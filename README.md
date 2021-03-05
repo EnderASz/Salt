@@ -9,3 +9,9 @@
 
 
 This is the Salt programming language. This is a compiled, interpreted language in a virtual machine.
+
+Directories:
+- `lib` - standard library of Salt
+- `doc` - md, txt & html documentation
+- `saltc` - salt compiler 
+- `svm` - salt virtual machine 
