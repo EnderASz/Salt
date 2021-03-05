@@ -1,0 +1,58 @@
+Salt bytecode explanation
+
+Before running Salt code, it needs to be compiled to a much simpler
+bytecode representation to make it easy for the Virtual Machine to 
+run it with top speed.
+
+
+@$__INIT__ 
+    Starting point of the program. This is called a label, which the Virtual
+    Machine can jump to. The initial dollar ($) sign makes the label a system
+    label, meaning it cannot be defined by the user.
+
+@$__END__
+    End of the program. When encountering this statement, the Virtual Machine
+    cleans the callstack and frees all the heap data. After that, it exits the
+    program.
+
+IMPRT s:lib
+    Import module and define it as accessable though a global variable
+    with the same name as `lib`.
+
+MKVAR r1:basetype *:typename s:varname r:value 
+    Make variable. Create a variable in the current scope with the specified
+    value. If `basetype` is not 1, use `typename` to define what unit this variable
+    is using. If `basetype` is 0, use the base simple types defined in typename 
+    which is then only 1 byte wide.
+
+DLVAR s:varname
+    Delete variable. This deletes the global instance of the variable, making
+    all future calls to the variable throw a NullPointerException.
+
+MKFUN r1:accessl s:funcname i:args ( {r1:basetype *:typename *:name}+ | . ) r1:basetype *:typename
+    Create function. `accessl` can be either 0 for public or 1 for private. 
+    The `args` is the amount of variables that will be found. If this is 0, 
+    the proceeding token will be a single dot. Else each variable will be 
+    defined as a type and value pair.
+
+DLFUN s:funcname
+    Delete function. Deletes the global function label which will cause
+    all later function calls throw a NullPointerException for this function.
+    This is used for optimalization, this shouldn't be placed by the user
+    coding a Salt program, but is placed by the compiled when no further
+    calls to this function are found. This helps lower memory usage.
+
+MKUNT r1:accessl s:unitname 
+
+CALLF s:funcname i:args ( {r1:basetype *:typename *:val}+ | . )
+    Call the function creating a new scope on the callstack.
+
+CALLX s:libname s:funcname i:args ( {r1:basetype *:typename *:val} | . )
+    Call an external function from the imported library. Throws exceptions if
+    fails to find function.
+
+FILEO s:varname r1:mode
+    Open file and return the file handle.
+
+SLEEP i:ms
+    Sleep the given amount of miliseconds
