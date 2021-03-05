@@ -7,8 +7,13 @@
 #include <string>
 using std::string;
 
+namespace salt 
+{
+
 enum TokenType
 {
+    TOK_0,          // nothing
+
     // Keywords
     KW_PUBLIC,      // public
     KW_PRIVATE,     // private
@@ -32,6 +37,7 @@ enum TokenType
     TOK_LSQUARE,    // [
     TOK_RSQUARE,    // ]
 
+    TOK_SEMIC,      // ;
     TOK_DOT,        // .
     TOK_SYMBOL,     // any_symbol
     TOK_ARROW,      // ->
@@ -68,5 +74,7 @@ typedef struct
  * do anything, it's just a shorthand.
  */
 Token token_create(string _val, TokenType _tok);
+
+} // salt
 
 #endif // TOKEN_H_
