@@ -27,8 +27,3 @@ objects:
 # Compile and link the main file
 final:
 	gcc -o build/$(RESULT) $(MAIN) $(OBJECTS)
-
-# Clean and move the compiled file to the user's ~/bin
-install: clean
-	mkdir -p ~/bin
-	mv $(RESULT) ~/bin/$(RESULT)
