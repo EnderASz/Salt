@@ -1,0 +1,8 @@
+# Build directories
+build/
+
+# Log files
+.log
+
+# Test files
+test.*
