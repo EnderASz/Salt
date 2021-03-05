@@ -20,7 +20,6 @@ clean:
 
 # Create all the needed directories.
 directories:
-	mkdir -p build
 	mkdir -p build/objects
 
 # Compile all sources to object files
