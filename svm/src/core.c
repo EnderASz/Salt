@@ -3,6 +3,31 @@
 #include "../include/core.h"
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
+
+// Virtual Machine global variables
+
+/* This 16-byte header should be located on top of each .scc file. The 
+ * SCC_HEADER contains the "magic bytes" indicating that this is indeed a scc
+ * (salt compiled code) file. The second 8 bytes, SCC_VERSION indicate the 
+ * format of the compiled code. If the format does not match the virtual 
+ * machine version, it will not execute.
+ */
+const char SCC_HEADER  [] = {0x7f, 0x53, 0x43, 0x43, 0x00, 0x00, 0x00, 0x00};
+const char SCC_VERSION [] = {0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x7f};
+
+/* uint max code pointer: the maximum amount cp can have before exiting
+ * execution. This is set by load_bytecode when reading bytecode from the 
+ * input .scc file.
+ */
+uint svm_mcp = 0;
+
+/* uint code pointer: points to the current location on the code array.
+ * This is chosen rather than a simple for loop in order to have more control
+ * over the execution flow, like making jumps.
+ */
+uint svm_cp = 0;
+
 
 /* Shows the help page and exits the whole program.
  */
@@ -12,4 +37,82 @@ void core_help()
     "\tFILE        compiled Salt code (scc) file",
     "\t-h, --help  show this page and exit");
     exit(1);
+}
+
+/* Parse the passed arguments and set special flags defined depending on the 
+ * arguments used when executing the program. This also returns the filename
+ * that the user chose to execute.
+ */
+char* parse_args(int argc, char** argv) 
+{
+    if (argc < 2) {
+        printf("Not enough arguments. See --help for more.\n");
+        exit(1);
+    }
+
+    // Check for -h, --help
+    for (uint i = 0; i < argc; i++) {
+        if ((strncmp(argv[i], "-h", 20) == 0) || 
+            (strncmp(argv[i], "--help", 20) == 0))
+            core_help();
+    }
+
+    // Currently set to the first parameter, this will be smarter later on
+    return argv[1];
+}
+
+/* Returns every line of the bytecode in a string array. The length of the
+ * array is automatically set to the global uint mbp. The first list is omited
+ * from the final string array because it contains the bytecode header which
+ * contains some crucial information about the bytecode itself.
+ */
+char** load_bytecode(const char* _filen)
+{
+    FILE* fp = fopen(_filen, "rb");
+    if (!fp) {
+        printf("Error: cannot read file\n");
+        exit(1);
+    }
+    
+    char buf[SVM_INSTRUCTION_WIDTH];
+    
+    // Check for .scc header before memory allocation
+    fgets(buf, SVM_INSTRUCTION_WIDTH - 1, fp);
+    if (strncmp(buf, SCC_HEADER, 8) != 0) {
+        printf("svm: this is not an scc executable. Exiting\n");
+        exit(1);
+    }
+
+    // Check for version
+    if (strncmp(buf + 8, SCC_VERSION, 8) != 0) {
+        printf("svm: incompatible scc file format. Exiting\n");
+        exit(1);
+    }
+
+    uint code_s = SVM_INITIAL_CODE_S;
+
+    char** code = calloc(sizeof(char*), code_s);
+    for (uint i = 0; i < SVM_INITIAL_CODE_S; i++)
+        code[i] = calloc(sizeof(char), SVM_INSTRUCTION_WIDTH);
+
+    svm_mcp = 0;    
+    while (fgets(buf, SVM_INSTRUCTION_WIDTH - 1, fp)) {
+
+        // Check for space, allocate more if not found
+        if (svm_mcp >= (code_s - 1)) {
+            code = (char**) realloc(code, sizeof(char*) * code_s 
+            + SVM_INITIAL_CODE_S);
+
+            for (uint i = code_s - 1; i < SVM_INITIAL_CODE_S + code_s; i++)
+                code[i] = malloc(sizeof(char) * SVM_INSTRUCTION_WIDTH);
+        
+            code_s += SVM_INITIAL_CODE_S;
+        }
+
+        strncpy(code[svm_mcp], buf, SVM_INSTRUCTION_WIDTH - 1);
+        svm_mcp++;
+    }
+
+    fclose(fp);
+    return code;
 }
