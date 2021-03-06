@@ -21,12 +21,10 @@ const uint execs_s = 2;
 
 /* This 16-byte header should be located on top of each .scc file. The 
  * SCC_HEADER contains the "magic bytes" indicating that this is indeed a scc
- * (salt compiled code) file. The second 8 bytes, SCC_VERSION indicate the 
- * format of the compiled code. If the format does not match the virtual 
- * machine version, it will not execute.
+ * (salt compiled code) file. 
  */
-const char SCC_HEADER  [] = {0x7f, 0x53, 0x43, 0x43, 0x00, 0x00, 0x00, 0x00};
-const char SCC_VERSION [] = {0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x7f};
+const char SCC_HEADER[]  = {0x7f, 0x53, 0x43, 0x43, 0xff, 0xee, 0x00, 0x00};
+const ushort SCC_VERSION = 1;
 
 /* uint max code pointer: the maximum amount cp can have before exiting
  * execution. This is set by load_bytecode when reading bytecode from the 
@@ -53,6 +51,15 @@ uint svm_end  = 0;
  */
 uint* svm_else;
 uint  svm_else_s = 0;
+
+/* This is the array for all constant strings loaded before executing the code.
+ * Each constant string has 3 pieces of information. The string id, located on
+ * the first 4 bytes; the string length, located on the next 4 bytes and the 
+ * other 8 bytes are the pointer to the location in bytecode where the string
+ * starts. The amount of const strings is set in load_bytecode.
+ */
+SaltCString* svm_cstr = NULL;
+uint svm_cstr_s = 0;
 
 
 /* Shows the help page and exits the whole program.
@@ -110,10 +117,13 @@ char** load_bytecode(const char* _filen)
     }
 
     // Check for version
-    if (strncmp(buf + 8, SCC_VERSION, 8) != 0) {
+    if (*(ushort*)(buf + 8) != SCC_VERSION) {
         printf("svm: incompatible scc file format. Exiting\n");
         exit(1);
     }
+
+    // Get string amount
+    svm_cstr_s = *(uint*) (buf + 16); 
 
     // Size of code
     uint code_s = SVM_INITIAL_CODE_S;
@@ -137,6 +147,28 @@ char** load_bytecode(const char* _filen)
 
     fclose(fp);
     return code;
+}
+
+/* This goes through each line in the bytecode (until it hits @$__INIT__) and
+ * saves every constant string that can be loaded. The pointers to the memory 
+ * locations are then saved in a salt unit in the svm_cstr array.  
+ */
+void load_strings(char* _code[])
+{
+    DEBUG(printf("[core] load_strings\n"));
+    svm_cstr = smalloc(sizeof(SaltCString), svm_cstr_s);
+
+    for (int i = 0; i != svm_init; i++) {
+
+        if (strncmp(_code[i], "[s", 2) != 0)
+            continue;
+
+        // Push payload to unit
+        SaltCString* unit = &(svm_cstr[i]);
+        unit->id  = *(uint*) _code[i] + 2;
+        unit->len = *(uint*) _code[i] + 6;
+        unit->ptr = (mptr_t) _code[i] + 10;
+    }
 }
 
 /* Load a single line from the file until it finds a newline. This has been

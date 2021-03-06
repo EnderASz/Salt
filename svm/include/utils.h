@@ -11,9 +11,9 @@
 /* The debug macro. Compiled the code found inside if SVM_DEBUG is defined.
  */
 #ifdef SVM_DEBUG
-# define DEBUG(__CODE__) __CODE__
+ #define DEBUG(__CODE__) __CODE__
 #else
-# define DEBUG(__CODE__)
+ #define DEBUG(__CODE__)
 #endif
 
 

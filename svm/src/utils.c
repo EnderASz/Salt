@@ -63,7 +63,7 @@ void utils_hexdump_c(mptr_t byte, uint _n)
             printf("%c", bv);
         }
         else {
-            printf(" ");
+            printf(".");
         }
     }
 }

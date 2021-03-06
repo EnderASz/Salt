@@ -3,8 +3,6 @@
  *
  *
  */
-#define SVM_DEBUG
-
 #include "../include/core.h"
 #include "../include/utils.h"
 #include <stdio.h>
@@ -23,7 +21,7 @@ int exec(char* code[])
     while (svm_cp != svm_end) {
         DEBUG(printf("[exec] # %d\n", svm_cp));
         
-        // Find exec func
+        // Find & exec
         for (uint i = 0; i < execs_s; i++) {
             if (strncmp(execs[i].id, code[svm_cp], 5) == 0) {
                 execs[i].f_exec((byte*) code[svm_cp] + 5);
@@ -96,5 +94,8 @@ void si_retrn(byte* _bytes)
  */
 void si_prntr(byte* _bytes)
 {
-    DEBUG(printf("[PRNTR] str: %d\n", *(int*) _bytes));
+    DEBUG(printf("[PRNTR] str: %d\n", *(uint*) _bytes));
+
+    char* str = (char*) svm_cstr[*(uint*) _bytes - 1].ptr;
+    printf("%s", str);
 }
