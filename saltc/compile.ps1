@@ -1,81 +1,52 @@
-# Powershell script for the Salt compiler for Windows
+# Powershell compilation script for the Salt Compiler for Windows system.
 
-#Requires -RunAsAdministrator
+# region - Setup before compilation
+    $MAIN = "saltc.cpp"
+    $RESULT = "saltc.exe"
 
-param (
-    [Parameter()]
-    [switch]$AddToPath = $false,
+    # Set all needed paths paths and directories
+    $BASEDIR = $PSScriptRoot
+    $BuildDir = "$BASEDIR\build"
+    $SourcesDir = "$BASEDIR\src"
+    $CompiledObjectsDir = "$BuildDir\objects"
+    $CompiledMainPath = "$BuildDir\$RESULT"
 
-    [Parameter()]
-    [switch]$Global = $false,
+    # Create all needed directories
+    New-Item -ErrorAction Ignore -Path $CompiledObjectsDir -ItemType "directory"
 
-    [Parameter()]
-    [string]$SaltHomeDir = "$Env:ProgramFiles\Salt"
-)
+    # Search all sources to build object files
+    $CPPSources = Get-ChildItem -Path $SourcesDir -Include *.cpp -Recurse
+    $CPPSourcesNames = ($CPP_SOURCES | %{$_.Basename})
+    $CPPSourcesPaths = ($CPP_SOURCES | %{$_.FullName})
+    $CSources = Get-ChildItem -Path $SourcesDir -Include *.c -Recurse
+    $CSourcesNames = ($C_SOURCES | %{$_.Basename})
+    $CSourcesPaths = ($C_SOURCES | %{$_.FullName})
 
-$MAIN = "saltc.cpp"
-$RESULT = "saltc.exe"
-$CURRENT = (Get-Location).Path
+    # Set paths for future object files
+    $CPP_OBJECTS_PATHS = ($CPP_SOURCES_NAMES | %{@("$CompiledObjectsDir\$_.o")})
+    $C_OBJECTS_PATHS = ($C_SOURCES_NAMES | %{@("$CompiledObjectsDir\$_.o")})
+    $ALL_OBJECTS_PATHS = $CPP_OBJECTS_PATHS + $C_OBJECTS_PATHS
+# endregion
 
-if($Global) {
-    $Access = 2 # Machine
-} else {
-    $Access = 1 # User
-}
-
-# Create Salt home directory
-New-Item -ErrorAction Ignore -Path $SaltHomeDir -ItemType "directory"
-
-# Create Salt bin directory
-$SaltBinDir = "$SaltHomeDir\bin"
-New-Item -ErrorAction Ignore -Path $SaltBinDir -ItemType "directory"
-
-# Search all C/C++ source files
-$CPP_SOURCES = Get-ChildItem -Path "src" -Include *.cpp -Recurse
-$CPP_SOURCES_NAMES = ($CPP_SOURCES | %{$_.Basename})
-$CPP_SOURCES_PATHS = ($CPP_SOURCES | %{$_.FullName})
-$C_SOURCES = Get-ChildItem -Path "src" -Include *.c -Recurse | %{$_.Basename}
-$C_SOURCES_NAMES = ($C_SOURCES | %{$_.Basename})
-$C_SOURCES_PATHS = ($C_SOURCES | %{$_.FullName})
-
-$BuildDir = "$CURRENT\build"
-
-# Create all needed directories
-$BuildedObjectsDir = "$BuildDir\objects"
-New-Item -ErrorAction Ignore -Path $BuildedObjectsDir -ItemType "directory"
-
-# Get future related paths for object files
-$CPP_OBJECTS_PATHS = ($CPP_SOURCES_NAMES | %{@("$BuildedObjectsDir\$_.o")})
-$C_OBJECTS_PATHS = ($C_SOURCES_NAMES | %{@("$BuildedObjectsDir\$_.o")})
-
-# Compile all sources to object files
-For($i = 0; $i -lt $CPP_SOURCES_NAMES.count; $i++) {
-    g++ -c -o $CPP_OBJECTS_PATHS[$i] $CPP_SOURCES_PATHS[$i]
-}
-For($i = 0; $i -lt $C_SOURCES_NAMES.count; $i++) {
-    gcc -c -o $C_OBJECTS_PATHS[$i] $C_SOURCES_PATHS[$i]
-}
-
-# Compile the main file and link with object files
-$CompiledMainPath = "$BuildDir\$RESULT"
-g++ -o $CompiledMainPath $MAIN ($OBJECTS -join ' ')
-
-# Move the compiled file to Salt bin
-Move-Item -Path $CompiledMainPath -Destination $SaltBinDir -Force
-
-# Clean after compilation
-Remove-Item -Path "build" -Recurse -Force
-
-# Add Salt directories to enviroment variables
-if($AddToPath) {
-    # Add SaltHome enviroment variable
-    [Environment]::SetEnvironmentVariable("SaltHome", $SaltHomeDir, $Access)
-
-    # Add Salt bin to PATH enviroment variable
-    $PATH = [Environment]::GetEnvironmentVariables($Access).Path
-    if(!$PATH -contains $SaltBinDir){
-
+# region - Compilation
+    # Compile all sources to object files
+    For($i = 0; $i -lt $CPP_OBJECTS_PATHS.count; $i++) {
+        g++ -c -o $CPP_OBJECTS_PATHS[$i] $CPP_SOURCES_PATHS[$i]
     }
-    $PATH += "$SaltBinDir;"
-    [Environment]::SetEnvironmentVariable("Path", $PATH, $Access)
-}
+    For($i = 0; $i -lt $C_SOURCES_NAMES.count; $i++) {
+        gcc -c -o $C_OBJECTS_PATHS[$i] $C_SOURCES_PATHS[$i]
+    }
+
+    # Compile the main file and link with object files
+    g++ -o $CompiledMainPath $MAIN ($ALL_OBJECTS_PATHS -join ' ')
+# endregion
+
+# region - Cleaning after compilation
+    # Move the compiled result to the top folder
+    Move-Item -Path $CompiledMainPath -Destination $BASEDIR -Force
+
+    # Remove compile-time directories
+    Remove-Item -Path $BuildDir -Recurse -Force
+# endregion
+
+return $CompiledMainPath
