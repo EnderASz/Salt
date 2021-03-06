@@ -2,11 +2,22 @@
  */
 #include "../include/core.h"
 #include "../include/utils.h"
+#include "../include/exec.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 
 // Virtual Machine global variables
+
+/* The main array of Salt executable units. Each element represents a single
+ * callable f_exec function. 
+ */
+const SaltExec execs[] = {
+    {"PRNTR", si_prntr},
+    {"RETRN", si_retrn},
+    {"\0\0n", NULL}
+};
+const uint execs_s = 2;
 
 /* This 16-byte header should be located on top of each .scc file. The 
  * SCC_HEADER contains the "magic bytes" indicating that this is indeed a scc

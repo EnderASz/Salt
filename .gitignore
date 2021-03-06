@@ -6,3 +6,6 @@ build/
 
 # Test files
 test.*
+
+# Compiled files
+*.scc

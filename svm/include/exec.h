@@ -22,4 +22,18 @@ extern int exec(char* _code[]);
  */
 extern void preload(char* _code[]);
 
+// SALT INSTRUCTIONS
+
+/* This instruction is located at the end of every function, even if the user
+ * did not define so. This sends a CSPOP signal to the virtual machine, popping
+ * one element off the callstack and returning to the previous scope.
+ */
+extern void si_retrn(byte* _bytes);
+
+/* This prints the constant string to standard out. The usual CALLX io print
+ * is replaced with this as oftenly as possible by the compiler to reach better 
+ * speeds.
+ */
+extern void si_prntr(byte* _bytes);
+
 #endif // EXEC_H_

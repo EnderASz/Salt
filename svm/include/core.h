@@ -23,15 +23,32 @@
 #define SVM_INITIAL_CODE_S 256
 
 /* This is the initial amount of uints in the svm_else array. 
- * 
  */
 #define SVM_INITIAL_ELSE_S 16
 
 // Global types
-typedef unsigned int  uint;
-typedef char* mptr_t;
+typedef unsigned int uint;
+typedef unsigned char byte;
+typedef byte* mptr_t;
+
+/* This structure represents a single Salt instruction to execute. In the exec
+ * function, the correct instruction with the maching id is found and then 
+ * executed, passing the remaining bytes as the argument.
+ */
+typedef struct _si_t {
+
+    char id[5];
+    void (*f_exec)(byte* _bytes);
+
+} SaltExec;
 
 // Virtual Machine global variables
+ 
+/* The main array of Salt executable units. Each element represents a single
+ * callable f_exec function. 
+ */
+extern const SaltExec execs[];
+extern const uint execs_s;
 
 /* This 16-byte header should be located on top of each .scc file. The 
  * SCC_HEADER contains the "magic bytes" indicating that this is indeed a scc

@@ -14,7 +14,7 @@
  * function is created with extreme detail to achieve a high execution speed
  * for the Virtual Machine.
  */
-int exec(char* _code[])
+int exec(char* code[])
 {
     // Move code pointer to init label.
     svm_cp = svm_init;
@@ -22,6 +22,15 @@ int exec(char* _code[])
     // Run only if the instruction under the code pointer isn't the end label.
     while (svm_cp != svm_end) {
         DEBUG(printf("[exec] # %d\n", svm_cp));
+        
+        // Find exec func
+        for (uint i = 0; i < execs_s; i++) {
+            if (strncmp(execs[i].id, code[svm_cp], 5) == 0) {
+                execs[i].f_exec((byte*) code[svm_cp] + 5);
+                break;
+            }
+        }
+        
         svm_cp++;
     }
 
@@ -68,4 +77,24 @@ void preload(char* _code[])
         }
     );
 
+}
+
+// SALT INSTRUCTIONS
+
+/* This instruction is located at the end of every function, even if the user
+ * did not define so. This sends a CSPOP signal to the virtual machine, popping
+ * one element off the callstack and returning to the previous scope.
+ */
+void si_retrn(byte* _bytes)
+{
+    DEBUG(printf("[RETRN] 000\n"));
+}
+
+/* This prints the constant string to standard out. The usual CALLX io print
+ * is replaced with this as oftenly as possible by the compiler to reach better 
+ * speeds.
+ */
+void si_prntr(byte* _bytes)
+{
+    DEBUG(printf("[PRNTR] str: %d\n", *(int*) _bytes));
 }
