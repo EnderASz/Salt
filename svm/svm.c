@@ -29,6 +29,8 @@ int main(int argc, char** argv)
 
     exec(bytecode);
 
+    clean();
+
     // Timer
     DEBUG(
     clock_gettime(CLOCK_REALTIME, &end);

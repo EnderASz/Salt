@@ -15,9 +15,10 @@
 const SaltExec execs[] = {
     {"PRNTR", si_prntr},
     {"RETRN", si_retrn},
+    {"SLEEP", si_sleep},
     {"\0\0n", NULL}
 };
-const uint execs_s = 2;
+const uint execs_s = 3;
 
 /* This 16-byte header should be located on top of each .scc file. The 
  * SCC_HEADER contains the "magic bytes" indicating that this is indeed a scc
@@ -158,7 +159,7 @@ void load_strings(char* _code[])
     DEBUG(printf("[core] load_strings\n"));
     svm_cstr = smalloc(sizeof(SaltCString), svm_cstr_s);
 
-    for (int i = 0; i != svm_init; i++) {
+    for (uint i = 0; i != svm_init; i++) {
 
         if (strncmp(_code[i], "[s", 2) != 0)
             continue;
@@ -168,6 +169,21 @@ void load_strings(char* _code[])
         unit->id  = *(uint*) _code[i] + 2;
         unit->len = *(uint*) _code[i] + 6;
         unit->ptr = (mptr_t) _code[i] + 10;
+
+        replace_newlines((char*) unit->ptr);
+    }
+}
+
+/* Because newlines are a part of the bytecode structure, they need to be 
+ * replaced with a different character in the constant strings. The chosen
+ * character is 0x11, which is a device control ASCII char.
+ */
+extern void replace_newlines(char* _str)
+{
+    uint strl = strlen(_str);
+    for (uint i = 0; i < strl; i++) {
+        if (_str[i] == 0x11)
+            _str[i] = 0x0a;
     }
 }
 
@@ -191,4 +207,21 @@ int load_line(FILE* _fp, char* _alloc)
         }
     }
     return 0;
+}
+
+/* This is called on program exit to free all the allocated memory and close
+ * all file handles. Basically, it renders the virtual machine unusable and
+ * barely alive.
+ */
+extern void clean(char** _bytecode)
+{
+    // Bytecode
+    for (uint i = 0; i < svm_mcp; i++)
+        free(_bytecode[i]);
+    
+    // Strings
+    free(svm_cstr);
+
+    // Rest
+    free(svm_else);
 }

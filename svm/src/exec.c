@@ -7,6 +7,7 @@
 #include "../include/utils.h"
 #include <stdio.h>
 #include <string.h>
+#include <time.h>
 
 /* Main execution loop, this is called when the whole file is read. This
  * function is created with extreme detail to achieve a high execution speed
@@ -94,8 +95,19 @@ void si_retrn(byte* _bytes)
  */
 void si_prntr(byte* _bytes)
 {
-    DEBUG(printf("[PRNTR] str: %d\n", *(uint*) _bytes));
-
     char* str = (char*) svm_cstr[*(uint*) _bytes - 1].ptr;
     printf("%s", str);
+}
+
+/* Pause this thread for the given amount of miliseconds. 
+ */
+void si_sleep(byte* _bytes)
+{
+    struct timespec end, now;
+    clock_gettime(CLOCK_REALTIME, &end);
+    end.tv_nsec += 1000000 * *(uint*) _bytes;
+    while ((now.tv_nsec + now.tv_sec * 1000000000) 
+         < (end.tv_nsec + end.tv_sec * 1000000000)) {
+        clock_gettime(CLOCK_REALTIME, &now);
+    }
 }

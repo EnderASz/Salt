@@ -36,4 +36,8 @@ extern void si_retrn(byte* _bytes);
  */
 extern void si_prntr(byte* _bytes);
 
+/* Pause this thread for the given amount of miliseconds. 
+ */
+extern void si_sleep(byte* _bytes);
+
 #endif // EXEC_H_

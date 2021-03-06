@@ -175,11 +175,23 @@ extern char** load_bytecode(const char* _filen);
  */
 extern void load_strings(char* _code[]);
 
+/* Because newlines are a part of the bytecode structure, they need to be 
+ * replaced with a different character in the constant strings. The chosen
+ * character is 0x11, which is a device control ASCII char.
+ */
+extern void replace_newlines(char* _str);
+
 /* Load a single line from the file until it finds a newline. This has been
  * moved here instead of using fgets, because it needs to load bytes after
  * a null terminator. Note, the max _alloc size is by default set to 
  * SVM_INSTRUCTION_WIDTH - 1.
  */
 extern int load_line(FILE* _fp, char* _alloc);
+
+/* This is called on program exit to free all the allocated memory and close
+ * all file handles. Basically, it renders the virtual machine unusable and
+ * barely alive.
+ */
+extern void clean();
 
 #endif // CORE_H_
