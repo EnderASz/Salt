@@ -29,7 +29,7 @@ param (
 
 # region - Compile Salt Compiler
     echo "Compiling Salt Compiler"
-    $SaltCompilerBinPath = (& $SaltcCompilerScriptPath)
+    $SaltCompilerBinPath = (& $SaltcCompilerScriptPath)[1]
 # endregion
 
 # region - Compile Salt Virtual Machine - #TODO
@@ -50,6 +50,10 @@ param (
         Move-Item -Path $SaltCompilerBinPath -Destination $SaltBinDir -Force
         # Move-Item -Path $SVMBinPath -Destination $SaltBinDir -Force #TODO
     # endregion
+
+    # Copy couple directories to Salt Home directory
+    Copy-Item -Path "$BASEDIR\doc" -Destination "$SaltHomeDir\doc" -Recurse
+    Copy-Item -Path "$BASEDIR\lib" -Destination "$SaltHomeDir\lib" -Recurse
 # endregion
 
 # region - Set couple enviroment variables
@@ -60,7 +64,7 @@ param (
 
         # Add Salt bin to 'PATH' user enviroment variable
         $PATH = [Environment]::GetEnvironmentVariables(1).Path
-        if(!$PATH -contains $SaltBinDir){
+        if(-not ($PATH -contains $SaltBinDir)){
             $PATH += "$SaltBinDir;"
             [Environment]::SetEnvironmentVariable("Path", $PATH, 1)
         }
@@ -72,9 +76,10 @@ param (
         # Add SaltHome to system enviroment variables
         [Environment]::SetEnvironmentVariable("SaltHome", $SaltHomeDir, 2)
 
-        # Add Salt bin to PATH enviroment variable
+        # Add Salt bin to 'PATH' system enviroment variable
         $PATH = [Environment]::GetEnvironmentVariables(2).Path
-        if(!$PATH -contains $SaltBinDir){
+        if(-not ($PATH -contains $SaltBinDir)){
+            
             $PATH += "$SaltBinDir;"
             [Environment]::SetEnvironmentVariable("Path", $PATH, 2)
         }
