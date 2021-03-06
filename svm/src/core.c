@@ -1,6 +1,7 @@
 /* core.h implementation
  */
 #include "../include/core.h"
+#include "../include/utils.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -27,6 +28,20 @@ uint svm_mcp = 0;
  * over the execution flow, like making jumps.
  */
 uint svm_cp = 0;
+
+/* These are the locations of the $__INIT__ and $__END__ labels defined in the
+ * preload function. These are used for as the entrypoint and exit of the 
+ * program. If exec matches svm_cp to svm_end, it exits the program execution. 
+ */
+uint svm_init = 0;
+uint svm_end  = 0;
+
+/* Both of those variables store information about the ELSE labels found in
+ * the bytecode. This is done to quickly and efficiently jump to the next 
+ * section when the `if` statement returns false.
+ */
+uint* svm_else;
+uint  svm_else_s = 0;
 
 
 /* Shows the help page and exits the whole program.
@@ -89,30 +104,48 @@ char** load_bytecode(const char* _filen)
         exit(1);
     }
 
+    // Size of code
     uint code_s = SVM_INITIAL_CODE_S;
-
-    char** code = calloc(sizeof(char*), code_s);
+    char** code = smalloc(sizeof(char*), code_s);
     for (uint i = 0; i < SVM_INITIAL_CODE_S; i++)
-        code[i] = calloc(sizeof(char), SVM_INSTRUCTION_WIDTH);
+        code[i] = smalloc(sizeof(char), SVM_INSTRUCTION_WIDTH);
 
-    svm_mcp = 0;    
-    while (fgets(buf, SVM_INSTRUCTION_WIDTH - 1, fp)) {
+    // Reading the bytecode file needs to moved to a while loop in order to 
+    // read any amount of bytes from the line, because using a simple fgets
+    // stops at the first null-byte, which are also a part of the bytecode.
+    // If the file is no longer readable, break.
+    uint status = 0;
+    
+    for (uint line;;line++) {
+        // Read line and break if EOF
+        if (load_line(fp, code[line]) == EOF)
+            break;
 
-        // Check for space, allocate more if not found
-        if (svm_mcp >= (code_s - 1)) {
-            code = (char**) realloc(code, sizeof(char*) * code_s 
-            + SVM_INITIAL_CODE_S);
-
-            for (uint i = code_s - 1; i < SVM_INITIAL_CODE_S + code_s; i++)
-                code[i] = malloc(sizeof(char) * SVM_INSTRUCTION_WIDTH);
-        
-            code_s += SVM_INITIAL_CODE_S;
-        }
-
-        strncpy(code[svm_mcp], buf, SVM_INSTRUCTION_WIDTH - 1);
-        svm_mcp++;
+        svm_mcp = line + 1;
     }
 
     fclose(fp);
     return code;
+}
+
+/* Load a single line from the file until it finds a newline. This has been
+ * moved here instead of using fgets, because it needs to load bytes after
+ * a null terminator. Note, the max _alloc size is by default set to 
+ * SVM_INSTRUCTION_WIDTH - 1.
+ */
+int load_line(FILE* _fp, char* _alloc)
+{
+    char c = 0;
+    for (uint i = 0; i < SVM_INSTRUCTION_WIDTH; i++) {
+        _alloc[i] = fgetc(_fp);
+        if (_alloc[i] == EOF) {
+            return -1;
+        }
+
+        if (_alloc[i] == '\n') {
+            _alloc[i] = 0;
+            break;
+        }
+    }
+    return 0;
 }

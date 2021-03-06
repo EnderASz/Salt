@@ -7,6 +7,7 @@
  */
 #include "include/core.h"
 #include "include/exec.h"
+#include "include/utils.h"
 
 /* Main entrypoint for the virtual machine. Calls the main functions which then
  * call their respective subsystems. Finally returns 0 if nothing goes wrong.
@@ -16,6 +17,7 @@ int main(int argc, char** argv)
     const char* filename = parse_args(argc, argv);
     char** bytecode = load_bytecode(filename);
 
+    preload(bytecode);
     exec(bytecode);
 
     return 0;
