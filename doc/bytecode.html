@@ -8,7 +8,7 @@
             border-collapse: collapse;
             width: 100%;
         }
-        #vars {
+        .borderc {
             border-collapse: collapse;
         }
         tr:first-child {
@@ -28,16 +28,107 @@
     </style>
 </head>
 <body>
-    <h2>Salt bytecode documentation</h2>
+    <h1>Salt Bytecode</h1>
 
+    <h2>Header</h2>
+    <p>
+        The used format for compiled salt code is SCC. It it split into instructions, labels,
+        constant fields and the header. The header is a 64 byte wide area located at the very
+        start of a SCC file. This is a detailed explanation on what each part of the header is
+        for.
+    </p>
+
+    <table class="borderc">
+        <tr>
+            <th>Offset</th>
+            <th>Bytes</th>
+            <th>Purpose</th>
+        </tr>
+        <tr>
+            <td><code>0</code></td>
+            <td><code>7f53 4343 ffee 0000</code></td>
+            <td>
+                <code>SCC_HEADER</code>: magic string, indicates that this is indeed a SCC file.
+            </td>
+        </tr>
+        <tr>
+            <td><code>8</code></td>
+            <td><code>xxxx 0000 0000 0000</code></td>
+            <td>
+                <code>SCC_VERSION</code>: format version
+            </td>
+        </tr>
+        <tr>
+            <td><code>16</code></td>
+            <td><code>xxxx xxxx 0000 0000</code></td>
+            <td>
+                amount of constant strings 
+            </td>
+        </tr>
+        <tr>
+            <td><code>24</code></td>
+            <td><code>0000 0000 0000 0000<br>0000 0000 0000 0000<br>0000 0000 0000 0000<br>0000 0000 0000 0000</code></td>
+            <td>
+                none (yet)
+            </td>
+        </tr>
+        <tr>
+            <td><code>56</code></td>
+            <td><code>7f7a 7b7c xxxx xx0a</code></td>
+            <td>
+                compiler signature
+            </td>
+        </tr>
+        
+    </table>
+
+    <h2>Labels</h2>
+    <p>
+        Any label always starts with the <code>@</code> sign. If the second character is a <code>$</code>
+        sign, it means that this perticular label is unique for the whole executable.
+    </p>
+    <table class="borderc">
+        <tr>
+            <th>Label</th>
+            <th>Explanation</th>
+        </tr>
+        <tr>
+            <td><code>@$__INIT__</code></td>
+            <td>
+                Starting point of the program. This is called a label, which the Virtual
+                Machine can jump to. The initial dollar ($) sign makes the label a unique
+                label which there can only be one of.
+            </td>
+        </tr>
+        <tr>
+            <td><code>@$__END__</code></td>
+            <td>
+                End of the program. When encountering this statement, the Virtual Machine
+                cleans the callstack and frees all the heap data. After that, it exits the
+                program.
+            </td>
+        </tr>
+        <tr>
+            <td><code>@ELSE</code></td>
+            <td>
+                This label shows the next closes jump-to location if the if statement returns
+                false. This is used in the virtual machine to make quick and efficient jumps
+                to a further point in code, because all the locations of the else tags are
+                preloaded before execution. This allows to use a binary search algorithm to
+                find the closest jump.
+            </td>
+        </tr>
+    </table>
+
+
+    <h2>Instructions</h2>
     <p>
         This is a full list of the newest Salt Virtual Machine instruction list with
         arguments and explanations for each of them. Each executable instruction is <b>exactly
-        5 characters long</b>. A instruction that begins with a <code>@</code> sign is
-        a label the virtual machine can jump to.
+        5 characters long</b>.
     </p>
 
-    <table id="vars">
+    <table class="borderc">
         <tr>
             <th>Variable</th>
             <th>Replacement</th>
@@ -58,40 +149,11 @@
 
     <br>
 
-    <table id="main">
+    <table class="bordec" id="main">
         <tr>
             <th>Instruction</th>
             <th>Arguments</th>
             <th>Explanation</th>
-        </tr>
-        <tr>
-            <td><code>@$__INIT__</code></td>
-            <td>-</td>
-            <td>
-                Starting point of the program. This is called a label, which the Virtual
-                Machine can jump to. The initial dollar ($) sign makes the label a unique
-                label which there can only be one of.
-            </td>
-        </tr>
-        <tr>
-            <td><code>@$__END__</code></td>
-            <td>-</td>
-            <td>
-                End of the program. When encountering this statement, the Virtual Machine
-                cleans the callstack and frees all the heap data. After that, it exits the
-                program.
-            </td>
-        </tr>
-        <tr>
-            <td><code>@ELSE</code></td>
-            <td>-</td>
-            <td>
-                This label shows the next closes jump-to location if the if statement returns
-                false. This is used in the virtual machine to make quick and efficient jumps
-                to a further point in code, because all the locations of the else tags are
-                preloaded before execution. This allows to use a binary search algorithm to
-                find the closest jump.
-            </td>
         </tr>
         <tr>
             <td><code>RETRN</code></td>
