@@ -6,6 +6,8 @@ RESULT = svm
 C_SOURCES = $(shell find src -name \*.c | sed 's/src\///' | tr '\n' ' ') 
 OBJECTS = $(foreach var,$(C_SOURCES),build/objects/$(var).o) 
 
+OPT = -O
+
 # Execute all the steps
 all: directories objects final
 
@@ -26,4 +28,4 @@ objects:
 
 # Compile and link the main file
 final:
-	gcc -o build/$(RESULT) $(MAIN) $(OBJECTS)
+	gcc $(OPT) -o build/$(RESULT) $(MAIN) $(OBJECTS)
