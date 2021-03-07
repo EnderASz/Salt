@@ -6,6 +6,21 @@
 #include "../include/object.h"
 #include <string.h>
 
+/* Global ID of salt objects. The initial value of this is 100, leaving space
+ for system variables ranging from 0 to 100. */
+uint salt_id_counter = 100;
+
+/* Get a unique ID for every newly created object.
+ *
+ * returns: unique ID
+ */
+uint salt_id()
+{
+    salt_id_counter++;
+    return salt_id_counter - 1;
+}
+
+
 /* The full method for creating a brand new Salt Object. Defines all the fields
  * which it can assign to. This method is private because it should be called
  * using other wrapper functions that are much easier to use.
@@ -34,7 +49,7 @@ SaltObject _salt_object_create(uint id, byte type, byte permission,
     obj.mutex_id   = mutex_id;
     obj.scope_id   = scope_id;
     obj.data       = data;
-
+    
     if (typeinfo == NULL)
         memset(obj.typeinfo, 0, 8);
     else
@@ -53,5 +68,16 @@ SaltObject _salt_object_create(uint id, byte type, byte permission,
  */
 SaltObject salt_object_mkconst(byte type, byte *typeinfo, void *data)
 {
-    return _salt_object_create(salt_id(), type, 1, 1, typeinfo, data, 0, 0);
+    return _salt_object_create(salt_id(), type, 0, 1, typeinfo, data, 0, 0);
+}
+
+/* Cast the typeinfo of the SaltObject into a uint.
+ *
+ * @_obj: salt object of string type
+ * 
+ * returns: length of the string
+ */
+uint salt_object_strlen(SaltObject *obj)
+{
+    return * (uint *) obj->typeinfo;
 }

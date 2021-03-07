@@ -18,10 +18,6 @@ char FLAG_HELP = 0;
 
 // GLOBALS
 
-/* Global ID of salt objects. The initial value of this is 100, leaving space
- for system variables ranging from 0 to 100. */
-uint salt_id_counter = 100;
-
 /* The amount of instructions core_load_bytecode needs to allocate space for.
  This helps to speed up the compiler to not overallocate nor underallocate,
  so it's generally faster and more memory efficient. */
@@ -34,15 +30,8 @@ uint svm_const_strings = 0;
 /* Maximum width of a single instruction provided by the compiler. */
 uint svm_max_width = 0;
 
-/* Get a unique ID for every newly created object.
- *
- * returns: unique ID
- */
-uint salt_id()
-{
-    salt_id_counter++;
-    return salt_id_counter - 1;
-}
+/* Array of constant strings */
+SaltObject *salt_const_strings;
 
 /* Parse the command line arguments and set special flags defined here so they
  * can be accessed anywhere.
@@ -99,13 +88,48 @@ void core_load_header(FILE *_fp)
     if (strncmp(header + 8, SCC_HEADER_VERSION, 8) != 0)
         CORE_ERROR("Invalid SCC version\n");
 
-    svm_instructions  = * (uint *) (header + 16);
-    svm_const_strings = * (uint *) (header + 24);
-    svm_max_width     = * (uint *) (header + 32);
+    svm_instructions      = * (uint *) (header + 16);
+    svm_const_strings     = * (uint *) (header + 24);
+    svm_max_width         = * (uint *) (header + 32);
+}
 
-    printf("svm_instructions  = %d\n", svm_instructions);
-    printf("svm_const_strings = %d\n", svm_const_strings);
-    printf("svm_max_width     = %d\n", svm_max_width);
+/* Read & load all constant strings from the top of the file and puts the into 
+ * the SaltObject constant string array (salt_cstrings).
+ *
+ * @_fp: file pointer to the scc file
+ */
+void core_load_strings(FILE *_fp)
+{
+    salt_const_strings = calloc(sizeof(SaltObject), svm_const_strings);
+    
+    char strl[4];
+    for (uint i = 0; i < svm_const_strings; i++) {
+
+        core_read_bytes(_fp, strl, 4);
+
+        // String length 
+        memcpy(salt_const_strings[i].typeinfo, strl, 4);
+        salt_const_strings[i].constant = 1;
+        
+        salt_const_strings[i].data = calloc(sizeof(char), * (uint *) strl);
+        core_read_bytes(_fp, salt_const_strings[i].data, * (uint *) strl);
+    
+        // Move one byte forward over the 0x0a
+        fgetc(_fp);
+    }
+}
+
+/* Read n amount of bytes from the file and place them in the string array.
+ * This takes the string length for granted.
+ *
+ * @_fp:  file pointer to read from
+ * @_str: memory allocated string
+ * @_n:   amount of bytes
+ */
+void core_read_bytes(FILE *_fp, char *_str, uint _n)
+{
+    for (uint i = 0; i < _n; i++)
+        _str[i] = fgetc(_fp);
 }
 
 /* Read & load the bytecode from the scc file. This must be executed after
@@ -118,9 +142,6 @@ void core_load_header(FILE *_fp)
  */
 char **core_load_bytecode(FILE *_fp)
 {
-    if (ftell(_fp) != 64)
-        CORE_ERROR("Failed to read SCC header\n");
-
     char **code = calloc(sizeof(char *), svm_instructions);
     for (uint i = 0; i < svm_instructions; i++)
         code[i] = calloc(sizeof(char), svm_max_width);

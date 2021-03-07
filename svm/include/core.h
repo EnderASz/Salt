@@ -14,6 +14,8 @@
 #include <string.h>
 #include <stdio.h>
 
+#include "object.h"
+
 /* Architecture the program is compiled on. On Windows this is usually set to
  32-bit by default, so to properly align structures you need to add padding
  depending if the pointer size is 8 bytes or 4 bytes. Also, sucks to be a MacOs
@@ -40,16 +42,13 @@
 // TYPES
 
 typedef unsigned char byte;
+typedef unsigned int  uint;
 
 // FLAGS
 
 extern char FLAG_HELP;
 
 // GLOBALS
-
-/* Global ID of salt objects. The initial value of this is 100, leaving space
- for system variables ranging from 0 to 100. */
-extern uint salt_id_counter;
 
 /* The amount of instructions core_load_bytecode needs to allocate space for.
  This helps to speed up the compiler to not overallocate nor underallocate,
@@ -63,11 +62,8 @@ extern uint svm_const_strings;
 /* Maximum width of a single instruction provided by the compiler. */
 extern uint svm_max_width;
 
-/* Get a unique ID for every newly created object.
- *
- * returns: unique ID
- */
-uint salt_id();
+/* Array of constant strings */
+extern SaltObject *salt_const_strings;
 
 /* Parse the command line arguments and set special flags defined here so they
  * can be accessed anywhere.
@@ -89,6 +85,22 @@ void core_show_help();
  * @_fp: file pointer to the scc file 
  */
 void core_load_header(FILE *_fp);
+
+/* Read & load all constant strings from the top of the file and puts the into 
+ * the SaltObject constant string array (salt_cstrings).
+ *
+ * @_fp: file pointer to the scc file
+ */
+void core_load_strings(FILE *_fp);
+
+/* Read n amount of bytes from the file and place them in the string array.
+ * This takes the string length for granted.
+ *
+ * @_fp:  file pointer to read from
+ * @_str: memory allocated string
+ * @_n:   amount of bytes
+ */
+void core_read_bytes(FILE *_fp, char *_str, uint _n);
 
 /* Read & load the bytecode from the scc file. This must be executed after
  * core_load_header, because of the global variables it sets and also moves the

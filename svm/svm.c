@@ -45,6 +45,7 @@
  * @version  0.1
  */
 #include "include/core.h"
+#include "include/object.h"
 
 int main(int argc, char **argv)
 {
@@ -58,6 +59,8 @@ int main(int argc, char **argv)
         CORE_ERROR("Cannot read file\n");
 
     core_load_header(fp);
+    core_load_strings(fp);
+
     char **code = core_load_bytecode(fp);
 
     fclose(fp);
