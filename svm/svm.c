@@ -1,41 +1,64 @@
 /**
- * Core file for the Salt Virual Machine. This side is written in C, to achieve
- * maximum speed in interacting with the software.
+ * Salt Virtual Machine
  *
- * Note that one instance of the virutal machine is one instance of executing 
- * code.
+ * The Salt Virtual Machine is the interpreter for compiled Salt code generated
+ * by saltc, the Salt compiler. It is written in C to have more control over 
+ * the bytes and what is happening in the background, to achieve better 
+ * execution speeds. This code is mostly written and handled by me (bellrise)
+ * but there may be more people in the future wanting to contribute to the
+ * project. 
+ *
+ * Code style
+ *
+ * Note for every developer wanting to contribute to the svm: the core goal is
+ * execution speed, memory usage comes isn't as important in today's times.
+ * The code must be clean and easy to read, without too many line comments but
+ * with rich documentation in the form of block comments. Functions & variables
+ * both have lower_case_names. Constants are always UPPER_CASE and structures
+ * are PascalCase. Pointers are near the value, not the type.
+ * 
+ * Comments should be located on top of every file, and should follow the two
+ * star style. Other comments above functions should have one star and should
+ * start from the first line. The function commenting style is simmilar to the
+ * Linux Kernel style, although it's a bit modified.
+ *
+ * Coding rules
+ *
+ * Functions should be short and do only one thing very well. If your function
+ * is longer than 50 lines, you should think about splitting it - but it's not
+ * required. Code should be clear and easy to read, use whitespace god damnit!
+ * Function names are constructed using the topic as the first word, and then
+ * the class & verb. Use `core_unit_clear` instead of `core_clear_unit`. The
+ * max line width is 80 characters, and there are no excuses. If you write even
+ * one character over the 80 char limit, you're certified braindead.
+ *
+ * Keep your code english: write proper english comments in a simple style so
+ * others can understand you. 
+ *
+ * Versions 
+ *
+ * Every new set of functionality or bugfixes should get a new `minor` version,
+ * and every major release should get a new `major` version. Simple as that.
+ *
+ *
+ * @author   bellrise
+ * @version  0.1
  */
-#define SVM_DEBUG
-
 #include "include/core.h"
-#include "include/exec.h"
-#include "include/utils.h"
-#include <time.h>
 
-/* Main entrypoint for the virtual machine. Calls the main functions which then
- * call their respective subsystems. Finally returns 0 if nothing goes wrong.
- */
-int main(int argc, char** argv)
+int main(int argc, char **argv)
 {
-    // Timer
-    struct timespec start, end;
-    DEBUG(clock_gettime(CLOCK_REALTIME, &start));
-    
-    const char* filename = parse_args(argc, argv);
-    char** bytecode = load_bytecode(filename);
+    char *filename = core_parse_args(argc, argv);
 
-    preload(bytecode);
-    load_strings(bytecode);
+    if (FLAG_HELP)
+        core_show_help();
 
-    exec(bytecode);
+    FILE *fp = fopen(filename, "rb"); 
+    if (!fp)
+        CORE_ERROR("Cannot read file\n");
 
-    clean();
+    core_load_header(fp);
+    char **code = core_load_bytecode(fp);
 
-    // Timer
-    DEBUG(
-    clock_gettime(CLOCK_REALTIME, &end);
-    printf("\n\nExecution took: %ld us\n", ((end.tv_nsec - start.tv_nsec) 
-           + (end.tv_sec - start.tv_sec) * 1000000000) / 1000);
-    );
-    return 0;
+    fclose(fp);
 }
