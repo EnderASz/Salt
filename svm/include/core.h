@@ -102,6 +102,15 @@ void core_load_strings(FILE *_fp);
  */
 void core_read_bytes(FILE *_fp, char *_str, uint _n);
 
+/* Similar to core_read_bytes, it reads the file pushing the characters into 
+ * the C string until it finds the _c char. 
+ * 
+ * @_fp:  file pointer to read from
+ * @_str: memory allocated string
+ * @_c:   the char to stop at
+ */
+void core_read_until(FILE *_fp, char *_str, char _c);
+
 /* Read & load the bytecode from the scc file. This must be executed after
  * core_load_header, because of the global variables it sets and also moves the
  * file cursor 64 bytes forward.

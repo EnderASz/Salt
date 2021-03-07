@@ -46,6 +46,7 @@
  */
 #include "include/core.h"
 #include "include/object.h"
+#include "include/exec.h"
 
 int main(int argc, char **argv)
 {
@@ -64,4 +65,9 @@ int main(int argc, char **argv)
     char **code = core_load_bytecode(fp);
 
     fclose(fp);
+
+    preload(code);
+    int ret = exec(code);
+
+    return ret;
 }

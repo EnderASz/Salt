@@ -102,18 +102,25 @@ void core_load_strings(FILE *_fp)
 {
     salt_const_strings = calloc(sizeof(SaltObject), svm_const_strings);
     
-    char strl[4];
+    uint strl;
     for (uint i = 0; i < svm_const_strings; i++) {
 
-        core_read_bytes(_fp, strl, 4);
+        core_read_bytes(_fp, (char *) &strl, 4);
 
         // String length 
-        memcpy(salt_const_strings[i].typeinfo, strl, 4);
+        memcpy(salt_const_strings[i].typeinfo, (char *) &strl, 4);
         salt_const_strings[i].constant = 1;
         
-        salt_const_strings[i].data = calloc(sizeof(char), * (uint *) strl);
-        core_read_bytes(_fp, salt_const_strings[i].data, * (uint *) strl);
+        salt_const_strings[i].data = calloc(sizeof(char), strl);
+        core_read_bytes(_fp, salt_const_strings[i].data, strl);
     
+        // Replace 0x11 with newlines
+        for (uint j = 0; j < strl; j++) {
+            if (((char *) salt_const_strings[i].data)[j] == 0x11) {
+                ((char *) salt_const_strings[i].data)[j] = 0x0a;
+            }
+        }
+
         // Move one byte forward over the 0x0a
         fgetc(_fp);
     }
@@ -132,6 +139,24 @@ void core_read_bytes(FILE *_fp, char *_str, uint _n)
         _str[i] = fgetc(_fp);
 }
 
+/* Similar to core_read_bytes, it reads the file pushing the characters into 
+ * the C string until it finds the _c char. 
+ * 
+ * @_fp:  file pointer to read from
+ * @_str: memory allocated string
+ * @_c:   the char to stop at
+ */
+void core_read_until(FILE *_fp, char *_str, char _c)
+{
+    for (uint i = 0 ;; i++) {
+        _str[i] = fgetc(_fp);
+        if (_str[i] == _c) {
+            _str[i] = 0;
+            break;
+        }
+    }
+}
+
 /* Read & load the bytecode from the scc file. This must be executed after
  * core_load_header, because of the global variables it sets and also moves the
  * file cursor 64 bytes forward.
@@ -143,8 +168,11 @@ void core_read_bytes(FILE *_fp, char *_str, uint _n)
 char **core_load_bytecode(FILE *_fp)
 {
     char **code = calloc(sizeof(char *), svm_instructions);
-    for (uint i = 0; i < svm_instructions; i++)
+    for (uint i = 0; i < svm_instructions; i++) {
         code[i] = calloc(sizeof(char), svm_max_width);
+
+        core_read_until(_fp, code[i], '\n');
+    }
 
     return code;
 }
