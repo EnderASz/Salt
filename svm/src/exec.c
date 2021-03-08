@@ -5,6 +5,7 @@
  */
 #include "../include/exec.h"
 #include "../include/os.h"
+#include "../include/utils.h"
 
 #include <time.h>
 
@@ -92,7 +93,7 @@ void exec_sleep(byte *data)
  */
 void exec_mkvar(byte *data)
 {
-    int *num = calloc(sizeof(int), 1);
+    int *num = alloc(sizeof(int), 1);
     *num = 123;
 
     SaltObject obj = salt_object_mkconst(SALT_INT, NULL, num);

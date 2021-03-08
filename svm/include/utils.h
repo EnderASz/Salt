@@ -9,6 +9,13 @@
 
 #include "object.h"
 
+/* Wrapper for the calloc function, checks if the memory has been allocated. 
+ *
+ * @_size:       size of each item
+ * @_elements:   amount of items
+ */
+void *alloc(uint _size, uint _elements);
+
 /* Print the contents of the object. This is basically a switch statement that
  * calls different static functions for each type of object.
  *

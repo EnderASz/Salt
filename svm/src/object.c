@@ -4,6 +4,7 @@
  * @author bellrise
  */
 #include "../include/object.h"
+#include "../include/utils.h"
 #include <string.h>
 #include <stdlib.h>
 
@@ -94,8 +95,8 @@ SaltObject salt_array_create(byte size, byte constant)
 {
     SaltObject obj = _salt_object_create(salt_id(), SALT_ARRAY, 0, 0, NULL,
                      NULL, 0, 0);
-    struct SaltArray *arr = malloc(sizeof(struct SaltArray));
-    arr->array = calloc(sizeof(SaltObject), size);
+    struct SaltArray *arr = alloc(sizeof(struct SaltArray), 1);
+    arr->array = alloc(sizeof(SaltObject), size);
     arr->space = size;
     arr->size  = 0;
 

@@ -79,10 +79,6 @@ int main(int argc, char **argv)
     preload(code);
     int ret = exec(code);
 
-    for (uint i = 0; i < salt_array_length(&salt_globals); i++) {
-        util_print_object(&(* (struct SaltArray*) salt_globals.data).array[i]);
-    }
-
     // Deallocate memory
     core_clean(code);
 

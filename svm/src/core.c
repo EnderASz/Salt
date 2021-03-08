@@ -4,6 +4,7 @@
  * @author bellrise
  */
 #include "../include/core.h"
+#include "../include/utils.h"
 #include <stdio.h>
 
 /* This is a useful macro for comparing the argument with the passed string. */
@@ -111,7 +112,7 @@ void core_load_header(FILE *_fp)
  */
 void core_load_strings(FILE *_fp)
 {
-    salt_const_strings = calloc(sizeof(SaltObject), svm_const_strings);
+    salt_const_strings = alloc(sizeof(SaltObject), svm_const_strings);
     
     uint strl;
     for (uint i = 0; i < svm_const_strings; i++) {
@@ -122,7 +123,7 @@ void core_load_strings(FILE *_fp)
         memcpy(salt_const_strings[i].typeinfo, (char *) &strl, 4);
         salt_const_strings[i].constant = 1;
         
-        salt_const_strings[i].data = calloc(sizeof(char), strl);
+        salt_const_strings[i].data = alloc(sizeof(char), strl);
         core_read_bytes(_fp, salt_const_strings[i].data, strl);
     
         // Replace 0x11 with newlines
@@ -178,9 +179,9 @@ void core_read_until(FILE *_fp, char *_str, char _c)
  */
 char **core_load_bytecode(FILE *_fp)
 {
-    char **code = calloc(sizeof(char *), svm_instructions);
+    char **code = alloc(sizeof(char *), svm_instructions);
     for (uint i = 0; i < svm_instructions; i++) {
-        code[i] = calloc(sizeof(char), svm_max_width);
+        code[i] = alloc(sizeof(char), svm_max_width);
 
         core_read_until(_fp, code[i], '\n');
     }
