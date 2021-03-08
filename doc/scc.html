@@ -1,0 +1,357 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>SCC Documentation</title>
+    <style>
+        body {
+            width: 50%;
+            margin: auto;
+            background-color: whitesmoke;
+        }
+        .svmcall, .label {
+            font-family: monospace;
+            background-color: wheat;
+            padding: 5px;
+            margin-top: 30px;
+        }
+        .label {
+            background-color: rgb(245, 200, 179);
+        }
+        .struct {
+            border-collapse: collapse;
+            width: 100%;
+            font-family: monospace;
+        }
+        .struct th, td {
+            border: 1px solid black;
+            padding: 8px;
+            text-align: left;
+        }
+        .struct tr:nth-child(even) {
+            background-color: rgb(236, 236, 236);
+        }
+        .struct tr:hover {
+            background-color: rgb(255, 255, 202);
+        }
+        .byte_list tr td:first-child, th:first-child {
+            width: 10%;
+        }
+    </style>
+    <script src="https://cdn.jsdelivr.net/gh/google/code-prettify@master/loader/run_prettify.js"></script>
+</head>
+<body>
+    <h1>
+        Salt Compiled Code (scc) documentation
+    </h1>
+    
+    <hr>
+    <p>
+        The Salt programming langauge is compiled to a SCC file before it gets executed, to
+        increase execution speeds and stability, because the compiled does a lot of validation
+        checks. This is the list of all current svm calls & labels.
+        <br>
+        Each SVM call (instruction), label & constant string is seperated with the <code>0x0a</code>
+        byte, also being the newline ASCII char. In order to still have access to the newline, all
+        <code>0x0a</code> bytes in strings must be replaced with <code>0x11</code> bytes, which
+        will then get converted to newlines.
+        <br>
+        Important note: <b>all object IDs created by the user must start from <code>0080 0000</code> 
+        (128)</b>. The first 127 object IDs are reserved by the SVM. Assigning an object to these
+        reserved IDs may cause unexpected problems.
+    </p>
+    
+    <h2>SCC Header</h2>
+    <p>
+        This 64-byte header is located at the beginning of every SCC file, contaning crucial 
+        information such as the SCC format version, the magic number, the amount of instructions
+        or const strings. Without it, executing Salt would be a lot harder.
+    </p>
+
+    <div id="s_header">
+        <table class="struct">
+            <tr>
+                <th>Offset</th>
+                <th>Bytes</th>
+                <th>Purpose</th>
+            </tr>
+            <tr>
+                <td><code>0</code></td>
+                <td><code>7f53 4343 ffee 0000</code></td>
+                <td>
+                    <code>SCC_HEADER</code>: magic string, indicates that this is indeed a SCC file.
+                </td>
+            </tr>
+            <tr>
+                <td><code>8</code></td>
+                <td><code>xxxx 0000 0000 0000</code></td>
+                <td>
+                    <code>SCC_VERSION</code>: format version
+                </td>
+            </tr>
+            <tr>
+                <td><code>16</code></td>
+                <td><code>xxxx xxxx 0000 0000</code></td>
+                <td>
+                    amount of instructions for allocating memory efficiently
+                </td>
+            </tr>
+            <tr>
+                <td><code>24</code></td>
+                <td><code>xxxx xxxx 0000 0000</code></td>
+                <td>
+                    amount of constant strings 
+                </td>
+            </tr>
+            <tr>
+                <td><code>32</code></td>
+                <td><code>xxxx xxxx 0000 0000</code></td>
+                <td>
+                    max instruction width; has to be a multiple of 16. 
+                </td>
+            </tr>
+            <tr>
+                <td><code>40</code></td>
+                <td><code>0000 0000 0000 0000<br>0000 0000 0000 0000</code></td>
+                <td>
+                    none (yet)
+                </td>
+            </tr>
+            <tr>
+                <td><code>56</code></td>
+                <td><code>7f7a 7b7c xxxx xx0a</code></td>
+                <td>
+                    compiler signature
+                </td>
+            </tr>
+            
+        </table>    
+    </div>
+    
+    <h2>Base types</h2>
+    <p>
+        These are the basic types the SVM currently accepts.
+    </p>
+
+    <div id="s_type">
+        <h2 class="wheat"></h2>
+        <table class="struct byte_list">
+            <tr>
+                <th>Byte</th>
+                <th>Type</th>
+            </tr>
+            <tr>
+                <td>0x00</td>
+                <td>null</td>
+            </tr>
+            <tr>
+                <td>0x01</td>
+                <td>int</td>
+            </tr>
+            <tr>
+                <td>0x02</td>
+                <td>float</td>
+            </tr>
+            <tr>
+                <td>0x03</td>
+                <td>bool</td>
+            </tr>
+            <tr>
+                <td>0x04</td>
+                <td>string</td>
+            </tr>
+            <tr>
+                <td>0x80</td>
+                <td>array</td>
+            </tr>
+        </table>
+    </div>
+
+    <br><hr>
+
+    <h2>Labels</h2>
+
+    <div id="s_$__init__">
+        <h2 class="label">@$__INIT__</h2>
+        <p>
+            Starting point of the program. This is called a label, which the Virtual
+            Machine can jump to. The initial dollar ($) sign makes the label a unique
+            label which there can only be one of.
+        </p>
+    </div>
+    
+    <div id="s_$__end__">
+        <h2 class="label">@$__END__</h2>
+        <p>
+            End label. When the SVM hits this line, it calls <code>core_clean()</code> and exits the program.
+        </p>
+    </div>
+
+    <div id="s_else">
+        <h2 class="label">@ELSE</h2>
+        <p>
+            This label shows the next closes jump-to location if the if statement returns
+            false. This is used in the virtual machine to make quick and efficient jumps
+            to a further point in code, because all the locations of the else tags are
+            preloaded before execution. This allows to use a binary search algorithm to
+            find the closest jump.
+        </p>
+    </div>
+
+    <hr>
+    <h2>SVM Calls</h2>
+    <p>
+        Each byte is marked with 2 "exes".
+    </p>
+
+    <div id="s_dumpi">
+        <h2 class="svmcall">DUMPI id</h2>
+        <p>
+            Print the ID of the object (without a newline).
+        </p>
+        <table class="struct">
+            <tr>
+                <td>xxxx xxxx</td>
+            </tr>
+                <td>uint id: object id</td>
+        </table>
+    </div>
+
+    <div id="s_dumpv">
+        <h2 class="svmcall">DUMPV id</h2>
+        <p>
+            Print the value of the object to standard out (without a newline). Note that this
+            is based on a switch case statement reading the type of the object to call the correct
+            function, so it's a lot slower than just calling <code><a href="#s_print">PRINT</a></code>.
+        </p>
+        <table class="struct">
+            <tr>
+                <td>xxxx xxxx</td>
+            </tr>
+                <td>uint id: object id</td>
+        </table>
+    </div>
+
+    <div id="s_extld">
+        <h2 class="svmcall">EXTLD strl ...</h2>
+        <p>
+            Load external dynamic library.
+        </p>
+        <table class="struct">
+            <tr>
+                <td>xxxx xxxx</td>
+                <td>...</td>
+            </tr>
+                <td>uint strl: length of string</td>
+                <td>payload</td>
+        </table>
+    </div>
+
+    <div id="s_killx">
+        <h2 class="svmcall">KILLX</h2>
+        <p>
+            Brutally kill the program and all its threads stopping the execution and immediately calling
+            <code>core_clean</code>. Note that this is not the preffered way of stopping code execution.
+        </p>
+    </div>
+
+    <div id="s_print">
+        <h2 class="svmcall">PRINT id</h2>
+        <p>
+            Print a constant string to standard out. This is the preffered way of printing
+            constant strings, because it is much faster compared to calling 
+            <code><a href="#s_dumpv">DUMPV</a></code>.
+        </p>
+        <table class="struct">
+            <tr>
+                <td>xxxx xxxx</td>
+            </tr>
+                <td>uint id: const string id</td>
+        </table>
+    </div>
+
+    <div id="s_sleep">
+        <h2 class="svmcall">SLEEP ms</h2>
+        <p>
+            Sleep the given amount of miliseconds.
+        </p>
+        <table class="struct">
+            <tr>
+                <td>xxxx xxxx</td>
+            </tr>
+                <td>uint ms: amount of miliseconds</td>
+        </table>
+    </div>
+
+    <div id="s_rxcpy">
+        <h2 class="svmcall">RXCPY dest src</h2>
+        <p>
+            Create a new object with the specified destination id and copy the object 
+            from the source id to it.
+        </p>
+        <table class="struct">
+            <tr>
+                <td>xxxx xxxx</td>
+                <td>xxxx xxxx</td>
+            </tr>
+                <td>uint dest: destination id</td>
+                <td>uint src: source id</td>
+        </table>
+    </div>
+
+    <div id="s_rxdel">
+        <h2 class="svmcall">RXDEL id</h2>
+        <p>
+            Delete the object by freeing the allocated memory for the value and removing
+            the ID from the register.
+        </p>
+        <table class="struct">
+            <tr>
+                <td>xxxx xxxx</td>
+            </tr>
+                <td>uint id: object id</td>
+        </table>
+    </div>
+
+    <div id="s_rxnew">
+        <h2 class="svmcall">RXNEW id const type val</h2>
+        <p>
+            Create a new object and allocate a sufficent amount of memory.
+        </p>
+        <table class="struct">
+            <tr>
+                <td>xxxx xxxx</td>
+                <td>xx</td>
+                <td>xx</td>
+                <td>xxxx xxxx</td>
+            </tr>
+                <td>uint id: object id</td>
+                <td>byte const: 0x01 for const object, else 0x00</td>
+                <td>byte <a href="#s_type">type</a></td>
+                <td>int val</td>
+        </table>
+    </div>
+
+    <div id="s_rxset">
+        <h2 class="svmcall">RXSET id type [strl] ...</h2>
+        <p>
+            Assign a new value to the object.
+        </p>
+        <table class="struct">
+            <tr>
+                <td>xxxx xxxx</td>
+                <td>xx</td>
+                <td>xxxx xxxx</td>
+                <td>...</td>
+            </tr>
+                <td>uint id: destination object id</td>
+                <td>byte <a href="#s_type">type</a></td>
+                <td>uint strl: string length only if type is string</td>
+                <td>payload</td>
+        </table>
+    </div>
+
+    <footer style="height: 100px;"></footer>
+
+</body>
+</html>
