@@ -9,3 +9,6 @@ test.*
 
 # Compiled files
 *.scc
+
+# Programming enviroments
+.vscode/
