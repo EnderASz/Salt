@@ -3,13 +3,13 @@
 MAIN   = svm.c
 RESULT = svm
 
-C_SOURCES = $(shell find src -name \*.c | sed 's/src\///' | tr '\n' ' ') 
-OBJECTS = $(foreach var,$(C_SOURCES),build/objects/$(var).o) 
+SOURCES = $(shell find src -name \*.c | sed 's/src\///' | tr '\n' ' ') 
+OBJECTS = $(foreach var,$(SOURCES),build/objects/$(var).o) 
 
 OPT = -O
 
 # Execute all the steps
-all: directories objects final
+all: directories $(SOURCES) final
 
 # Clean after compilation, moving the compiled result to
 # the top folder.
@@ -19,13 +19,16 @@ clean:
 
 # Create all the needed directories.
 directories:
-	mkdir -p build
+	# Creating directories
 	mkdir -p build/objects
 
 # Compile all sources to object files
-objects:
-	$(foreach var,$(C_SOURCES),gcc -c -o build/objects/$(var).o src/$(var);)
+$(SOURCES):
+	gcc -c -o build/objects/$@.o src/$@
 
 # Compile and link the main file
 final:
+	# Final compilation step
 	gcc $(OPT) -o build/$(RESULT) $(MAIN) $(OBJECTS)
+	
+	# ----- Done ----- 	

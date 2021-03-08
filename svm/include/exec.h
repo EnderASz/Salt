@@ -48,8 +48,13 @@ void preload(char **code);
 /* Print the constant string. 
  *
  * @data: the first 4 bytes indicate the constant string ID
- *
  */
 void exec_prntr(byte *data);
+
+/* Sleep the given amount of miliseconds. 
+ *
+ * @data: the first 4 bytes are the time you want to sleep
+ */
+void exec_sleep(byte *data);
 
 #endif // EXEC_H_

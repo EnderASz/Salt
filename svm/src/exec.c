@@ -4,13 +4,17 @@
  * @author bellrise
  */
 #include "../include/exec.h"
+#include "../include/os.h"
+
+#include <time.h>
 
 /* Constant list of function pointers */
 const struct SaltExec salt_execs[] = {
-    {"PRNTR", exec_prntr}
+    {"PRNTR", exec_prntr},
+    {"SLEEP", exec_sleep}
 };
 
-static short salt_execs_l = 1;
+static short salt_execs_l = 2;
 
 /* Locations of the start and finish labels */
 uint exec_label_init = 0;
@@ -30,8 +34,9 @@ int exec(char **code)
 
         for (short j = 0; j < salt_execs_l; j++) {
             
-            if (strncmp(salt_execs[j].instruction, code[i], 4) == 0) {
-                salt_execs[j].f_exec((byte *) (code[i] + 5));
+            if (strncmp(salt_execs[j].instruction, code[i], 5) == 0) {
+                printf("Calling %s\n", salt_execs[j].instruction);
+                salt_execs[j].f_exec((byte *) code[i] + 5);
                 break;
             }
 
@@ -60,15 +65,35 @@ void preload(char **code)
         }
 
     }
+
+    printf("$__INIT__: %d\n", exec_label_init);
+    printf("$__END__: %d\n", exec_label_end);
 }
 
 /* Print the constant string. 
  *
  * @data: the first 4 bytes indicate the constant string ID
- *
  */
 void exec_prntr(byte *data)
 {
     uint pos = * (uint *) data - 1;
     printf("%s", (char *) salt_const_strings[pos].data);
+}
+
+/* Sleep the given amount of miliseconds. 
+ *
+ * @data: the first 4 bytes are the time you want to sleep
+ */
+void exec_sleep(byte *data)
+{
+    // struct timespec now, end;
+    // clock_gettime(CLOCK_THREAD_CPUTIME_ID, &end);
+    // end.tv_nsec += 1000000 * * (uint *) data;
+
+    // while ((end.tv_nsec + end.tv_sec * 1000000000)
+    //     >= (now.tv_nsec + now.tv_sec * 1000000000)) {
+    //     clock_gettime(CLOCK_THREAD_CPUTIME_ID, &now);
+    // }
+    printf("sleeping for: %d\n", * (uint *) data);
+    os_sleep(* (uint *) data); 
 }
