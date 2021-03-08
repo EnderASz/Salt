@@ -11,9 +11,9 @@
 
 /* Constant list of function pointers */
 const struct SaltExec salt_execs[] = {
-    {"PRNTR", exec_prntr},
+    {"PRINT", exec_print},
     {"SLEEP", exec_sleep},
-    {"MKVAR", exec_mkvar}
+    {"KILLX", exec_killx}
 };
 
 static short salt_execs_l = 3;
@@ -34,13 +34,20 @@ int exec(char **code)
 {
     for (uint i = exec_label_init + 1; i != exec_label_end; i++) {
 
+        /* the signal exec will recieve from any SaltExec function */
+        byte signal;
+
         for (short j = 0; j < salt_execs_l; j++) {
             
             if (strncmp(salt_execs[j].instruction, code[i], 5) == 0) {
-                salt_execs[j].f_exec((byte *) code[i] + 5);
+                signal = salt_execs[j].f_exec((byte *) code[i] + 5);
                 break;
             }
 
+        }
+
+        if (signal == EXEC_SIGKILL) {
+            return 1;
         }
 
     }
@@ -68,34 +75,63 @@ void preload(char **code)
     }
 }
 
+/* Print the ID of the object (without a newline).
+ *
+ * @data id
+ */
+byte exec_dumpi(byte *data)
+{
+    uint id = * (uint *) data;
+    uint oid = ((struct SaltArray *) salt_globals.data)->array[id].id;
+
+    printf("%d", oid);
+
+    return EXEC_SIGPASS;
+}
+
+/* Print the value of the object to standard out (without a newline). Note that
+ * this is based on a switch case statement reading the type of the object to 
+ * call the correct function, so it's a lot slower than just calling PRINT.
+ *
+ * @data id
+ */
+byte exec_dumpv(byte *data)
+{
+    uint id = * (uint *) data;
+
+    util_print_object(&((struct SaltArray *) salt_globals.data)->array[id]);
+
+    return EXEC_SIGPASS;
+}
+
+/* Kill all threads and immediately exit the program calling core_clean().
+ *
+ * @data  none
+ */
+byte exec_killx(byte *data)
+{
+    return EXEC_SIGKILL;   
+}
+
 /* Print the constant string. 
  *
  * @data: the first 4 bytes indicate the constant string ID
  */
-void exec_prntr(byte *data)
+byte exec_print(byte *data)
 {
     uint pos = * (uint *) data - 1;
     fputs((char *) salt_const_strings[pos].data, stdout);
+
+    return EXEC_SIGPASS;
 }
 
 /* Sleep the given amount of miliseconds. 
  *
  * @data: the first 4 bytes are the time you want to sleep
  */
-void exec_sleep(byte *data)
+byte exec_sleep(byte *data)
 {
     os_sleep(* (uint *) data); 
-}
 
-/* Create a new variable in the current scope.
- *
- * @data: the variable type, name and content
- */
-void exec_mkvar(byte *data)
-{
-    int *num = alloc(sizeof(int), 1);
-    *num = 123;
-
-    SaltObject obj = salt_object_mkconst(SALT_INT, NULL, num);
-    salt_array_append(salt_globals.data, obj);
+    return EXEC_SIGPASS;
 }
