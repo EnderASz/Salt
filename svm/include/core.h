@@ -32,11 +32,11 @@
 #define SCC_HEADER_VERSION "\x01\x00\x00\x00"
 
 /* Core error macro, print the error message and exit. */
-#define CORE_ERROR(...)             \
-    {                               \
-        printf("[svm] Error: ");    \
-        printf(__VA_ARGS__);        \
-        exit(1);                    \
+#define CORE_ERROR(...)         \
+    {                           \
+        printf("[svm]: ");      \
+        printf(__VA_ARGS__);    \
+        exit(1);                \
     }
 
 // TYPES
@@ -65,6 +65,9 @@ extern uint svm_max_width;
 /* Array of constant strings */
 extern SaltObject *salt_const_strings;
 
+/* Global variables */
+extern SaltObject salt_globals;
+
 /* Parse the command line arguments and set special flags defined here so they
  * can be accessed anywhere.
  * 
@@ -77,6 +80,11 @@ char *core_parse_args(int argc, char **argv);
 
 /* Show the help page and exit the program. */
 void core_show_help();
+
+/* Initialize some global variables and registers. Be sure to call this before
+ * calling exec or preload. 
+ */
+void core_init();
 
 /* Read & load the header file contents to the global variables. While reading,
  * validate information in the header and optionally exit the program with a
@@ -120,5 +128,12 @@ void core_read_until(FILE *_fp, char *_str, char _c);
  * returns: pointer to allocated area for the bytecode to sit in
  */
 char **core_load_bytecode(FILE *_fp);
+
+/* Deallocate all memory and close any open file pointers. It is very important
+ * to call this before exiting the program.
+ *
+ * @bytecode  bytecode to deallocate
+ */
+void core_clean(char **bytecode);
 
 #endif // CORE_H_

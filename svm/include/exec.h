@@ -57,4 +57,10 @@ void exec_prntr(byte *data);
  */
 void exec_sleep(byte *data);
 
+/* Create a new variable in the current scope.
+ *
+ * @data: the variable type, name and content
+ */
+void exec_mkvar(byte *data);
+
 #endif // EXEC_H_

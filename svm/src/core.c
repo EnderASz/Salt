@@ -33,6 +33,9 @@ uint svm_max_width = 0;
 /* Array of constant strings */
 SaltObject *salt_const_strings;
 
+/* Global variables */
+SaltObject salt_globals;
+
 /* Parse the command line arguments and set special flags defined here so they
  * can be accessed anywhere.
  * 
@@ -65,6 +68,14 @@ void core_show_help()
     "  FILE        compiled Salt code (scc) file",
     "  -h, --help  show this page and exit");
     exit(1);
+}
+
+/* Initialize some global variables and registers. Be sure to call this before
+ * calling exec or preload. 
+ */
+void core_init()
+{
+    salt_globals = salt_array_create(SALT_ARRAY_EXP, 0);
 }
 
 /* Read & load the header file contents to the global variables. While reading,
@@ -175,4 +186,27 @@ char **core_load_bytecode(FILE *_fp)
     }
 
     return code;
+}
+
+/* Initialize some global variables and registers. Be sure to call this before
+ * calling exec or preload. 
+ *
+ * @bytecode  bytecode to deallocate
+ */
+void core_clean(char **bytecode)
+{
+    struct SaltArray globals = * (struct SaltArray *) salt_globals.data;
+    for (uint i = 0; i < globals.space; i++) {
+        free(globals.array[i].data);
+    }
+    free(globals.array);
+
+
+    for (uint i = 0; i < svm_instructions; i++) {
+        free(bytecode[i]);
+    }
+    free(bytecode);
+
+    free(salt_const_strings);
+
 }

@@ -11,10 +11,11 @@
 /* Constant list of function pointers */
 const struct SaltExec salt_execs[] = {
     {"PRNTR", exec_prntr},
-    {"SLEEP", exec_sleep}
+    {"SLEEP", exec_sleep},
+    {"MKVAR", exec_mkvar}
 };
 
-static short salt_execs_l = 2;
+static short salt_execs_l = 3;
 
 /* Locations of the start and finish labels */
 uint exec_label_init = 0;
@@ -35,7 +36,6 @@ int exec(char **code)
         for (short j = 0; j < salt_execs_l; j++) {
             
             if (strncmp(salt_execs[j].instruction, code[i], 5) == 0) {
-                printf("Calling %s\n", salt_execs[j].instruction);
                 salt_execs[j].f_exec((byte *) code[i] + 5);
                 break;
             }
@@ -65,9 +65,6 @@ void preload(char **code)
         }
 
     }
-
-    printf("$__INIT__: %d\n", exec_label_init);
-    printf("$__END__: %d\n", exec_label_end);
 }
 
 /* Print the constant string. 
@@ -77,7 +74,7 @@ void preload(char **code)
 void exec_prntr(byte *data)
 {
     uint pos = * (uint *) data - 1;
-    printf("%s", (char *) salt_const_strings[pos].data);
+    fputs((char *) salt_const_strings[pos].data, stdout);
 }
 
 /* Sleep the given amount of miliseconds. 
@@ -86,14 +83,18 @@ void exec_prntr(byte *data)
  */
 void exec_sleep(byte *data)
 {
-    // struct timespec now, end;
-    // clock_gettime(CLOCK_THREAD_CPUTIME_ID, &end);
-    // end.tv_nsec += 1000000 * * (uint *) data;
-
-    // while ((end.tv_nsec + end.tv_sec * 1000000000)
-    //     >= (now.tv_nsec + now.tv_sec * 1000000000)) {
-    //     clock_gettime(CLOCK_THREAD_CPUTIME_ID, &now);
-    // }
-    printf("sleeping for: %d\n", * (uint *) data);
     os_sleep(* (uint *) data); 
+}
+
+/* Create a new variable in the current scope.
+ *
+ * @data: the variable type, name and content
+ */
+void exec_mkvar(byte *data)
+{
+    int *num = calloc(sizeof(int), 1);
+    *num = 123;
+
+    SaltObject obj = salt_object_mkconst(SALT_INT, NULL, num);
+    salt_array_append(salt_globals.data, obj);
 }

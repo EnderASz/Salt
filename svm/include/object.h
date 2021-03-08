@@ -12,11 +12,16 @@ typedef unsigned int  uint;
 typedef unsigned char byte; 
 
 /* This is a list of built-in Salt object types. */
-#define SALT_NULL   0x00;
-#define SALT_INT    0x01;
-#define SALT_FLOAT  0x02; 
-#define SALT_STRING 0x03;
-#define SALT_BOOL   0x04;
+#define SALT_NULL   0x00
+#define SALT_INT    0x01
+#define SALT_FLOAT  0x02 
+#define SALT_STRING 0x03
+#define SALT_BOOL   0x04
+
+#define SALT_ARRAY  0x80
+
+/* How much additional memory should the array allocate on each allocation */
+#define SALT_ARRAY_EXP 16
 
 /* The SaltObject structure type is a universal data container used everywhere
  in Salt to hold any type of data. This is achieved by leaving space for a void
@@ -52,6 +57,20 @@ typedef struct _salt_object_st { // (32)
     uint    scope_id;
 
 } SaltObject;
+
+/* This stores an dynamic array of SaltObjects. Use the functions that come 
+ with this because it supports dynamic allocation. */
+struct SaltArray { // (16)
+
+    /* current size of array */
+    uint         size;
+
+    /* allocated space */
+    uint        space;
+
+    SaltObject *array;
+
+};
 
 /* Global ID of salt objects. The initial value of this is 100, leaving space
  for system variables ranging from 0 to 100. */
@@ -100,5 +119,28 @@ SaltObject salt_object_mkconst(byte type, byte *typeinfo, void *data);
  * returns: length of the string
  */
 uint salt_object_strlen(SaltObject *obj);
+
+/* Create a new Salt array with the specified parameters.
+ *
+ * @size      initial size of the array
+ * @constant  additional information about the type
+ *
+ * returns: new salt object of type SALT_ARRAY
+ */
+SaltObject salt_array_create(byte size, byte constant);
+
+/* Append a single object to the array. This copies the object data so you
+ * can safely use local variables to append.
+ *
+ * @array   pointer to array
+ * @data    data to add
+ */
+void salt_array_append(struct SaltArray *array, SaltObject data);
+
+/* Return the length of the Salt array.
+ *
+ * @obj  pointer to salt object
+ */
+uint salt_array_length(SaltObject *obj);
 
 #endif // OBJECT_H_

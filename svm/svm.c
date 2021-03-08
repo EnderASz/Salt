@@ -47,6 +47,12 @@
 #include "include/core.h"
 #include "include/object.h"
 #include "include/exec.h"
+#include "include/utils.h"
+
+/* This string will show up in the compiled version of SVM which you can then
+ grep to, checking the format. */
+const char *svm_version_string = "SVM: format 1";
+
 
 int main(int argc, char **argv)
 {
@@ -59,15 +65,26 @@ int main(int argc, char **argv)
     if (!fp)
         CORE_ERROR("Cannot read file\n");
 
+    // Load code
     core_load_header(fp);
     core_load_strings(fp);
-
     char **code = core_load_bytecode(fp);
 
     fclose(fp);
 
+    // Initialize variables
+    core_init();
+
+    // Execute
     preload(code);
     int ret = exec(code);
+
+    for (uint i = 0; i < salt_array_length(&salt_globals); i++) {
+        util_print_object(&(* (struct SaltArray*) salt_globals.data).array[i]);
+    }
+
+    // Deallocate memory
+    core_clean(code);
 
     return ret;
 }

@@ -5,6 +5,7 @@
  */
 #include "../include/object.h"
 #include <string.h>
+#include <stdlib.h>
 
 /* Global ID of salt objects. The initial value of this is 100, leaving space
  for system variables ranging from 0 to 100. */
@@ -80,4 +81,53 @@ SaltObject salt_object_mkconst(byte type, byte *typeinfo, void *data)
 uint salt_object_strlen(SaltObject *obj)
 {
     return * (uint *) obj->typeinfo;
+}
+
+/* Create a new Salt array with the specified parameters.
+ *
+ * @size      initial size of the array
+ * @constant  additional information about the type
+ *
+ * returns: new salt object of type SALT_ARRAY
+ */
+SaltObject salt_array_create(byte size, byte constant)
+{
+    SaltObject obj = _salt_object_create(salt_id(), SALT_ARRAY, 0, 0, NULL,
+                     NULL, 0, 0);
+    struct SaltArray *arr = malloc(sizeof(struct SaltArray));
+    arr->array = calloc(sizeof(SaltObject), size);
+    arr->space = size;
+    arr->size  = 0;
+
+    obj.data = arr;
+
+    return obj;
+}
+
+/* Append a single object to the array. This copies the object data so you
+ * can safely use local variables to append.
+ *
+ * @array   pointer to array
+ * @data    data to add
+ */
+void salt_array_append(struct SaltArray *array, SaltObject data)
+{
+    if (array->space <= array->size) {
+        array->array = realloc(array->array, sizeof(SaltObject) 
+                       * (array->space + 16));
+
+        array->space += 1;
+    }   
+
+    array->array[array->size] = data;
+    array->size++;
+}
+
+/* Return the length of the Salt array.
+ *
+ * @obj  pointer to salt object
+ */
+uint salt_array_length(SaltObject *obj)
+{
+    return (* (struct SaltArray *) obj->data).size;
 }
