@@ -12,6 +12,7 @@
 
 /* Signals that get sent to exec */
 #define EXEC_SIGPASS    0x00
+#define EXEC_SIGERR     0x01
 #define EXEC_SIGKILL    0xFF
 
 /* The SaltExec structure holds the 5 character instruction and the pointer to
@@ -79,10 +80,37 @@ byte exec_killx(byte *data);
  */
 byte exec_print(byte *data);
 
-/* Sleep the given amount of miliseconds. 
+/* Create a new object with the specified destination id and copy the object
+ * from the source id to it.
  *
  * @data ms
  */
 byte exec_sleep(byte *data);
+
+/* Create a new object with the specified destination id and copy the object
+ * from the source id to it.
+ *
+ * @data dest src
+ */
+byte exec_rxcpy(byte *data);
+
+/* Delete the object by freeing the allocated memory for the value and removing
+ * the ID from the register.
+ *
+ * @data id
+ */
+byte exec_rxdel(byte *data);
+
+/* Create a new object in the register.
+ *
+ * @data id const type val
+ */
+byte exec_rxnew(byte *data);
+
+/* Assign a new value to the object.
+ *
+ * @data id type [strl] ...
+ */
+byte exec_rxset(byte *data);
 
 #endif // EXEC_H_

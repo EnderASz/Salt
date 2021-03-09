@@ -9,8 +9,11 @@
 
 #include <time.h>
 
-/* Constant list of function pointers */
+/* Constant list of function pointers. */
 const struct SaltExec salt_execs[] = {
+    {"RXNEW", exec_rxnew},
+    {"RXSET", exec_rxset},
+    {"RXDEL", exec_rxdel},
     {"DUMPV", exec_dumpv},
     {"PRINT", exec_print},
     {"SLEEP", exec_sleep},
@@ -18,15 +21,15 @@ const struct SaltExec salt_execs[] = {
     {"KILLX", exec_killx}
 };
 
-static short salt_execs_l = 5;
+static short salt_execs_l = 8;
 
 /* Locations of the start and finish labels */
 uint exec_label_init = 0;
 uint exec_label_end  = 0;
 
 /* The main execution loop. Executes the instructions passed in the bytecode
- * by reading the 5 first characters as the instruction and finding the correct
- * function in salt_execs. */
+ by reading the 5 first characters as the instruction and finding the correct
+ function in salt_execs. */
 int exec(char **code)
 {
     for (uint i = exec_label_init + 1; i != exec_label_end; i++) {
@@ -43,9 +46,11 @@ int exec(char **code)
 
         }
 
-        if (signal == EXEC_SIGKILL) {
+        if (signal == EXEC_SIGPASS)
+            printf("svm: exec_ failed\n");
+
+        if (signal == EXEC_SIGKILL)
             return 1;
-        }
 
     }
 
@@ -53,7 +58,7 @@ int exec(char **code)
 }
 
 /* Preload the bytecode meaning: find the $__INIT__ and $__END__ labels, as well
- * as all else labels for faster access. */
+ as all else labels for faster access. */
 void preload(char **code)
 {
     for (uint i = 0; i < svm_instructions; i++) {
@@ -81,8 +86,8 @@ byte exec_dumpi(byte *data)
 }
 
 /* Print the value of the object to standard out (without a newline). Note that
- * this is based on a switch case statement reading the type of the object to 
- * call the correct function, so it's a lot slower than just calling PRINT. */
+ this is based on a switch case statement reading the type of the object to 
+ call the correct function, so it's a lot slower than just calling PRINT. */
 byte exec_dumpv(byte *data)
 {
     uint id = * (uint *) data;
@@ -111,6 +116,72 @@ byte exec_print(byte *data)
 byte exec_sleep(byte *data)
 {
     os_sleep(* (uint *) data); 
+
+    return EXEC_SIGPASS;
+}
+
+/* Create a new object with the specified destination id and copy the object
+ from the source id to it. */
+byte exec_rxcpy(byte *data)
+{
+    SaltObject new_ = *xregister_find(* (uint *) data);
+    new_.id = * (uint *) data;
+
+    xregister_add(new_);
+
+    return EXEC_SIGPASS;
+}
+
+/* Delete the object by freeing the allocated memory for the value and removing
+ the ID from the register. */
+byte exec_rxdel(byte *data)
+{
+    xregister_remove(* (uint *) data);
+
+    return EXEC_SIGPASS;
+}
+
+/* Create a new object in the register. */
+byte exec_rxnew(byte *data)
+{
+    uint id     = * (uint *) data;
+    byte const_ = *          data + 8;
+    byte type   = *          data + 9;
+
+    SaltObject obj = salt_object_create(id, type, PERM_USER, 0, NULL, 
+                     NULL, 0, 0);
+
+    void *val;
+    if (type == SALT_STRING) {
+        val = util_generate_data(type, data + 14); 
+        memcpy(obj.typeinfo, data + 10, 4);
+    }
+    else {
+        val = util_generate_data(type, data + 10);
+    }
+
+    obj.data = val;
+
+    xregister_add(obj);
+
+    return EXEC_SIGPASS;
+}
+
+/* Assign a new value to the object. */
+byte exec_rxset(byte *data)
+{
+    uint id   = * (uint *) data;
+    byte type = *          data + 8; 
+
+    // TODO: other types
+    int *val = alloc(sizeof(int), 1);
+
+    SaltObject *obj = xregister_find(id);
+    if (obj->type != type)
+        return EXEC_SIGERR;
+
+    free(obj->data);
+    obj->data = val;
 
     return EXEC_SIGPASS;
 }

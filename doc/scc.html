@@ -314,7 +314,7 @@
     </div>
 
     <div id="s_rxnew">
-        <h2 class="svmcall">RXNEW id const type val</h2>
+        <h2 class="svmcall">RXNEW id const type [strl] ...</h2>
         <p>
             Create a new object and allocate a sufficent amount of memory.
         </p>
@@ -324,11 +324,13 @@
                 <td>xx</td>
                 <td>xx</td>
                 <td>xxxx xxxx</td>
+                <td>...</td>
             </tr>
                 <td>uint id: object id</td>
                 <td>byte const: 0x01 for const object, else 0x00</td>
                 <td>byte <a href="#s_type">type</a></td>
-                <td>int val</td>
+                <td>uint strl: string length only if type is string</td>
+                <td>payload</td>
         </table>
     </div>
 

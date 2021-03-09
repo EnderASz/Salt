@@ -70,6 +70,7 @@ extern SaltObject *salt_const_strings;
 
 /* Global register */
 extern struct SaltArray xregister;
+extern SaltObject       xnullptr;
 
 /* Parse the command line arguments and set special flags defined here so they
  * can be accessed anywhere.
@@ -139,12 +140,25 @@ char **core_load_bytecode(FILE *_fp);
  */
 void core_clean(char **bytecode);
 
+/* Add a object to the register. The blacklisted IDs range from 0000 0000 (0)
+ * to 0080 0000 (128).
+ *
+ * @_obj  object to add
+ */
+void xregister_add(SaltObject _obj);
+
+/* Remove object from register by ID.
+ *
+ * @_id   id of the object
+ */
+void xregister_remove(uint _id);
+
 /* Returns the SaltObject with the given register.
  *
- * @id  id of the object to look up
+ * @_id  id of the object to look up
  *
  * returns: pointer to object in register, NULL if not found
  */
-SaltObject *xregister_find(uint id);
+SaltObject *xregister_find(uint _id);
 
 #endif // CORE_H_

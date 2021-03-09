@@ -32,6 +32,16 @@ uint util_pow(uint _num, short _exp);
  */
 void util_print_object(SaltObject *_obj);
 
+/* Generate data from the given type and pointer, returning a pointer to the 
+ * allocated data. 
+ *
+ * @_type   type of the object
+ * @_data   pointer to the bytes
+ *
+ * returns: void pointer to allocated data
+ */
+void *util_generate_data(byte _type, void *_data);
+
 /* Subroutine for printing an int object
  *
  * @_obj the object of type int

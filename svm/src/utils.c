@@ -31,19 +31,59 @@ uint util_pow(uint _num, short _exp)
 }
 
 /* Print the contents of the object. This is basically a switch statement that
- * calls different static functions for each type of object. */
+ calls different static functions for each type of object. */
 void util_print_object(SaltObject *_obj)
 {
     switch (_obj->type) {
         
-        case SALT_INT:
-            _util_print_int(_obj);
-            break;
+    case SALT_INT:
+        _util_print_int(_obj);
+        break;
 
-        default:
-            printf("Cannot print object type %02hhx\n", _obj->type);
+    default:
+        printf("Cannot print object type %02hhx\n", _obj->type);
+    
     }
 }
+
+/* Generate data from the given type and pointer, returning a pointer to the 
+ allocated data. */
+void *util_generate_data(byte _type, void *_data)
+{
+    void *ptr;
+    switch (_type) {
+    
+    case SALT_INT:
+        ptr = alloc(sizeof(int), 1);
+        * (int *) ptr = * (int *) _data;
+        break;
+
+    case SALT_FLOAT:
+        ptr = alloc(sizeof(float), 1);
+        * (float *) ptr = * (float *) _data;
+        break;
+    
+    case SALT_STRING:
+        ptr = alloc(sizeof(char), * (uint *) _data);
+        strncpy(ptr, _data + 4, * (uint *) _data);
+        break;
+
+    case SALT_NULL:
+        ptr = NULL;
+        break;
+
+    case SALT_BOOL:
+        ptr = alloc(sizeof(byte), 1);
+        * (byte *) ptr = * (byte *) _data;
+        break;
+
+    default:
+        CORE_ERROR("unknown data type when creating object\n");
+
+    }
+    return ptr;
+}
+
 
 /* Subroutine for printing an int object */
 inline void _util_print_int(SaltObject *_obj)

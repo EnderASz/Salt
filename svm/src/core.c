@@ -29,9 +29,10 @@ uint svm_max_width = 0;
 SaltObject *salt_const_strings;
 
 struct SaltArray xregister;
+SaltObject       xnullptr;
 
 /* Parse the command line arguments and set special flags defined here so they
- * can be accessed anywhere. */
+ can be accessed anywhere. */
 char *core_parse_args(int argc, char **argv)
 {
     if (argc < 2)
@@ -77,15 +78,16 @@ void core_show_help()
 }
 
 /* Initialize some global variables and registers. Be sure to call this before
- * calling exec or preload. */
+ calling exec or preload. */
 void core_init()
 {
     xregister = salt_array_create(svm_xregister_size + 128, 0);
+    xnullptr = salt_object_create(0, SALT_NULL, 0, 1, NULL, NULL, 0, 0);
 }
 
 /* Read & load the header file contents to the global variables. While reading,
- * validate information in the header and optionally exit the program with a
- * fatal error if something is incorrect. */
+ validate information in the header and optionally exit the program with a
+ fatal error if something is incorrect. */
 void core_load_header(FILE *_fp)
 {
     char header[64];
@@ -107,7 +109,7 @@ void core_load_header(FILE *_fp)
 }
 
 /* Read & load all constant strings from the top of the file and puts the into 
- * the SaltObject constant string array (salt_cstrings). */
+ the SaltObject constant string array (salt_cstrings). */
 void core_load_strings(FILE *_fp)
 {
     salt_const_strings = alloc(sizeof(SaltObject), svm_const_strings);
@@ -137,7 +139,7 @@ void core_load_strings(FILE *_fp)
 }
 
 /* Read n amount of bytes from the file and place them in the string array.
- * This takes the string length for granted. */
+ This takes the string length for granted. */
 void core_read_bytes(FILE *_fp, char *_str, uint _n)
 {
     for (uint i = 0; i < _n; i++)
@@ -145,7 +147,7 @@ void core_read_bytes(FILE *_fp, char *_str, uint _n)
 }
 
 /* Similar to core_read_bytes, it reads the file pushing the characters into 
- * the C string until it finds the _c char. */
+ the C string until it finds the _c char. */
 void core_read_until(FILE *_fp, char *_str, char _c)
 {
     for (uint i = 0 ;; i++) {
@@ -158,8 +160,8 @@ void core_read_until(FILE *_fp, char *_str, char _c)
 }
 
 /* Read & load the bytecode from the scc file. This must be executed after
- * core_load_header, because of the global variables it sets and also moves the
- * file cursor 64 bytes forward. */
+ core_load_header, because of the global variables it sets and also moves the
+ file cursor 64 bytes forward. */
 char **core_load_bytecode(FILE *_fp)
 {
     char **code = alloc(sizeof(char *), svm_instructions);
@@ -173,7 +175,7 @@ char **core_load_bytecode(FILE *_fp)
 }
 
 /* Initialize some global variables and registers. Be sure to call this before
- * calling exec or preload. */
+ calling exec or preload. */
 void core_clean(char **bytecode)
 {
     for (uint i = 0; i < xregister.space; i++) {
@@ -189,6 +191,35 @@ void core_clean(char **bytecode)
 
     free(salt_const_strings);
 
+}
+
+/* Add a object to the register. The blacklisted IDs range from 0000 0000 (0)
+ to 0080 0000 (128). */
+void xregister_add(SaltObject _obj)
+{
+    if (_obj.id <= 128)
+        CORE_ERROR("failed to add object to xreg\n");
+
+    if (xregister.space <= xregister.size) {
+        xregister.array = realloc(&xregister, sizeof(SaltObject) 
+                       * (xregister.space + svm_xregister_size));
+
+        xregister.space += xregister.size + svm_xregister_size;
+    }   
+
+    xregister.array[xregister.size] = _obj;
+    xregister.size++;
+}
+
+/* Remove object from register by ID. */
+void xregister_remove(uint _id)
+{
+    for (uint i = 0; i < xregister.size; i++) {
+        if (xregister.array[i].id == _id) {
+            free(xregister.array[i].data);
+            xregister.array[i] = xnullptr;
+        }
+    }
 }
 
 /* Returns the SaltObject with the given register. */

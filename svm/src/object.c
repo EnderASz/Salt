@@ -21,9 +21,9 @@ uint salt_id()
 
 
 /* The full method for creating a brand new Salt Object. Defines all the fields
- * which it can assign to. This method is private because it should be called
- * using other wrapper functions that are much easier to use. */
-SaltObject _salt_object_create(uint id, byte type, byte permission, 
+ which it can assign to. This method is private because it should be called
+ using other wrapper functions that are much easier to use. */
+SaltObject salt_object_create(uint id, byte type, byte permission, 
            byte constant, byte *typeinfo, void *data, uint mutex_id,
            uint scope_id)
 {
@@ -47,7 +47,7 @@ SaltObject _salt_object_create(uint id, byte type, byte permission,
 /* Create a new constant variable from the passed information. */
 SaltObject salt_object_mkconst(byte type, byte *typeinfo, void *data)
 {
-    return _salt_object_create(salt_id(), type, 0, 1, typeinfo, data, 0, 0);
+    return salt_object_create(salt_id(), type, 0, 1, typeinfo, data, 0, 0);
 }
 
 /* Cast the typeinfo of the SaltObject into a uint. */

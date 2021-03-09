@@ -20,6 +20,10 @@ typedef unsigned char byte;
 
 #define SALT_ARRAY  0x80
 
+/* Permission levels */
+#define PERM_USER   0
+#define PERM_SVM    1
+
 /* The SaltObject structure type is a universal data container used everywhere
  in Salt to hold any type of data. This is achieved by leaving space for a void
  pointer, which you can then dereference to get the data. */
@@ -95,9 +99,9 @@ uint salt_object_id();
  * 
  * returns: brand new SaltObject
  */
-static SaltObject _salt_object_create(uint id, byte type, byte permission, 
-                  byte constant, byte *typeinfo, void *data, uint mutex_id,
-                  uint scope_id);
+SaltObject salt_object_create(uint id, byte type, byte permission, 
+           byte constant, byte *typeinfo, void *data, uint mutex_id,
+           uint scope_id);
 
 /* Create a new constant variable from the passed information.
  *
