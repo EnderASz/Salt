@@ -20,9 +20,6 @@ typedef unsigned char byte;
 
 #define SALT_ARRAY  0x80
 
-/* How much additional memory should the array allocate on each allocation */
-#define SALT_ARRAY_EXP 16
-
 /* The SaltObject structure type is a universal data container used everywhere
  in Salt to hold any type of data. This is achieved by leaving space for a void
  pointer, which you can then dereference to get the data. */
@@ -127,7 +124,7 @@ uint salt_object_strlen(SaltObject *obj);
  *
  * returns: new salt object of type SALT_ARRAY
  */
-SaltObject salt_array_create(byte size, byte constant);
+struct SaltArray salt_array_create(byte size, byte constant);
 
 /* Append a single object to the array. This copies the object data so you
  * can safely use local variables to append.

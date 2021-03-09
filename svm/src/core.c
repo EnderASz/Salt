@@ -6,36 +6,29 @@
 #include "../include/core.h"
 #include "../include/utils.h"
 #include <stdio.h>
+#include <string.h>
 
 /* This is a useful macro for comparing the argument with the passed string. */
-#define CORE_ARGS_CMP(STR, LONG, SHORT)  \
-       (strcmp(STR, LONG) == 0)          \
-    || (strcmp(STR, SHORT) == 0)
+#define CORE_ARGS_CMP(STR, LONG, SHORT)           \
+       (strncmp(STR, LONG, strlen(LONG)) == 0)    \
+    || (strncmp(STR, SHORT, strlen(SHORT)) == 0)
 
 
 // FLAGS
 
 char FLAG_HELP = 0;
 
+uint svm_xregister_size = 16;
+
 // GLOBALS
 
-/* The amount of instructions core_load_bytecode needs to allocate space for.
- This helps to speed up the compiler to not overallocate nor underallocate,
- so it's generally faster and more memory efficient. */
 uint svm_instructions = 0;
-
-/* The amount of constant strings the vm needs to allocate space for. Again, 
- this is for optimazation. */
 uint svm_const_strings = 0;
-
-/* Maximum width of a single instruction provided by the compiler. */
 uint svm_max_width = 0;
 
-/* Array of constant strings */
 SaltObject *salt_const_strings;
 
-/* Global variables */
-SaltObject salt_globals;
+struct SaltArray xregister;
 
 /* Parse the command line arguments and set special flags defined here so they
  * can be accessed anywhere.
@@ -50,24 +43,42 @@ char *core_parse_args(int argc, char **argv)
     if (argc < 2)
         CORE_ERROR("not enough arguments, try --help\n");
 
+    char *filename;
+
     for (short i = 0; i < argc; i++) {
 
         if (CORE_ARGS_CMP(argv[i], "--help", "-h"))
             FLAG_HELP = 1;
-    
+
+        else if (CORE_ARGS_CMP(argv[i], "--xregsize", "-x")) {
+            i++;
+            if (i >= argc)
+                CORE_ERROR("xregsize requires an argument\n");
+
+            uint size = str_to_uint(argv[i]);
+            if (!size) {
+                CORE_ERROR("xregsize requires an uint\n");
+            }
+            svm_xregister_size = size;
+        }
+
+        else 
+            filename = argv[i];
+
     }
 
     // TOOD: This should not be position locked.
-    return argv[1];
+    return filename;
 }
 
 /* Show the help page and exit the program. */
 void core_show_help()
 {
-    printf("%s\n%s\n\n%s\n%s\n", "Usage: svm FILE [OPTION]...",
-    "Execute compiled Salt code.",
-    "  FILE        compiled Salt code (scc) file",
-    "  -h, --help  show this page and exit");
+    printf("Usage: svm FILE [OPTION]...\n"
+    "Execute compiled Salt code.\n\n"
+    "  FILE           compiled Salt code (scc) file\n"
+    "  -h, --help     show this page and exit\n"
+    "  -x, --xregsize initial xregister size. default 16\n");
     exit(1);
 }
 
@@ -76,7 +87,7 @@ void core_show_help()
  */
 void core_init()
 {
-    salt_globals = salt_array_create(SALT_ARRAY_EXP, 0);
+    xregister = salt_array_create(svm_xregister_size + 128, 0);
 }
 
 /* Read & load the header file contents to the global variables. While reading,
@@ -196,11 +207,10 @@ char **core_load_bytecode(FILE *_fp)
  */
 void core_clean(char **bytecode)
 {
-    struct SaltArray globals = * (struct SaltArray *) salt_globals.data;
-    for (uint i = 0; i < globals.space; i++) {
-        free(globals.array[i].data);
+    for (uint i = 0; i < xregister.space; i++) {
+        free(xregister.array[i].data);
     }
-    free(globals.array);
+    free(xregister.array);
 
 
     for (uint i = 0; i < svm_instructions; i++) {
@@ -210,4 +220,19 @@ void core_clean(char **bytecode)
 
     free(salt_const_strings);
 
+}
+
+/* Returns the SaltObject with the given register.
+ *
+ * @id  id of the object to look up
+ *
+ * returns: pointer to object in register, NULL if not found
+ */
+SaltObject *xregister_find(uint id)
+{
+    for (uint i = 0; i < xregister.size; i++) {
+        if (id == xregister.array[i].id)
+            return &xregister.array[i];
+    }
+    return NULL;
 }

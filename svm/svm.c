@@ -48,6 +48,7 @@
 #include "include/object.h"
 #include "include/exec.h"
 #include "include/utils.h"
+#include "include/os.h"
 
 /* This string will show up in the compiled version of SVM which you can then
  grep to, checking the format. */
@@ -74,7 +75,7 @@ int main(int argc, char **argv)
 
     // Initialize variables
     core_init();
-
+    
     // Execute
     preload(code);
     int ret = exec(code);

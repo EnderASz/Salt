@@ -34,7 +34,7 @@
 /* Core error macro, print the error message and exit. */
 #define CORE_ERROR(...)         \
     {                           \
-        printf("[svm]: ");      \
+        printf("svm: ");        \
         printf(__VA_ARGS__);    \
         exit(1);                \
     }
@@ -47,6 +47,9 @@ typedef unsigned int  uint;
 // FLAGS
 
 extern char FLAG_HELP;
+
+/* initial xregister size */
+extern uint svm_xregister_size;
 
 // GLOBALS
 
@@ -65,8 +68,8 @@ extern uint svm_max_width;
 /* Array of constant strings */
 extern SaltObject *salt_const_strings;
 
-/* Global variables */
-extern SaltObject salt_globals;
+/* Global register */
+extern struct SaltArray xregister;
 
 /* Parse the command line arguments and set special flags defined here so they
  * can be accessed anywhere.
@@ -135,5 +138,13 @@ char **core_load_bytecode(FILE *_fp);
  * @bytecode  bytecode to deallocate
  */
 void core_clean(char **bytecode);
+
+/* Returns the SaltObject with the given register.
+ *
+ * @id  id of the object to look up
+ *
+ * returns: pointer to object in register, NULL if not found
+ */
+SaltObject *xregister_find(uint id);
 
 #endif // CORE_H_

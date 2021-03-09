@@ -11,12 +11,14 @@
 
 /* Constant list of function pointers */
 const struct SaltExec salt_execs[] = {
+    {"DUMPV", exec_dumpv},
     {"PRINT", exec_print},
     {"SLEEP", exec_sleep},
+    {"DUMPI", exec_dumpi},
     {"KILLX", exec_killx}
 };
 
-static short salt_execs_l = 3;
+static short salt_execs_l = 5;
 
 /* Locations of the start and finish labels */
 uint exec_label_init = 0;
@@ -82,7 +84,7 @@ void preload(char **code)
 byte exec_dumpi(byte *data)
 {
     uint id = * (uint *) data;
-    uint oid = ((struct SaltArray *) salt_globals.data)->array[id].id;
+    uint oid = xregister.array[id].id;
 
     printf("%d", oid);
 
@@ -99,7 +101,7 @@ byte exec_dumpv(byte *data)
 {
     uint id = * (uint *) data;
 
-    util_print_object(&((struct SaltArray *) salt_globals.data)->array[id]);
+    util_print_object(&xregister.array[id]);
 
     return EXEC_SIGPASS;
 }

@@ -91,18 +91,14 @@ uint salt_object_strlen(SaltObject *obj)
  *
  * returns: new salt object of type SALT_ARRAY
  */
-SaltObject salt_array_create(byte size, byte constant)
+struct SaltArray salt_array_create(byte size, byte constant)
 {
-    SaltObject obj = _salt_object_create(salt_id(), SALT_ARRAY, 0, 0, NULL,
-                     NULL, 0, 0);
-    struct SaltArray *arr = alloc(sizeof(struct SaltArray), 1);
-    arr->array = alloc(sizeof(SaltObject), size);
-    arr->space = size;
-    arr->size  = 0;
+    struct SaltArray arr;
+    arr.array = alloc(sizeof(SaltObject), size);
+    arr.space = size;
+    arr.size  = 0;
 
-    obj.data = arr;
-
-    return obj;
+    return arr;
 }
 
 /* Append a single object to the array. This copies the object data so you
