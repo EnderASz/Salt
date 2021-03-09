@@ -9,11 +9,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-/* Wrapper for the calloc function, checks if the memory has been allocated. 
- *
- * @_size:       size of each item
- * @_elements:   amount of items
- */
+/* Wrapper for the calloc function, checks if the memory has been allocated. */
 void *alloc(uint _size, uint _elements)
 {
     void *ptr = calloc(_size, _elements);
@@ -24,13 +20,7 @@ void *alloc(uint _size, uint _elements)
     return ptr;
 }
 
-/* Raise the number to the given exponential
- *
- * @_num    number to raise
- * @_exp    exponential
- *
- * returns: power
- */
+/* Raise the number to the given exponential */
 uint util_pow(uint _num, short _exp)
 {
     uint base = _num;
@@ -41,10 +31,7 @@ uint util_pow(uint _num, short _exp)
 }
 
 /* Print the contents of the object. This is basically a switch statement that
- * calls different static functions for each type of object.
- *
- * @_obj: object to print
- */
+ * calls different static functions for each type of object. */
 void util_print_object(SaltObject *_obj)
 {
     switch (_obj->type) {
@@ -58,21 +45,13 @@ void util_print_object(SaltObject *_obj)
     }
 }
 
-/* Subroutine for printing an int object
- *
- * @_obj: the object of type int
- */
+/* Subroutine for printing an int object */
 inline void _util_print_int(SaltObject *_obj)
 {
     printf("%d", * (int *) _obj->data);
 }
 
-/* Cast the passed string to a uint.
- *
- * @_str string with only numbers
- *
- * returns: uint or 0 if fails
- */
+/* Cast the passed string to a uint. */
 uint str_to_uint(char *_str)
 {
     uint total = 0;

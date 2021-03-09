@@ -31,13 +31,7 @@ SaltObject *salt_const_strings;
 struct SaltArray xregister;
 
 /* Parse the command line arguments and set special flags defined here so they
- * can be accessed anywhere.
- * 
- * @argc amount of arguments
- * @argv array of (strings) arguments 
- *
- * returns: filename of the script
- */
+ * can be accessed anywhere. */
 char *core_parse_args(int argc, char **argv)
 {
     if (argc < 2)
@@ -83,8 +77,7 @@ void core_show_help()
 }
 
 /* Initialize some global variables and registers. Be sure to call this before
- * calling exec or preload. 
- */
+ * calling exec or preload. */
 void core_init()
 {
     xregister = salt_array_create(svm_xregister_size + 128, 0);
@@ -92,10 +85,7 @@ void core_init()
 
 /* Read & load the header file contents to the global variables. While reading,
  * validate information in the header and optionally exit the program with a
- * fatal error if something is incorrect.
- *
- * @_fp: file pointer to the scc file 
- */
+ * fatal error if something is incorrect. */
 void core_load_header(FILE *_fp)
 {
     char header[64];
@@ -117,10 +107,7 @@ void core_load_header(FILE *_fp)
 }
 
 /* Read & load all constant strings from the top of the file and puts the into 
- * the SaltObject constant string array (salt_cstrings).
- *
- * @_fp: file pointer to the scc file
- */
+ * the SaltObject constant string array (salt_cstrings). */
 void core_load_strings(FILE *_fp)
 {
     salt_const_strings = alloc(sizeof(SaltObject), svm_const_strings);
@@ -150,12 +137,7 @@ void core_load_strings(FILE *_fp)
 }
 
 /* Read n amount of bytes from the file and place them in the string array.
- * This takes the string length for granted.
- *
- * @_fp:  file pointer to read from
- * @_str: memory allocated string
- * @_n:   amount of bytes
- */
+ * This takes the string length for granted. */
 void core_read_bytes(FILE *_fp, char *_str, uint _n)
 {
     for (uint i = 0; i < _n; i++)
@@ -163,12 +145,7 @@ void core_read_bytes(FILE *_fp, char *_str, uint _n)
 }
 
 /* Similar to core_read_bytes, it reads the file pushing the characters into 
- * the C string until it finds the _c char. 
- * 
- * @_fp:  file pointer to read from
- * @_str: memory allocated string
- * @_c:   the char to stop at
- */
+ * the C string until it finds the _c char. */
 void core_read_until(FILE *_fp, char *_str, char _c)
 {
     for (uint i = 0 ;; i++) {
@@ -182,12 +159,7 @@ void core_read_until(FILE *_fp, char *_str, char _c)
 
 /* Read & load the bytecode from the scc file. This must be executed after
  * core_load_header, because of the global variables it sets and also moves the
- * file cursor 64 bytes forward.
- *
- * @_fp: file pointer to the scc file
- *
- * returns: pointer to allocated area for the bytecode to sit in
- */
+ * file cursor 64 bytes forward. */
 char **core_load_bytecode(FILE *_fp)
 {
     char **code = alloc(sizeof(char *), svm_instructions);
@@ -201,10 +173,7 @@ char **core_load_bytecode(FILE *_fp)
 }
 
 /* Initialize some global variables and registers. Be sure to call this before
- * calling exec or preload. 
- *
- * @bytecode  bytecode to deallocate
- */
+ * calling exec or preload. */
 void core_clean(char **bytecode)
 {
     for (uint i = 0; i < xregister.space; i++) {
@@ -222,12 +191,7 @@ void core_clean(char **bytecode)
 
 }
 
-/* Returns the SaltObject with the given register.
- *
- * @id  id of the object to look up
- *
- * returns: pointer to object in register, NULL if not found
- */
+/* Returns the SaltObject with the given register. */
 SaltObject *xregister_find(uint id)
 {
     for (uint i = 0; i < xregister.size; i++) {

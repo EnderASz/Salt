@@ -26,12 +26,7 @@ uint exec_label_end  = 0;
 
 /* The main execution loop. Executes the instructions passed in the bytecode
  * by reading the 5 first characters as the instruction and finding the correct
- * function in salt_execs.
- *
- * @code: loaded bytecode
- *
- * returns: return code
- */
+ * function in salt_execs. */
 int exec(char **code)
 {
     for (uint i = exec_label_init + 1; i != exec_label_end; i++) {
@@ -58,10 +53,7 @@ int exec(char **code)
 }
 
 /* Preload the bytecode meaning: find the $__INIT__ and $__END__ labels, as well
- * as all else labels for faster access.
- *
- * @code: loaded bytecode
- */
+ * as all else labels for faster access. */
 void preload(char **code)
 {
     for (uint i = 0; i < svm_instructions; i++) {
@@ -77,10 +69,7 @@ void preload(char **code)
     }
 }
 
-/* Print the ID of the object (without a newline).
- *
- * @data id
- */
+/* Print the ID of the object (without a newline). */
 byte exec_dumpi(byte *data)
 {
     uint id = * (uint *) data;
@@ -93,10 +82,7 @@ byte exec_dumpi(byte *data)
 
 /* Print the value of the object to standard out (without a newline). Note that
  * this is based on a switch case statement reading the type of the object to 
- * call the correct function, so it's a lot slower than just calling PRINT.
- *
- * @data id
- */
+ * call the correct function, so it's a lot slower than just calling PRINT. */
 byte exec_dumpv(byte *data)
 {
     uint id = * (uint *) data;
@@ -106,19 +92,13 @@ byte exec_dumpv(byte *data)
     return EXEC_SIGPASS;
 }
 
-/* Kill all threads and immediately exit the program calling core_clean().
- *
- * @data  none
- */
+/* Kill all threads and immediately exit the program calling core_clean(). */
 byte exec_killx(byte *data)
 {
     return EXEC_SIGKILL;   
 }
 
-/* Print the constant string. 
- *
- * @data: the first 4 bytes indicate the constant string ID
- */
+/* Print the constant string. */
 byte exec_print(byte *data)
 {
     uint pos = * (uint *) data - 1;
@@ -127,10 +107,7 @@ byte exec_print(byte *data)
     return EXEC_SIGPASS;
 }
 
-/* Sleep the given amount of miliseconds. 
- *
- * @data: the first 4 bytes are the time you want to sleep
- */
+/* Sleep the given amount of miliseconds. */
 byte exec_sleep(byte *data)
 {
     os_sleep(* (uint *) data); 
