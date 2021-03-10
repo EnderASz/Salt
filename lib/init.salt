@@ -1,19 +1,21 @@
-// This is the globals Salt module, which is imported before any program.
-// All functions from here are put in the global field container, not in
-// a different module like any other does.
-//
-// @author bellrise, 2021
+#[ 
+    This is the globals Salt module, which is imported before any program.
+    All functions from here are put in the global field container, not in
+    a different module like any other does.
 
-// Virtual machine definitions
+    @author bellrise, 2021 
+]#
+
+# Virtual machine definition
 public internal int     __SVM_ERRNO__
 public internal string  __SVM_ERRSTR__
 public internal         __SVM_JMP__(point: string) -> null {}
 public internal         __SVM_IST__(lvl: int) -> string[] {}
 public internal         __SVM_THROW__() -> null {}
 
-// Exit the program from any point. Calls the SVM jump instruction, jumping
-// to the end of the program exiting it.
-public exit() -> null
-{
-    __SVM_JMP__("$__END__");
-}
+#[ Exit the program by sending a jump to $__END__ instruction to the Virtual
+ machine. ]#
+public internal         exit() -> null {}
+
+#[ Sleep the passed amount of miliseconds. ]#
+public internal         sleep(ms: int) -> null {}

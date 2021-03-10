@@ -45,9 +45,20 @@
  * @version  0.1
  */
 #include "include/core.h"
+#include "include/object.h"
+#include "include/exec.h"
+#include "include/utils.h"
+#include "include/os.h"
+#include "include/except.h"
+
+/* This string will show up in the compiled version of SVM which you can then
+ grep to, checking the format. */
+const char *svm_version_string = "SVM: format 1";
+
 
 int main(int argc, char **argv)
 {
+    dprintf("[!] USING DEBUG SVM BUILD, DO NOT USE IN PRODUCTION\n");
     char *filename = core_parse_args(argc, argv);
 
     if (FLAG_HELP)
@@ -57,8 +68,22 @@ int main(int argc, char **argv)
     if (!fp)
         CORE_ERROR("Cannot read file\n");
 
+    // Load code
     core_load_header(fp);
+    core_load_strings(fp);
     char **code = core_load_bytecode(fp);
 
     fclose(fp);
+
+    // Initialize variables
+    core_init();
+ 
+    // Execute
+    preload(code);
+    int ret = exec(code);
+
+    // Deallocate memory
+    core_clean(code);
+
+    return ret;
 }

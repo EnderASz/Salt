@@ -14,6 +14,8 @@
 #include <string.h>
 #include <stdio.h>
 
+#include "object.h"
+
 /* Architecture the program is compiled on. On Windows this is usually set to
  32-bit by default, so to properly align structures you need to add padding
  depending if the pointer size is 8 bytes or 4 bytes. Also, sucks to be a MacOs
@@ -30,26 +32,37 @@
 #define SCC_HEADER_VERSION "\x01\x00\x00\x00"
 
 /* Core error macro, print the error message and exit. */
-#define CORE_ERROR(...)             \
-    {                               \
-        printf("[svm] Error: ");    \
-        printf(__VA_ARGS__);        \
-        exit(1);                    \
+#define CORE_ERROR(...)         \
+    {                           \
+        printf("svm: ");        \
+        printf(__VA_ARGS__);    \
+        exit(1);                \
     }
 
 // TYPES
 
 typedef unsigned char byte;
+typedef unsigned int  uint;
 
 // FLAGS
 
+/* help page flag */
 extern char FLAG_HELP;
+
+/* overwrite */
+extern char FLAG_UNSAFE;
+
+/* max memory flag */
+extern uint svm_max_mem;
+
+/* initial xregister size */
+extern uint svm_xregister_size;
 
 // GLOBALS
 
-/* Global ID of salt objects. The initial value of this is 100, leaving space
- for system variables ranging from 0 to 100. */
-extern uint salt_id_counter;
+/* Amount of bytes the SVM has allocated (outside of its own code). This is 
+ tracked by vmalloc. */
+extern unsigned long long svm_allocated;
 
 /* The amount of instructions core_load_bytecode needs to allocate space for.
  This helps to speed up the compiler to not overallocate nor underallocate,
@@ -63,11 +76,27 @@ extern uint svm_const_strings;
 /* Maximum width of a single instruction provided by the compiler. */
 extern uint svm_max_width;
 
-/* Get a unique ID for every newly created object.
+/* Array of constant strings */
+extern SaltObject *salt_const_strings;
+
+/* Global variable register. This is possible because the compiler actually
+ * takes care of the variable scopes and always (should) provide the proper
+ * SaltObject IDs. core_init is responsible for allocating the initial size
+ * of the xregister. 
  *
- * returns: unique ID
+ * When creating a new SaltObject, the functions responsible for appending
+ * data to the xregister control check if the creator is PERM_USER and the
+ * ID is 128 or lower and do not allow that. That means that the first 128
+ * objects are SVM objects.
+ * 
+ * SVM Objects (by index, starting from 0)
+ * 
+ * 9    (string) error title
+ * 10   (string) error message
+ *
  */
-uint salt_id();
+extern struct SaltArray xregister;
+extern SaltObject       xnullptr;
 
 /* Parse the command line arguments and set special flags defined here so they
  * can be accessed anywhere.
@@ -82,6 +111,11 @@ char *core_parse_args(int argc, char **argv);
 /* Show the help page and exit the program. */
 void core_show_help();
 
+/* Initialize some global variables and registers. Be sure to call this before
+ * calling exec or preload. 
+ */
+void core_init();
+
 /* Read & load the header file contents to the global variables. While reading,
  * validate information in the header and optionally exit the program with a
  * fatal error if something is incorrect.
@@ -89,6 +123,31 @@ void core_show_help();
  * @_fp: file pointer to the scc file 
  */
 void core_load_header(FILE *_fp);
+
+/* Read & load all constant strings from the top of the file and puts the into 
+ * the SaltObject constant string array (salt_cstrings).
+ *
+ * @_fp: file pointer to the scc file
+ */
+void core_load_strings(FILE *_fp);
+
+/* Read n amount of bytes from the file and place them in the string array.
+ * This takes the string length for granted.
+ *
+ * @_fp:  file pointer to read from
+ * @_str: memory allocated string
+ * @_n:   amount of bytes
+ */
+void core_read_bytes(FILE *_fp, char *_str, uint _n);
+
+/* Similar to core_read_bytes, it reads the file pushing the characters into 
+ * the C string until it finds the _c char. 
+ * 
+ * @_fp:  file pointer to read from
+ * @_str: memory allocated string
+ * @_c:   the char to stop at
+ */
+void core_read_until(FILE *_fp, char *_str, char _c);
 
 /* Read & load the bytecode from the scc file. This must be executed after
  * core_load_header, because of the global variables it sets and also moves the
@@ -99,5 +158,35 @@ void core_load_header(FILE *_fp);
  * returns: pointer to allocated area for the bytecode to sit in
  */
 char **core_load_bytecode(FILE *_fp);
+
+/* Deallocate all memory and close any open file pointers. It is very important
+ * to call this before exiting the program.
+ *
+ * @bytecode  bytecode to deallocate
+ */
+void core_clean(char **bytecode);
+
+/* Add a object to the register. The blacklisted IDs range from 0000 0000 (0)
+ * to 0080 0000 (128).
+ *
+ * @_obj    object to add
+ * @_perm   who is creating the object
+ */
+void xregister_add(SaltObject _obj, int _perm);
+
+/* Remove object from register by ID.
+ *
+ * @_id   id of the object
+ */
+void xregister_remove(uint _id);
+
+/* Returns the SaltObject with the given register.
+ *
+ * @_id  id of the object to look up
+ *
+
+ * returns: pointer to object in register, NULL if not found
+ */
+SaltObject *xregister_find(uint _id);
 
 #endif // CORE_H_
