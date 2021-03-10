@@ -33,10 +33,8 @@ uint svm_max_width = 0;
 SaltObject *salt_const_strings;
 
 struct SaltArray xregister;
-SaltObject       xnullptr;
+SaltObject xnullptr;
 
-/* Parse the command line arguments and set special flags defined here so they
- can be accessed anywhere. */
 char *core_parse_args(int argc, char **argv)
 {
     if (argc < 2)
@@ -60,11 +58,9 @@ char *core_parse_args(int argc, char **argv)
 
     }
 
-    // TOOD: This should not be position locked.
     return filename;
 }
 
-/* Show the help page and exit the program. */
 void core_show_help()
 {
     printf("Usage: svm FILE [OPTION]...\n"
@@ -76,20 +72,15 @@ void core_show_help()
     exit(1);
 }
 
-/* Initialize some global variables and registers. Be sure to call this before
- calling exec or preload. */
 void core_init()
 {
     xregister = salt_array_create(svm_xregister_size + 128, 0);
-    xnullptr = salt_object_create(0, SALT_NULL, 0, 1, NULL, NULL, 0, 0);
+    xnullptr  = salt_object_create(0, SALT_NULL, 0, 1, NULL, NULL, 0, 0);
 
     dprintf("Loaded xregister with size %d\n", svm_xregister_size);
     dprintf("Defined max memory: %d\n", svm_max_mem);
 }
 
-/* Read & load the header file contents to the global variables. While reading,
- validate information in the header and optionally exit the program with a
- fatal error if something is incorrect. */
 void core_load_header(FILE *_fp)
 {
     char header[64];
@@ -110,8 +101,6 @@ void core_load_header(FILE *_fp)
     svm_max_width         = * (uint *) (header + 32);
 }
 
-/* Read & load all constant strings from the top of the file and puts the into 
- the SaltObject constant string array (salt_cstrings). */
 void core_load_strings(FILE *_fp)
 {
     salt_const_strings = vmalloc(sizeof(SaltObject), svm_const_strings);
@@ -140,16 +129,12 @@ void core_load_strings(FILE *_fp)
     }
 }
 
-/* Read n amount of bytes from the file and place them in the string array.
- This takes the string length for granted. */
 void core_read_bytes(FILE *_fp, char *_str, uint _n)
 {
     for (uint i = 0; i < _n; i++)
         _str[i] = fgetc(_fp);
 }
 
-/* Similar to core_read_bytes, it reads the file pushing the characters into 
- the C string until it finds the _c char. */
 void core_read_until(FILE *_fp, char *_str, char _c)
 {
     for (uint i = 0 ;; i++) {
@@ -161,9 +146,6 @@ void core_read_until(FILE *_fp, char *_str, char _c)
     }
 }
 
-/* Read & load the bytecode from the scc file. This must be executed after
- core_load_header, because of the global variables it sets and also moves the
- file cursor 64 bytes forward. */
 char **core_load_bytecode(FILE *_fp)
 {
     char **code = vmalloc(sizeof(char *), svm_instructions);
@@ -176,38 +158,40 @@ char **core_load_bytecode(FILE *_fp)
     return code;
 }
 
-/* Initialize some global variables and registers. Be sure to call this before
- calling exec or preload. */
 void core_clean(char **bytecode)
 {
     dprintf("Cleaning core\n");
+    
+    // xregister
     for (uint i = 0; i < xregister.space; i++) {
         vmfree(xregister.array[i].data, util_get_size(&xregister.array[i]));
     }
     vmfree(xregister.array, xregister.space * sizeof(SaltObject));
 
+    // Bytecode
     for (uint i = 0; i < svm_instructions; i++) {
         vmfree(bytecode[i], svm_max_width);
     }
     vmfree(bytecode, svm_instructions * sizeof(char *));
 
+    // Const strings
     unsigned long cstrings = 0;
     for (uint i = 0; i < svm_const_strings; i++) {
-        vmfree(salt_const_strings[i].data, strlen(salt_const_strings[i].data));
+        vmfree(salt_const_strings[i].data, 
+               salt_object_strlen(&salt_const_strings[i]));
     }
     vmfree(salt_const_strings, svm_const_strings * sizeof(SaltObject));
+
 
     if (svm_allocated > 0)
         dprintf("Memory leak of %lld bytes\n", svm_allocated);
 
 }
 
-/* Add a object to the register. The blacklisted IDs range from 0000 0000 (0)
- to 0080 0000 (128). */
 void xregister_add(SaltObject _obj)
 {
     if (_obj.id <= 128)
-        CORE_ERROR("failed to add object to xreg\n");
+        CORE_ERROR("failed to add object to xregister\n");
 
     if (xregister.space <= xregister.size) {
         xregister.array = realloc(&xregister, sizeof(SaltObject) 
@@ -220,7 +204,6 @@ void xregister_add(SaltObject _obj)
     xregister.size++;
 }
 
-/* Remove object from register by ID. */
 void xregister_remove(uint _id)
 {
     SaltObject *obj = xregister_find(_id);
@@ -228,7 +211,6 @@ void xregister_remove(uint _id)
     *obj = xnullptr;
 }
 
-/* Returns the SaltObject with the given register. */
 SaltObject *xregister_find(uint id)
 {
     for (uint i = 0; i < xregister.size; i++) {

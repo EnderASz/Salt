@@ -10,10 +10,12 @@ OPT = -O
 
 # Execute all the steps
 all: directories $(SOURCES) final
+	# --- Done ---
 .PHONY: all
 
 # Build a debug mode
 debug: directories debug-setup $(SOURCES) final debug-clean
+	# --- Done ---
 .PHONY: debug
 
 # Setup the debug define in utils  
@@ -26,6 +28,7 @@ debug-setup:
 # Clean after the debug
 debug-clean:
 	mv build/utils.h.clean include/utils.h
+	# Built debug version
 .PHONY: debug-clean
 
 # Clean after compilation, moving the compiled result to
@@ -49,6 +52,5 @@ $(SOURCES):
 final:
 	# Final compilation step
 	gcc $(OPT) -o build/$(RESULT) $(MAIN) $(OBJECTS)
-	
-	# ----- Done ----- 	
+	# Build production version
 .PHONY: final

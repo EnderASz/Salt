@@ -9,7 +9,6 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-/* Wrapper for the calloc function, checks if the memory has been allocated. */
 void *vmalloc(uint _size, uint _elements)
 {
     svm_allocated += _size * _elements;
@@ -26,15 +25,12 @@ void *vmalloc(uint _size, uint _elements)
     return ptr;
 }
 
-/* Free the given pointer and remove the amount of bytes from the total stack
- */
 void vmfree(void *_ptr, uint _size)
 {
     svm_allocated -= _size;
     free(_ptr);
 }
 
-/* Raise the number to the given exponential */
 uint util_pow(uint _num, short _exp)
 {
     uint base = _num;
@@ -43,7 +39,7 @@ uint util_pow(uint _num, short _exp)
     }
     return _num;
 }
-/* Pull the next argument from the pos location. */
+
 uint util_arg_uint(int _argc, char **_argv, int *_pos, char *_field)
 {
     (*_pos)++;
@@ -60,8 +56,6 @@ uint util_arg_uint(int _argc, char **_argv, int *_pos, char *_field)
     return size;
 }
 
-/* Print the contents of the object. This is basically a switch statement that
- calls different static functions for each type of object. */
 void util_print_object(SaltObject *_obj)
 {
     switch (_obj->type) {
@@ -76,8 +70,6 @@ void util_print_object(SaltObject *_obj)
     }
 }
 
-/* Generate data from the given type and pointer, returning a pointer to the 
- allocated data. */
 void *util_generate_data(byte _type, void *_data)
 {
     void *ptr;
@@ -114,7 +106,6 @@ void *util_generate_data(byte _type, void *_data)
     return ptr;
 }
 
-/* Return size of allocated payload */
 uint util_get_size(SaltObject *_obj)
 {
     switch (_obj->type) {
@@ -133,13 +124,11 @@ uint util_get_size(SaltObject *_obj)
     return -1;
 }
 
-/* Subroutine for printing an int object */
 inline void _util_print_int(SaltObject *_obj)
 {
     printf("%d", * (int *) _obj->data);
 }
 
-/* Cast the passed string to a uint. */
 uint str_to_uint(char *_str)
 {
     uint total = 0;

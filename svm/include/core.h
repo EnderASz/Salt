@@ -46,6 +46,7 @@ typedef unsigned int  uint;
 
 // FLAGS
 
+/* help page flag */
 extern char FLAG_HELP;
 
 /* max memory flag */

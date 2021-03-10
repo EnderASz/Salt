@@ -81,10 +81,6 @@ int main(int argc, char **argv)
     preload(code);
     int ret = exec(code);
 
-    for (uint i = 0; i < xregister.size; i++) {
-        printf("variable %d of type %02hhx\n", xregister.array[i].id, xregister.array[i].type);
-    }
-
     // Deallocate memory
     core_clean(code);
 
