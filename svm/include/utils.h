@@ -1,4 +1,5 @@
 #define DEBUG
+#define DEBUG
 /**
  * The utils module contains several functions mostly for printing data to 
  * standard out.
@@ -24,6 +25,16 @@
  * @_elements   amount of items
  */
 void *vmalloc(uint _size, uint _elements);
+
+/* Wrapper for the realloc function, counts memory.
+ *
+ * @_ptr      pointer to memory
+ * @_initial  memory size (before)
+ * @_new      new size
+ *
+ * returns: pointer to the new memory
+ */
+void *vmrealloc(void *_ptr, uint _initial, uint _new);
 
 /* Free the given pointer and remove the amount of bytes from the total stack
  *

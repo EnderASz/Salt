@@ -35,6 +35,22 @@ void *vmalloc(uint _size, uint _elements)
     return ptr;
 }
 
+void *vmrealloc(void *_ptr, uint _initial, uint _new)
+{
+    svm_allocated = svm_allocated - _initial + _new;
+    dprintf("vmrealloc(%d)\n", _new);
+
+    if (svm_max_mem)
+        if (svm_allocated > svm_max_mem)
+            CORE_ERROR("MemoryException: out of memory\n");
+
+    void *ptr = realloc(_ptr, _new);
+    if (ptr == NULL)
+        CORE_ERROR("Failed to reallocate memory\n");
+
+    return ptr;
+}
+
 void vmfree(void *_ptr, uint _size)
 {
     svm_allocated -= _size;
