@@ -73,16 +73,6 @@ struct SaltArray { // (16)
 
 };
 
-/* Global ID of salt objects. The initial value of this is 100, leaving space
- for system variables ranging from 0 to 100. */
-extern uint salt_id_counter;
-
-/* Get a unique ID for every newly created object.
- *
- * returns: unique ID
- */
-uint salt_object_id();
-
 /* The full method for creating a brand new Salt Object. Defines all the fields
  * which it can assign to. This method is private because it should be called
  * using other wrapper functions that are much easier to use.
@@ -111,7 +101,18 @@ SaltObject salt_object_create(uint id, byte type, byte permission,
  *
  * returns: brand new constant SaltObject
  */
-SaltObject salt_object_mkconst(byte type, byte *typeinfo, void *data);
+SaltObject salt_object_mkconst(uint id, byte type, byte *typeinfo, void *data);
+
+/* Create a new salt object from the given ID and string with the given length.
+ *
+ * @id      ID of new object
+ * @perm    permission level
+ * @len     length of string
+ * @str     pointer to string
+ *
+ * returns: brand new salt string
+ */
+SaltObject salt_string_create(uint id, byte perm, int len, char *str);
 
 /* Cast the typeinfo of the SaltObject into a uint.
  *

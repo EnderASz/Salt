@@ -112,7 +112,7 @@ byte exec_rxcpy(byte *data)
     SaltObject new_ = *xregister_find(* (uint *) data);
     new_.id = * (uint *) data;
 
-    xregister_add(new_);
+    xregister_add(new_, PERM_USER);
 
     return EXEC_SIGPASS;
 }
@@ -144,7 +144,7 @@ byte exec_rxnew(byte *data)
 
     obj.data = val;
 
-    xregister_add(obj);
+    xregister_add(obj, PERM_USER);
 
     return EXEC_SIGPASS;
 }

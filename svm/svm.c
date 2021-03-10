@@ -49,6 +49,7 @@
 #include "include/exec.h"
 #include "include/utils.h"
 #include "include/os.h"
+#include "include/except.h"
 
 /* This string will show up in the compiled version of SVM which you can then
  grep to, checking the format. */
@@ -57,9 +58,6 @@ const char *svm_version_string = "SVM: format 1";
 
 int main(int argc, char **argv)
 {
-    float s = 1.245;
-    util_hexdump((byte *) &s, 4);
-
     dprintf("[!] USING DEBUG SVM BUILD, DO NOT USE IN PRODUCTION\n");
     char *filename = core_parse_args(argc, argv);
 
@@ -79,7 +77,7 @@ int main(int argc, char **argv)
 
     // Initialize variables
     core_init();
-    
+ 
     // Execute
     preload(code);
     int ret = exec(code);

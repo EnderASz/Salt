@@ -5,6 +5,7 @@
  */
 #include "../include/utils.h"
 #include "../include/core.h"
+#include "../include/except.h"
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -24,13 +25,15 @@ void *vmalloc(uint _size, uint _elements)
     svm_allocated += _size * _elements;
     dprintf("vmalloc(%d)\n", _size * _elements);
 
-    if (svm_max_mem)
-        if (svm_allocated > svm_max_mem)
-            CORE_ERROR("MemoryException: out of memory\n");
+    if (svm_max_mem && (svm_allocated > svm_max_mem)) {
+        except_set("MemoryException", "out of memory");
+        except_throw();
+    }
 
     void *ptr = calloc(_size, _elements);
     if (ptr == NULL) {
-        CORE_ERROR("Failed to allocate memory\n");
+        except_set("MemoryException", "cannot allocate memory");
+        except_throw();        
     }
     return ptr;
 }
@@ -40,13 +43,16 @@ void *vmrealloc(void *_ptr, uint _initial, uint _new)
     svm_allocated = svm_allocated - _initial + _new;
     dprintf("vmrealloc(%d)\n", _new);
 
-    if (svm_max_mem)
-        if (svm_allocated > svm_max_mem)
-            CORE_ERROR("MemoryException: out of memory\n");
+    if (svm_max_mem && (svm_allocated > svm_max_mem)) {
+        except_set("MemoryException", "out of memory");
+        except_throw();
+    }
 
     void *ptr = realloc(_ptr, _new);
-    if (ptr == NULL)
-        CORE_ERROR("Failed to reallocate memory\n");
+    if (ptr == NULL) {
+        except_set("MemoryExeception", "cannot reallocate memory");
+        except_throw();
+    }
 
     return ptr;
 }
@@ -126,7 +132,8 @@ void *util_generate_data(byte _type, void *_data)
         break;
 
     default:
-        CORE_ERROR("unknown data type when creating object\n");
+        except_set("TypeError", "invalid type for object creation");
+        except_throw();
 
     }
     return ptr;

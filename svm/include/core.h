@@ -79,7 +79,22 @@ extern uint svm_max_width;
 /* Array of constant strings */
 extern SaltObject *salt_const_strings;
 
-/* Global register */
+/* Global variable register. This is possible because the compiler actually
+ * takes care of the variable scopes and always (should) provide the proper
+ * SaltObject IDs. core_init is responsible for allocating the initial size
+ * of the xregister. 
+ *
+ * When creating a new SaltObject, the functions responsible for appending
+ * data to the xregister control check if the creator is PERM_USER and the
+ * ID is 128 or lower and do not allow that. That means that the first 128
+ * objects are SVM objects.
+ * 
+ * SVM Objects (by index, starting from 0)
+ * 
+ * 9    (string) error title
+ * 10   (string) error message
+ *
+ */
 extern struct SaltArray xregister;
 extern SaltObject       xnullptr;
 
@@ -154,9 +169,10 @@ void core_clean(char **bytecode);
 /* Add a object to the register. The blacklisted IDs range from 0000 0000 (0)
  * to 0080 0000 (128).
  *
- * @_obj  object to add
+ * @_obj    object to add
+ * @_perm   who is creating the object
  */
-void xregister_add(SaltObject _obj);
+void xregister_add(SaltObject _obj, int _perm);
 
 /* Remove object from register by ID.
  *
@@ -168,6 +184,7 @@ void xregister_remove(uint _id);
  *
  * @_id  id of the object to look up
  *
+
  * returns: pointer to object in register, NULL if not found
  */
 SaltObject *xregister_find(uint _id);

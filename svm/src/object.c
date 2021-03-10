@@ -8,14 +8,6 @@
 #include <string.h>
 #include <stdlib.h>
 
-uint salt_id_counter = 100;
-
-uint salt_id()
-{
-    salt_id_counter++;
-    return salt_id_counter - 1;
-}
-
 SaltObject salt_object_create(uint id, byte type, byte permission, 
            byte constant, byte *typeinfo, void *data, uint mutex_id,
            uint scope_id)
@@ -37,9 +29,16 @@ SaltObject salt_object_create(uint id, byte type, byte permission,
     return obj;
 }
 
-SaltObject salt_object_mkconst(byte type, byte *typeinfo, void *data)
+SaltObject salt_object_mkconst(uint id, byte type, byte *typeinfo, void *data)
 {
-    return salt_object_create(salt_id(), type, 0, 1, typeinfo, data, 0, 0);
+    return salt_object_create(id, type, 0, 1, typeinfo, data, 0, 0);
+}
+
+SaltObject salt_string_create(uint id, byte perm, int len, char *str)
+{
+    char *string = vmalloc(sizeof(char), len);
+    strncpy(string, str, len);
+    return salt_object_create(id, SALT_STRING, perm, 0, NULL, string, 0, 0);
 }
 
 uint salt_object_strlen(SaltObject *obj)
@@ -60,7 +59,8 @@ struct SaltArray salt_array_create(byte size, byte constant)
 void salt_array_append(struct SaltArray *array, SaltObject data)
 {
     if (array->space <= array->size) {
-        array->array = realloc(array->array, sizeof(SaltObject) 
+        array->array = vmrealloc(array->array, sizeof(SaltObject) 
+                       * array->space, sizeof(SaltObject) 
                        * (array->space + 16));
 
         array->space += 1;
