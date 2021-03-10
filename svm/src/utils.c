@@ -10,14 +10,28 @@
 #include <stdlib.h>
 
 /* Wrapper for the calloc function, checks if the memory has been allocated. */
-void *alloc(uint _size, uint _elements)
+void *vmalloc(uint _size, uint _elements)
 {
+    svm_allocated += _size * _elements;
+    dprintf("Trying to allocate %lld bytes\n", svm_allocated);
+
+    if (svm_max_mem)
+        if (svm_allocated > svm_max_mem)
+            CORE_ERROR("MemoryException: out of memory\n");
+
     void *ptr = calloc(_size, _elements);
     if (ptr == NULL) {
-        CORE_ERROR("Failed to allocate memory.\n");
-        exit(1);
+        CORE_ERROR("Failed to allocate memory\n");
     }
     return ptr;
+}
+
+/* Free the given pointer and remove the amount of bytes from the total stack
+ */
+void vmfree(void *_ptr, uint _size)
+{
+    svm_allocated -= _size;
+    free(_ptr);
 }
 
 /* Raise the number to the given exponential */
@@ -28,6 +42,22 @@ uint util_pow(uint _num, short _exp)
         _num = base * _num;
     }
     return _num;
+}
+/* Pull the next argument from the pos location. */
+uint util_arg_uint(int _argc, char **_argv, int *_pos, char *_field)
+{
+    (*_pos)++;
+    if (*_pos >= _argc) {
+        printf("svm: %s requires an argument\n", _field);
+        exit(1);
+    }
+
+    uint size = str_to_uint(_argv[*_pos]);
+    if (!size) {
+        printf("svm: %s requires and uint\n", _field);
+        exit(1);
+    }
+    return size;
 }
 
 /* Print the contents of the object. This is basically a switch statement that
@@ -54,17 +84,17 @@ void *util_generate_data(byte _type, void *_data)
     switch (_type) {
     
     case SALT_INT:
-        ptr = alloc(sizeof(int), 1);
+        ptr = vmalloc(sizeof(int), 1);
         * (int *) ptr = * (int *) _data;
         break;
 
     case SALT_FLOAT:
-        ptr = alloc(sizeof(float), 1);
+        ptr = vmalloc(sizeof(float), 1);
         * (float *) ptr = * (float *) _data;
         break;
     
     case SALT_STRING:
-        ptr = alloc(sizeof(char), * (uint *) _data);
+        ptr = vmalloc(sizeof(char), * (uint *) _data);
         strncpy(ptr, _data + 4, * (uint *) _data);
         break;
 
@@ -73,7 +103,7 @@ void *util_generate_data(byte _type, void *_data)
         break;
 
     case SALT_BOOL:
-        ptr = alloc(sizeof(byte), 1);
+        ptr = vmalloc(sizeof(byte), 1);
         * (byte *) ptr = * (byte *) _data;
         break;
 

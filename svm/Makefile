@@ -10,17 +10,36 @@ OPT = -O
 
 # Execute all the steps
 all: directories $(SOURCES) final
+.PHONY: all
+
+# Build a debug mode
+debug: directories debug-setup $(SOURCES) final debug-clean
+.PHONY: debug
+
+# Setup the debug define in utils  
+debug-setup: 
+	cp include/utils.h build/utils.h.clean
+	printf "#define DEBUG\n" > include/utils.h
+	cat build/utils.h.clean >> include/utils.h
+.PHONY: debug-setup
+
+# Clean after the debug
+debug-clean:
+	mv build/utils.h.clean include/utils.h
+.PHONY: debug-clean
 
 # Clean after compilation, moving the compiled result to
 # the top folder.
 clean:
 	mv build/$(RESULT) ./$(RESULT)
 	rm -r build
+.PHONY: clean
 
 # Create all the needed directories.
 directories:
 	# Creating directories
 	mkdir -p build/objects
+.PHONY: directories
 
 # Compile all sources to object files
 $(SOURCES):
@@ -32,3 +51,4 @@ final:
 	gcc $(OPT) -o build/$(RESULT) $(MAIN) $(OBJECTS)
 	
 	# ----- Done ----- 	
+.PHONY: final
