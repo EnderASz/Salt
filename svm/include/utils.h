@@ -1,3 +1,4 @@
+#define DEBUG
 /**
  * The utils module contains several functions mostly for printing data to 
  * standard out.
@@ -58,6 +59,21 @@ uint util_arg_uint(int _argc, char **_argv, int *_pos, char *_field);
  */
 void util_print_object(SaltObject *_obj);
 
+/* Subroutines for util_print_object */
+void util_dumpv_null   (SaltObject *_obj);
+void util_dumpv_int    (SaltObject *_obj);
+void util_dumpv_float  (SaltObject *_obj);
+void util_dumpv_string (SaltObject *_obj);
+void util_dumpv_bool   (SaltObject *_obj);
+void util_dumpv_array  (SaltObject *_obj);
+
+/* Print n amount of chars in hex form.
+ *
+ * @_bytes  pointer to first byte
+ * @_amount amount of bytes
+ */
+void util_hexdump(byte *_bytes, uint _amount);
+
 /* Generate data from the given type and pointer, returning a pointer to the 
  * allocated data. 
  *
@@ -75,12 +91,6 @@ void *util_generate_data(byte _type, void *_data);
  * returns: size of object
  */
 uint util_get_size(SaltObject *_obj);
-
-/* Subroutine for printing an int object
- *
- * @_obj the object of type int
- */
-static void _util_print_int(SaltObject *_obj);
 
 /* Cast the passed string to a uint.
  *

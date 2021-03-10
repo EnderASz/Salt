@@ -16,7 +16,8 @@
 
 // FLAGS
 
-char FLAG_HELP = 0;
+char FLAG_HELP   = 0;
+char FLAG_UNSAFE = 0;
 
 uint svm_max_mem = 0;
 
@@ -53,6 +54,9 @@ char *core_parse_args(int argc, char **argv)
         else if (CORE_ARGS_CMP(argv[i], "--max-mem", "-m"))
             svm_max_mem = util_arg_uint(argc, argv, &i, "max-mem");
 
+        else if (CORE_ARGS_CMP(argv[i], "--unsafe", "-u"))
+            FLAG_UNSAFE = 1;
+
         else 
             filename = argv[i];
 
@@ -68,7 +72,10 @@ void core_show_help()
     "  FILE           compiled Salt code (scc) file\n"
     "  -h, --help     show this page and exit\n"
     "  -x, --xregsize initial xregister size. default 16\n"
-    "  -m, --max-mem  maximum bytes the SVM can use\n");
+    "  -m, --max-mem  maximum bytes the SVM can use\n"
+    "  -u, --unsafe   activate unsafe mode; this allows the compiler to "
+    "modify the\n"
+    "                 internal SVM registers; it is not recommended\n");
     exit(1);
 }
 
@@ -190,8 +197,9 @@ void core_clean(char **bytecode)
 
 void xregister_add(SaltObject _obj)
 {
-    if (_obj.id <= 128)
-        CORE_ERROR("failed to add object to xregister\n");
+    dprintf("Adding Object %d\n", _obj.id);
+    if ((_obj.id <= 128) && !FLAG_UNSAFE)
+        CORE_ERROR("cannot add object to xregister: protected ID\n");
 
     if (xregister.space <= xregister.size) {
         xregister.array = realloc(&xregister, sizeof(SaltObject) 

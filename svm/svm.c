@@ -57,6 +57,9 @@ const char *svm_version_string = "SVM: format 1";
 
 int main(int argc, char **argv)
 {
+    float s = 1.245;
+    util_hexdump((byte *) &s, 4);
+
     dprintf("[!] USING DEBUG SVM BUILD, DO NOT USE IN PRODUCTION\n");
     char *filename = core_parse_args(argc, argv);
 

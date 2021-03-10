@@ -49,6 +49,9 @@ typedef unsigned int  uint;
 /* help page flag */
 extern char FLAG_HELP;
 
+/* overwrite */
+extern char FLAG_UNSAFE;
+
 /* max memory flag */
 extern uint svm_max_mem;
 

@@ -80,9 +80,10 @@ byte exec_dumpi(byte *data)
 byte exec_dumpv(byte *data)
 {
     uint id = * (uint *) data;
-
-    util_print_object(&xregister.array[id]);
-
+    SaltObject *obj = xregister_find(id);
+    if (obj != NULL)
+        util_print_object(obj);
+    
     return EXEC_SIGPASS;
 }
 
@@ -94,7 +95,7 @@ byte exec_killx(byte *data)
 byte exec_print(byte *data)
 {
     uint pos = * (uint *) data - 1;
-    fputs((char *) salt_const_strings[pos].data, stdout);
+    printf("%s", (char *) salt_const_strings[pos].data);
 
     return EXEC_SIGPASS;
 }

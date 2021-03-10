@@ -9,10 +9,20 @@
 #include <stdio.h>
 #include <stdlib.h>
 
+static void (*_dumpv_calls[6]) (SaltObject *) = {
+    util_dumpv_null,
+    util_dumpv_int,
+    util_dumpv_float,
+    util_dumpv_string,
+    util_dumpv_bool,
+    util_dumpv_array
+};
+
+
 void *vmalloc(uint _size, uint _elements)
 {
     svm_allocated += _size * _elements;
-    dprintf("svm_allocated is %lld\n", svm_allocated);
+    dprintf("vmalloc(%d)\n", _size * _elements);
 
     if (svm_max_mem)
         if (svm_allocated > svm_max_mem)
@@ -58,15 +68,15 @@ uint util_arg_uint(int _argc, char **_argv, int *_pos, char *_field)
 
 void util_print_object(SaltObject *_obj)
 {
-    switch (_obj->type) {
-        
-    case SALT_INT:
-        _util_print_int(_obj);
-        break;
+    _dumpv_calls[_obj->type](_obj);
+}
 
-    default:
-        printf("Cannot print object type %02hhx\n", _obj->type);
-    
+void util_hexdump(byte *_bytes, uint _amount)
+{   
+    for (uint i = 0; i < _amount; i++) {
+        printf("%02hhx", _bytes[i]);
+        if (i % 2 != 0)
+            printf(" ");
     }
 }
 
@@ -111,22 +121,44 @@ uint util_get_size(SaltObject *_obj)
     switch (_obj->type) {
 
     case SALT_INT:
-        return 4;
+        return sizeof(int);
     case SALT_FLOAT:
-        return 4;
+        return sizeof(float);
     case SALT_NULL:
         return 0;
     case SALT_BOOL:
-        return 1;
+        return sizeof(byte);
     case SALT_STRING:
         return * (uint *) _obj->typeinfo;
     }
     return -1;
 }
 
-inline void _util_print_int(SaltObject *_obj)
+inline void util_dumpv_int(SaltObject *_obj)
+{ printf("%d", * (int *) _obj->data); }
+
+inline void util_dumpv_float(SaltObject *_obj)
+{ printf("%f", * (float *) _obj->data); }
+
+inline void util_dumpv_array(SaltObject *_obj)
+{ printf("Array printing not implemented yet\n"); }
+
+inline void util_dumpv_null(SaltObject *_obj)
+{ printf("null"); }
+
+inline void util_dumpv_string(SaltObject *_obj)
 {
-    printf("%d", * (int *) _obj->data);
+    for (uint i = 0; i < * (uint *) _obj->typeinfo; i++) {
+        fputc(((char *) _obj->data)[i], stdout);
+    }
+}
+
+inline void util_dumpv_bool(SaltObject *_obj)
+{
+    if (* (byte *) _obj->data)
+        printf("true");
+    else
+        printf("false");
 }
 
 uint str_to_uint(char *_str)
