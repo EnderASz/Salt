@@ -18,9 +18,13 @@
 
 char FLAG_HELP = 0;
 
+uint svm_max_mem = 0;
+
 uint svm_xregister_size = 16;
 
 // GLOBALS
+
+unsigned long long svm_allocated = 0;
 
 uint svm_instructions = 0;
 uint svm_const_strings = 0;
@@ -40,22 +44,16 @@ char *core_parse_args(int argc, char **argv)
 
     char *filename;
 
-    for (short i = 0; i < argc; i++) {
+    for (int i = 0; i < argc; i++) {
 
         if (CORE_ARGS_CMP(argv[i], "--help", "-h"))
             FLAG_HELP = 1;
 
-        else if (CORE_ARGS_CMP(argv[i], "--xregsize", "-x")) {
-            i++;
-            if (i >= argc)
-                CORE_ERROR("xregsize requires an argument\n");
+        else if (CORE_ARGS_CMP(argv[i], "--xregsize", "-x"))
+            svm_xregister_size = util_arg_uint(argc, argv, &i, "xregsize");
 
-            uint size = str_to_uint(argv[i]);
-            if (!size) {
-                CORE_ERROR("xregsize requires an uint\n");
-            }
-            svm_xregister_size = size;
-        }
+        else if (CORE_ARGS_CMP(argv[i], "--max-mem", "-m"))
+            svm_max_mem = util_arg_uint(argc, argv, &i, "max-mem");
 
         else 
             filename = argv[i];
@@ -73,7 +71,8 @@ void core_show_help()
     "Execute compiled Salt code.\n\n"
     "  FILE           compiled Salt code (scc) file\n"
     "  -h, --help     show this page and exit\n"
-    "  -x, --xregsize initial xregister size. default 16\n");
+    "  -x, --xregsize initial xregister size. default 16\n"
+    "  -m, --max-mem  maximum bytes the SVM can use\n");
     exit(1);
 }
 
@@ -83,6 +82,9 @@ void core_init()
 {
     xregister = salt_array_create(svm_xregister_size + 128, 0);
     xnullptr = salt_object_create(0, SALT_NULL, 0, 1, NULL, NULL, 0, 0);
+
+    dprintf("Loaded xregister with size %d\n", svm_xregister_size);
+    dprintf("Defined max memory: %d\n", svm_max_mem);
 }
 
 /* Read & load the header file contents to the global variables. While reading,
@@ -112,7 +114,7 @@ void core_load_header(FILE *_fp)
  the SaltObject constant string array (salt_cstrings). */
 void core_load_strings(FILE *_fp)
 {
-    salt_const_strings = alloc(sizeof(SaltObject), svm_const_strings);
+    salt_const_strings = vmalloc(sizeof(SaltObject), svm_const_strings);
     
     uint strl;
     for (uint i = 0; i < svm_const_strings; i++) {
@@ -123,7 +125,7 @@ void core_load_strings(FILE *_fp)
         memcpy(salt_const_strings[i].typeinfo, (char *) &strl, 4);
         salt_const_strings[i].constant = 1;
         
-        salt_const_strings[i].data = alloc(sizeof(char), strl);
+        salt_const_strings[i].data = vmalloc(sizeof(char), strl);
         core_read_bytes(_fp, salt_const_strings[i].data, strl);
     
         // Replace 0x11 with newlines
@@ -164,9 +166,9 @@ void core_read_until(FILE *_fp, char *_str, char _c)
  file cursor 64 bytes forward. */
 char **core_load_bytecode(FILE *_fp)
 {
-    char **code = alloc(sizeof(char *), svm_instructions);
+    char **code = vmalloc(sizeof(char *), svm_instructions);
     for (uint i = 0; i < svm_instructions; i++) {
-        code[i] = alloc(sizeof(char), svm_max_width);
+        code[i] = vmalloc(sizeof(char), svm_max_width);
 
         core_read_until(_fp, code[i], '\n');
     }
@@ -178,18 +180,25 @@ char **core_load_bytecode(FILE *_fp)
  calling exec or preload. */
 void core_clean(char **bytecode)
 {
+    dprintf("Cleaning core\n");
     for (uint i = 0; i < xregister.space; i++) {
-        free(xregister.array[i].data);
+        vmfree(xregister.array[i].data, util_get_size(&xregister.array[i]));
     }
-    free(xregister.array);
-
+    vmfree(xregister.array, xregister.space * sizeof(SaltObject));
 
     for (uint i = 0; i < svm_instructions; i++) {
-        free(bytecode[i]);
+        vmfree(bytecode[i], svm_max_width);
     }
-    free(bytecode);
+    vmfree(bytecode, svm_instructions * sizeof(char *));
 
-    free(salt_const_strings);
+    unsigned long cstrings = 0;
+    for (uint i = 0; i < svm_const_strings; i++) {
+        vmfree(salt_const_strings[i].data, strlen(salt_const_strings[i].data));
+    }
+    vmfree(salt_const_strings, svm_const_strings * sizeof(SaltObject));
+
+    if (svm_allocated > 0)
+        dprintf("Memory leak of %lld bytes\n", svm_allocated);
 
 }
 
@@ -214,12 +223,9 @@ void xregister_add(SaltObject _obj)
 /* Remove object from register by ID. */
 void xregister_remove(uint _id)
 {
-    for (uint i = 0; i < xregister.size; i++) {
-        if (xregister.array[i].id == _id) {
-            free(xregister.array[i].data);
-            xregister.array[i] = xnullptr;
-        }
-    }
+    SaltObject *obj = xregister_find(_id);
+    vmfree(obj->data, util_get_size(obj));
+    *obj = xnullptr;
 }
 
 /* Returns the SaltObject with the given register. */

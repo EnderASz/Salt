@@ -35,7 +35,7 @@ int exec(char **code)
     for (uint i = exec_label_init + 1; i != exec_label_end; i++) {
 
         /* the signal exec will recieve from any SaltExec function */
-        byte signal;
+        byte signal = EXEC_SIGPASS;
 
         for (short j = 0; j < salt_execs_l; j++) {
             
@@ -46,7 +46,7 @@ int exec(char **code)
 
         }
 
-        if (signal == EXEC_SIGPASS)
+        if (signal == EXEC_SIGERR)
             printf("svm: exec_ failed\n");
 
         if (signal == EXEC_SIGKILL)
@@ -145,19 +145,19 @@ byte exec_rxdel(byte *data)
 byte exec_rxnew(byte *data)
 {
     uint id     = * (uint *) data;
-    byte const_ = *          data + 8;
-    byte type   = *          data + 9;
+    byte const_ = *          (data + 4);
+    byte type   = *          (data + 5);
 
     SaltObject obj = salt_object_create(id, type, PERM_USER, 0, NULL, 
                      NULL, 0, 0);
 
     void *val;
     if (type == SALT_STRING) {
-        val = util_generate_data(type, data + 14); 
-        memcpy(obj.typeinfo, data + 10, 4);
+        val = util_generate_data(type, data + 10); 
+        memcpy(obj.typeinfo, data + 6, 4);
     }
     else {
-        val = util_generate_data(type, data + 10);
+        val = util_generate_data(type, data + 6);
     }
 
     obj.data = val;
@@ -174,13 +174,13 @@ byte exec_rxset(byte *data)
     byte type = *          data + 8; 
 
     // TODO: other types
-    int *val = alloc(sizeof(int), 1);
+    int *val = vmalloc(sizeof(int), 1);
 
     SaltObject *obj = xregister_find(id);
     if (obj->type != type)
         return EXEC_SIGERR;
 
-    free(obj->data);
+    vmfree(obj->data, util_get_size(obj));
     obj->data = val;
 
     return EXEC_SIGPASS;

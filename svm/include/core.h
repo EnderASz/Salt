@@ -48,10 +48,17 @@ typedef unsigned int  uint;
 
 extern char FLAG_HELP;
 
+/* max memory flag */
+extern uint svm_max_mem;
+
 /* initial xregister size */
 extern uint svm_xregister_size;
 
 // GLOBALS
+
+/* Amount of bytes the SVM has allocated (outside of its own code). This is 
+ tracked by vmalloc. */
+extern unsigned long long svm_allocated;
 
 /* The amount of instructions core_load_bytecode needs to allocate space for.
  This helps to speed up the compiler to not overallocate nor underallocate,

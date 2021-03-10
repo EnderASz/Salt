@@ -57,6 +57,7 @@ const char *svm_version_string = "SVM: format 1";
 
 int main(int argc, char **argv)
 {
+    dprintf("[!] USING DEBUG SVM BUILD, DO NOT USE IN PRODUCTION\n");
     char *filename = core_parse_args(argc, argv);
 
     if (FLAG_HELP)
@@ -79,6 +80,10 @@ int main(int argc, char **argv)
     // Execute
     preload(code);
     int ret = exec(code);
+
+    for (uint i = 0; i < xregister.size; i++) {
+        printf("variable %d of type %02hhx\n", xregister.array[i].id, xregister.array[i].type);
+    }
 
     // Deallocate memory
     core_clean(code);

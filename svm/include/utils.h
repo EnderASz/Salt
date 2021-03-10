@@ -68,6 +68,14 @@ void util_print_object(SaltObject *_obj);
  */
 void *util_generate_data(byte _type, void *_data);
 
+/* Return size of allocated payload
+ * 
+ * @_obj    pointer to object
+ * 
+ * returns: size of object
+ */
+uint util_get_size(SaltObject *_obj);
+
 /* Subroutine for printing an int object
  *
  * @_obj the object of type int

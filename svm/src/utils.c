@@ -13,7 +13,7 @@
 void *vmalloc(uint _size, uint _elements)
 {
     svm_allocated += _size * _elements;
-    dprintf("Trying to allocate %lld bytes\n", svm_allocated);
+    dprintf("svm_allocated is %lld\n", svm_allocated);
 
     if (svm_max_mem)
         if (svm_allocated > svm_max_mem)
@@ -114,6 +114,24 @@ void *util_generate_data(byte _type, void *_data)
     return ptr;
 }
 
+/* Return size of allocated payload */
+uint util_get_size(SaltObject *_obj)
+{
+    switch (_obj->type) {
+
+    case SALT_INT:
+        return 4;
+    case SALT_FLOAT:
+        return 4;
+    case SALT_NULL:
+        return 0;
+    case SALT_BOOL:
+        return 1;
+    case SALT_STRING:
+        return * (uint *) _obj->typeinfo;
+    }
+    return -1;
+}
 
 /* Subroutine for printing an int object */
 inline void _util_print_int(SaltObject *_obj)
