@@ -5,6 +5,8 @@
  */
 #include "../include/object.h"
 #include "../include/utils.h"
+#include "../include/except.h"
+
 #include <string.h>
 #include <stdlib.h>
 
@@ -39,6 +41,23 @@ SaltObject salt_string_create(uint id, byte perm, int len, char *str)
     char *string = vmalloc(sizeof(char), len);
     strncpy(string, str, len);
     return salt_object_create(id, SALT_STRING, perm, 0, NULL, string, 0, 0);
+}
+
+void salt_string_set(SaltObject *obj, char *str)
+{
+    if (obj->type != SALT_STRING) {
+        except_set("TypeException", "cannot assign string to non-string type");
+        except_throw();
+    }
+
+    uint strl = strlen(str);
+
+    vmrealloc(obj->data, * (uint *) obj->typeinfo, strl);
+    
+    for (uint i = 0; i < sizeof(uint); i++)
+        obj->typeinfo[i] = ((byte *) &strl)[i];
+
+    strncpy(obj->data, str, strl);
 }
 
 uint salt_object_strlen(SaltObject *obj)

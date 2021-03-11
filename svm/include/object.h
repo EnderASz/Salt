@@ -71,6 +71,10 @@ struct SaltArray { // (16)
 
     SaltObject *array;
 
+#if ARCH == 32
+    byte     _pad1[4];   
+#endif
+
 };
 
 /* The full method for creating a brand new Salt Object. Defines all the fields
@@ -113,6 +117,14 @@ SaltObject salt_object_mkconst(uint id, byte type, byte *typeinfo, void *data);
  * returns: brand new salt string
  */
 SaltObject salt_string_create(uint id, byte perm, int len, char *str);
+
+/* Assign a new string to the passed SaltObject. If the type of the object is
+ * not SALT_STRING it throws a TypeException.
+ *
+ * @obj     pointer to object
+ * @str     null terminated string
+ */
+void salt_string_set(SaltObject *obj, char *str);
 
 /* Cast the typeinfo of the SaltObject into a uint.
  *

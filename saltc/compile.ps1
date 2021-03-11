@@ -19,27 +19,21 @@
     $CPPSources = Get-ChildItem -Path $SourcesDir -Include *.cpp -Recurse
     $CPPSourcesNames = ($CPPSources | %{$_.Basename})
     $CPPSourcesPaths = ($CPPSources | %{$_.FullName})
-    $CSources = Get-ChildItem -Path $SourcesDir -Include *.c -Recurse
-    $CSourcesNames = ($CSources | %{$_.Basename})
-    $CSourcesPaths = ($CSources | %{$_.FullName})
 
     # Set paths for future object files
     $CPPObjectsPaths = ($CPPSourcesNames | %{@("$CompiledObjectsDir\$_.o")})
-    $CObjectsPaths = ($CSources | %{@("$CompiledObjectsDir\$_.o")})
-    $AllObjectsPaths = $CPPObjectsPaths + $CObjectsPaths
 # endregion
 
 # region - Compilation
     # Compile all sources to object files
     For($i = 0; $i -lt $CPPObjectsPaths.count; $i++) {
-        g++ -c -o $CPPObjectsPaths[$i] $CPPSourcesPaths[$i]
-    }
-    For($i = 0; $i -lt $CSourcesPaths.count; $i++) {
-        gcc -c -o $CObjectsPaths[$i] $CSourcesPaths[$i]
+        $CPPObjectPath = $CPPObjectsPaths[$i]
+        $CPPSourcePath = $CPPSourcesPaths[$i]
+        g++ -std="c++1z" -c -o $CPPObjectPath $CPPSourcePath
     }
 
     # Compile the main file and link with object files
-    g++ -o $BuildedMainPath $MAIN_SOURCE_PATH $AllObjectsPaths
+    g++ -std="c++1z" -o $BuildedMainPath $MAIN_SOURCE_PATH $CPPObjectsPaths
 # endregion
 
 # region - Cleaning after compilation

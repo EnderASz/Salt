@@ -69,10 +69,12 @@ void preload(char **code)
 
 byte exec_dumpi(byte *data)
 {
-    uint id = * (uint *) data;
-    uint oid = xregister.array[id].id;
-
-    printf("%d", oid);
+    SaltObject *obj = xregister_find(* (uint *) data);
+    
+    if (obj == NULL)
+        printf("null");
+    else    
+        printf("%d", obj->id);
 
     return EXEC_SIGPASS;
 }

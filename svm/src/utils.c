@@ -132,7 +132,7 @@ void *util_generate_data(byte _type, void *_data)
         break;
 
     default:
-        except_set("TypeError", "invalid type for object creation");
+        except_set("TypeException", "invalid type for object creation");
         except_throw();
 
     }

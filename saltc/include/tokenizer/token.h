@@ -1,5 +1,5 @@
 /**
- * The token class contains a single token 
+ * The token class contains a single token.
  */
 #ifndef TOKEN_H_
 #define TOKEN_H_
@@ -7,24 +7,25 @@
 #include <string>
 using std::string;
 
-namespace salt 
+namespace salt::tokenizer
 {
 
+/* TokenType enumerator contains token types. */
 enum TokenType
 {
     TOK_0,          // Literally nothing
-
+    
     META_INIT,      // Include 'init.salt'
 
     // Keywords
     KW_PUBLIC,      // public
     KW_PRIVATE,     // private
     KW_INTERNAL,    // internal
-    KW_IMPORT,      // import
-    KW_DEL,         // del
+    KW_CONST,       // const
 
     // Control keywords
     KW_IMPORT,      // import
+    KW_DEL,         // del
     KW_RETURN,      // return
     KW_IF,          // if
     KW_ELSE,        // else
@@ -103,34 +104,35 @@ enum TokenType
     TYPE_FLOAT,      // float
     TYPE_STRING,     // string    
 
-    // Constant values
-    TOKC_NULL,      // null
-    TOKC_STRING,    // "string"
-    TOKC_FLOAT,     // 12.4
-    TOKC_INT,       // 55
-    TOKC_BOOL,      // true | false
+    // Literals
+    TOKL_NULL,      // null
+    TOKL_STRING,    // "string"
+    TOKL_FLOAT,     // 12.4
+    TOKL_INT,       // 55
+    TOKL_BOOL,      // true | false
 
     // Name
     TOK_NAME,       // names used to call functions, access variables etc.
-};
+}; // salt::tokenizer::TokenType
  
-/* The token type stores a single token, which can than be turned
+/**
+ * The token type stores a single token, which can than be turned
  * into a Token array for validating. Depending on the type, the 
  * value may be NULL or have an actual string value, like a TOKC_STRING
  * which has the actual string value.
  */
-typedef struct 
+struct Token 
 {
-    string    value;
     TokenType type;
+    string    value;
+};
 
-} Token;
-
-/* Create a new token from the given parameters. This doesn't really
+/**
+ * Create a new token from the given parameters. This doesn't really
  * do anything, it's just a shorthand.
  */
-Token token_create(string _val, TokenType _tok);
+Token token_create(TokenType _tok, string _val = NULL);
 
-} // salt
+} // salt::tokenizer
 
 #endif // TOKEN_H_
