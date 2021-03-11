@@ -9,9 +9,16 @@ OBJECTS = $(foreach var,$(SOURCES),build/objects/$(var).o)
 OPT = -O
 
 # Execute all the steps
-all: directories $(SOURCES) final
+all: directories version $(SOURCES) final
 	# --- Done ---
 .PHONY: all
+
+# Add version control
+version:
+	cp include/os.h build/os.h.clean
+	python3 build.py build > include/os.h
+	cat build/os.h.clean >> include/os.h
+.PHONY: version
 
 # Build a debug mode
 debug: directories debug-setup $(SOURCES) final debug-clean
@@ -50,7 +57,8 @@ $(SOURCES):
 
 # Compile and link the main file
 final:
-	# Final compilation step
 	gcc $(OPT) -o build/$(RESULT) $(MAIN) $(OBJECTS)
-	# Build production version
+	mv build/os.h.clean include/os.h
+	# Built production version
+
 .PHONY: final

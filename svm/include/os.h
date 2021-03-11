@@ -7,6 +7,10 @@
 #ifndef OS_H_
 #define OS_H_
 
+#ifndef SVM_VERSION
+  #define SVM_VERSION "undefined"
+#endif
+
 /* Include different headers for Windows & Linux. */
 #if defined(_WIN32)
   #include <Windows.h>

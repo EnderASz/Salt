@@ -6,6 +6,7 @@
 #include "../include/core.h"
 #include "../include/utils.h"
 #include "../include/except.h"
+#include "../include/os.h"
 
 #include <stdio.h>
 #include <string.h>
@@ -18,8 +19,8 @@
 
 // FLAGS
 
-char FLAG_HELP   = 0;
-char FLAG_UNSAFE = 0;
+char FLAG_HELP    = 0;
+char FLAG_UNSAFE  = 0;
 
 uint svm_max_mem = 0;
 
@@ -59,6 +60,11 @@ char *core_parse_args(int argc, char **argv)
         else if (CORE_ARGS_CMP(argv[i], "--unsafe", "-u"))
             FLAG_UNSAFE = 1;
 
+        else if (CORE_ARGS_CMP(argv[i], "--version", "-v")) {
+            printf("%s\n", SVM_VERSION);
+            exit(1);
+        }
+
         else 
             filename = argv[i];
 
@@ -72,6 +78,7 @@ void core_show_help()
     printf("Usage: svm FILE [OPTION]...\n"
     "Execute compiled Salt code.\n\n"
     "  FILE           compiled Salt code (scc) file\n"
+    "  -v, --version  show the version\n"
     "  -h, --help     show this page and exit\n"
     "  -x, --xregsize initial xregister size. default 16\n"
     "  -m, --max-mem  maximum bytes the SVM can use\n"
