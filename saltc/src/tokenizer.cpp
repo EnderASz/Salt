@@ -2,7 +2,6 @@
  * tokenizer.h implementation
  *
  */
-#include "../include/meta.h"
 #include "../include/tokenizer.h"
 
 #include <vector>
