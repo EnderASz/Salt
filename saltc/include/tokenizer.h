@@ -1,21 +1,22 @@
 /**
  * This is the tokenizer class, which is a contained class for parsing and
  * tokenizing any given string.
+ * This also includes all header files from 'tokenizer' directory.
  */
-#ifndef TOKENZIER_H_
-#define TOKENZIER_H_
+#ifndef TOKENIZER_H_
+#define TOKENIZER_H_
 
-#include "../include/utils.h"
-#include "../include/token.h"
+#include "tokenizer/token.h"
 #include <string>
-#include <list>
+#include <vector>
 
 using std::string;
 
-namespace salt
+namespace salt::tokenizer
 {
 
-/* The tokenizer class is a contained class which parses the the passed string
+/**
+ * The tokenizer class is a contained class which parses the the passed string
  * (the file contents).
  */
 class Tokenizer
@@ -31,15 +32,15 @@ public:
      * there so the length of the list can be easily returned. Internally it 
      * uses a std::vector<Token> or a Token*, depending on the implementation.
      */
-    std::list<Token> render();
+    std::vector<Token> render();
 
 private:
-    /* Original string from the constructor.
-     */
+    /* Original string from the constructor. */
     string original;
-};
+
+}; //salt::tokenizer::Tokenizer
 
 
-} // salt
+} // salt::tokenizer
 
 #endif // TOKENIZER_H_
