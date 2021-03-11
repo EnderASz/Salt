@@ -1,5 +1,16 @@
 # Powershell compilation script for the Salt Compiler for Windows system.
 
+param (
+    [Parameter()]
+    [switch]$AllWarnings = $false
+)
+
+if($AllWarnings) {
+    $wall_flag = "-Wall"
+} else {
+    $wall_flag = ""
+}
+
 # region - Setup before compilation
 
     # Set all needed paths paths and directories
@@ -29,11 +40,11 @@
     For($i = 0; $i -lt $CPPObjectsPaths.count; $i++) {
         $CPPObjectPath = $CPPObjectsPaths[$i]
         $CPPSourcePath = $CPPSourcesPaths[$i]
-        g++ -std="c++1z" -c -o $CPPObjectPath $CPPSourcePath
+        g++ -std="c++1z" $wall_flag -c -o $CPPObjectPath $CPPSourcePath
     }
 
     # Compile the main file and link with object files
-    g++ -std="c++1z" -o $BuildedMainPath $MAIN_SOURCE_PATH $CPPObjectsPaths
+    g++ -std="c++1z" $wall_flag -o $BuildedMainPath $MAIN_SOURCE_PATH $CPPObjectsPaths
 # endregion
 
 # region - Cleaning after compilation
