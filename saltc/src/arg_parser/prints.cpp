@@ -27,7 +27,7 @@ void help() {
  * exit the program.
  */
 void unrecognized_option_error(string arg) {
-    printf(consts::UNRECOGNIZED_OPTION_FORMAT, arg);
+    printf(consts::UNRECOGNIZED_OPTION_FORMAT, arg.c_str());
     exit(1);
 }
 
