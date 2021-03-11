@@ -51,7 +51,7 @@ void Params::initObject(std::queue<string> args) {
  * @argc - amount of arguments
  * @argv - array of strings (char*) arguments
  */ 
-Params::Params(int argc, char* argv[]) {
+Params::Params(uint argc, char* argv[]) {
     std::queue<string> args;
     for (uint i = 0; i < argc; i++) {
         args.push(argv[i]);
@@ -65,7 +65,7 @@ Params::Params(int argc, char* argv[]) {
  * @argc - amount of arguments
  * @argv - array of strings arguments
  */ 
-Params::Params(int argc, string argv[]) {
+Params::Params(uint argc, string argv[]) {
     std::queue<string> args;
     for (uint i = 0; i < argc; i++) {
         args.push(argv[i]);

@@ -8,6 +8,7 @@
 #ifndef CORE_PARAMS_H_
 #define CORE_PARAMS_H_
 
+#include "../utils.h"
 #include <queue>
 #include <string>
 
@@ -36,8 +37,8 @@ private:
 public:
     
     Params(std::queue<string> args);
-    Params(int argc, char* argv[]);
-    Params(int n, string args[]);
+    Params(uint argc, char* argv[]);
+    Params(uint argc, string args[]);
 
     /* Compares given string with given short and long argument names. */
     static bool arg_comp(

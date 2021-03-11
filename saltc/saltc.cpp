@@ -14,7 +14,7 @@ using namespace salt;
  * precompilation, parser, tokenizer, validator and synthesizer.
  */
 int main(int argc, char* argv[]) {
-    arg_parser::Params parameters(argc, argv);
+    arg_parser::Params parameters((uint) argc, argv);
 
     return 0;
 }
