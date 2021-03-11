@@ -21,4 +21,6 @@ T pop(Q& container) {
     return value;
 }
 
+string load_file(string filepath);
+
 #endif // UTILS_H_
