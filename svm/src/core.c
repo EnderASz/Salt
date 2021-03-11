@@ -199,8 +199,6 @@ void core_clean(char **bytecode)
     }
     vmfree(bytecode, svm_instructions * sizeof(char *));
 
-    // Const strings
-    unsigned long cstrings = 0;
     for (uint i = 0; i < svm_const_strings; i++) {
         vmfree(salt_const_strings[i].data, 
                salt_object_strlen(&salt_const_strings[i]));

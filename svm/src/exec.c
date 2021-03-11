@@ -132,7 +132,7 @@ byte exec_rxnew(byte *data)
     byte const_ = *          (data + 4);
     byte type   = *          (data + 5);
 
-    SaltObject obj = salt_object_create(id, type, PERM_USER, 0, NULL, 
+    SaltObject obj = salt_object_create(id, type, PERM_USER, const_, NULL, 
                      NULL, 0, 0);
 
     void *val;
