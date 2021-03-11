@@ -118,6 +118,14 @@ SaltObject salt_object_mkconst(uint id, byte type, byte *typeinfo, void *data);
  */
 SaltObject salt_string_create(uint id, byte perm, int len, char *str);
 
+/* Assign a new string to the passed SaltObject. If the type of the object is
+ * not SALT_STRING it throws a TypeException.
+ *
+ * @obj     pointer to object
+ * @str     null terminated string
+ */
+void salt_string_set(SaltObject *obj, char *str);
+
 /* Cast the typeinfo of the SaltObject into a uint.
  *
  * @_obj: salt object of string type

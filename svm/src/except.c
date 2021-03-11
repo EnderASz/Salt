@@ -25,19 +25,6 @@ void except_set(const char *title, const char *msg)
     SaltObject *err_title = xregister_find(9);
     SaltObject *err_text  = xregister_find(10);
 
-    vmrealloc(err_title->data, * (uint *) err_title->typeinfo, strlen(title));
-    vmrealloc(err_text->data,  * (uint *) err_text->typeinfo,  strlen(msg));
-
-    dprintf("except_set: copying memory\n");
-
-    int title_l = (int) strlen(title);
-    for (short i = 0; i < 4; i++)
-        err_title->typeinfo[i] = ((char *) &title_l)[i];
-
-    int msg_l = (int) strlen(msg);
-    for (short i = 0; i < 4; i++)
-        err_text->typeinfo[i] = ((char *) &msg_l)[i];
-
-    strncpy(err_title->data, title, strlen(title));
-    strncpy(err_text->data, msg, strlen(msg));
+    salt_string_set(err_title, (char *) title);
+    salt_string_set(err_text, (char *) msg);
 }
