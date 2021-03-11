@@ -32,10 +32,14 @@
 # region - Compilation
     # Compile all sources to object files
     For($i = 0; $i -lt $CPPObjectsPaths.count; $i++) {
-        g++ -c -o $CPPObjectsPaths[$i] $CPPSourcesPaths[$i]
+        $CPPObjectPath = $CPPObjectsPaths[$i]
+        $CPPSourcePath = $CPPSourcesPaths[$i]
+        g++ -c -o $CPPObjectPath $CPPSourcePath
     }
     For($i = 0; $i -lt $CSourcesPaths.count; $i++) {
-        gcc -c -o $CObjectsPaths[$i] $CSourcesPaths[$i]
+        $CObjectPath = $CObjectsPaths[$i]
+        $CSourcePath = $CSourcesPaths[$i]
+        gcc -c -o $CObjectPath $CSourcePath
     }
 
     # Compile the main file and link with object files
