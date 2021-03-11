@@ -71,6 +71,10 @@ struct SaltArray { // (16)
 
     SaltObject *array;
 
+#if ARCH == 32
+    byte     _pad1[4];   
+#endif
+
 };
 
 /* The full method for creating a brand new Salt Object. Defines all the fields
