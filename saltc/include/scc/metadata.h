@@ -28,6 +28,12 @@ namespace salt::scc
 
         int string_literals_amount;
 
+    public:
+        static std::array<byte, 6> getSCCHeader();
+        static std::array<byte, 2> getSCCVersion();
+        static std::array<byte, 8> getCompilerSignature();
+
+        byte* getSCCFileHeader();
     };
 
 };

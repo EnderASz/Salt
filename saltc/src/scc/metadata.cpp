@@ -22,4 +22,18 @@ namespace salt::scc
         '\x7f','\x7a','\x7b','\x7c','\x00','\x00','\x00','\x0a'};
         /*                             xx     xx     xx         */
 
+    /* Get SCC magic string of 6 bytes lenght */
+    std::array<byte, 6> Metadata::getSCCHeader() {
+        return SCC_HEADER;}
+
+    /* Get format version identificator of 2 bytes lenght */
+    std::array<byte, 2> Metadata::getSCCVersion() {return SCC_VERSION;}
+
+    /* Get compiler signature of 8 bytes lenght */
+    std::array<byte, 8> Metadata::getCompilerSignature() {
+        return COMPILER_SIGNATURE;
+    }
+
+    byte* getSCCFileHeader() {}
+
 }
