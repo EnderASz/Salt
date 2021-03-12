@@ -9,8 +9,7 @@ OBJECTS = $(foreach var,$(SOURCES),build/objects/$(var).o)
 CFLAGS = -Wall
 
 # Execute all the steps
-all: directories version $(SOURCES) final
-	# --- Done ---
+all: directories version $(SOURCES) link
 .PHONY: all
 
 # Add version control
@@ -21,8 +20,7 @@ version:
 .PHONY: version
 
 # Build a debug mode
-debug: directories debug-setup $(SOURCES) final debug-clean
-	# --- Done ---
+debug: directories debug-setup $(SOURCES) link debug-clean
 .PHONY: debug
 
 # Setup the debug define in utils  
@@ -56,9 +54,7 @@ $(SOURCES):
 	gcc $(CFLAGS) -c -o build/objects/$@.o src/$@
 
 # Compile and link the main file
-final:
+link:
 	gcc -o build/$(RESULT) $(MAIN) $(OBJECTS)
 	mv build/os.h.clean include/os.h
-	# Built production version
-
-.PHONY: final
+.PHONY: link
