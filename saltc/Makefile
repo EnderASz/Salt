@@ -3,7 +3,7 @@
 MAIN   = saltc.cpp
 RESULT = saltc
 
-CFLAGS = -std=c++1z
+CFLAGS = -std=c++1z -Wall
 
 SOURCES = $(shell find src -name \*.cpp | sed 's/src\///' | tr '\n' ' ') 
 OBJECTS = $(foreach var,$(SOURCES),build/objects/$(var).o)

@@ -108,7 +108,7 @@ namespace salt
     std::vector<byte> Synthesizer::makeNum(T val)
     {
         std::vector<byte> collector;
-        for (short i = 0; i < sizeof(T); i++) {
+        for (short i = 0; i < (short) sizeof(T); i++) {
             collector.push_back(((byte *) &val)[i]);
         }
             
@@ -144,7 +144,7 @@ namespace salt
     std::vector<byte> Synthesizer::makeLabel(const char label[6])
     {
         std::vector<byte> collector;
-        for (byte i = 0; i < 5; i++)
+        for (short i = 0; i < 5; i++)
             collector.push_back(label[i]);
         return collector;
     }
