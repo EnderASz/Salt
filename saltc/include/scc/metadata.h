@@ -8,6 +8,7 @@
 #include "../utils.h"
 
 #include <string>
+#include <array>
 using std::string;
 
 namespace salt::scc

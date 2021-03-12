@@ -22,6 +22,7 @@ directories:
 	mkdir -p build/objects
 	mkdir -p build/objects/arg_parser
 	mkdir -p build/objects/tokenizer
+	mkdir -p build/objects/scc
 
 # Compile all sources to object files
 $(SOURCES):

@@ -12,7 +12,7 @@ using std::string;
 
 // Type definitions
 typedef unsigned int uint;
-typedef unsigned char byte;
+typedef char byte;
 
 template<typename T, class Q = std::queue<T>>
 T pop(Q& container) {
