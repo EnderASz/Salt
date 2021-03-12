@@ -164,10 +164,10 @@ inline void util_dumpv_float(SaltObject *_obj)
 { printf("%f", * (float *) _obj->data); }
 
 inline void util_dumpv_array(SaltObject *_obj)
-{ printf("Array printing not implemented yet\n"); }
+{ printf("Array printing not implemented yet (%d)\n", _obj->id); }
 
 inline void util_dumpv_null(SaltObject *_obj)
-{ printf("null"); }
+{ printf("<null : %d>", _obj->id); }
 
 inline void util_dumpv_string(SaltObject *_obj)
 {
