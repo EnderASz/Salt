@@ -119,11 +119,11 @@ namespace salt
     {
         std::vector<byte> collector;
         pushBytes(collector, makeNum<uint>(val.size() + 1));
-        for (uint i = 0; i < val.size(); i++) {
-            if (val[i] == '\n')
+        for (char& chr : val) {
+            if (chr == '\n')
                 collector.push_back('\x11');
             else
-                collector.push_back(val[i]);
+                collector.push_back(chr);
         }
         collector.push_back(0);
         return collector;
@@ -153,8 +153,8 @@ namespace salt
                       std::vector<byte> bytes)
     {
         std::vector<byte> collector = makeLabel(label);
-        for (uint i = 0; i < bytes.size(); i++)
-            collector.push_back(bytes[i]);
+        for (byte& chr : bytes)
+            collector.push_back(chr);
         collector.push_back('\n');
         return collector;
     }
@@ -169,16 +169,16 @@ namespace salt
     void Synthesizer::pushBytes(std::vector<byte>& collector, 
                                 std::string bytes)
     {
-        for (uint i = 0; i < bytes.size(); i++) {
-            collector.push_back(bytes[i]);
+        for (char& chr : bytes) {
+            collector.push_back(chr);
         }
     }
 
     void Synthesizer::pushBytes(std::vector<byte>& collector, 
                                 std::vector<byte> bytes)
     {
-        for (uint i = 0; i < bytes.size(); i++) {
-            collector.push_back(bytes[i]);
+        for (byte& chr : bytes) {
+            collector.push_back(chr);
         }
     }
 
