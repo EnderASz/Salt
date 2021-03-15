@@ -205,8 +205,9 @@ void core_clean(char **bytecode) {
     vmfree(salt_const_strings, svm_const_strings * sizeof(SaltObject));
 
 
-    if (svm_allocated > 0)
+    if (svm_allocated > 0) {
         dprintf("Memory leak of %lld bytes\n", svm_allocated);
+    }
 }
 
 void xregister_add(SaltObject _obj, int _perm)
