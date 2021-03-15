@@ -1,3 +1,4 @@
+#define SVM_VERSION "svm 0.3 build 53"
 /**
  * The os module provides cross platform compatibilty between Linux and 
  * Windows, like the sleep() function.

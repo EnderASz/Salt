@@ -20,7 +20,7 @@ version:
 .PHONY: version
 
 # Build a debug mode
-debug: directories debug-setup $(SOURCES) link debug-clean
+debug: directories version debug-setup $(SOURCES) link debug-clean
 .PHONY: debug
 
 # Setup the debug define in utils  

@@ -64,7 +64,7 @@ byte exec_dumpi(byte *data);
  */
 byte exec_dumpv(byte *data);
 
-/* Brutally kill the program and all its threads stopping the execution and 
+/* Brutally kill the program and all its threads stopping the execution and
  * immediately calling core_clean. Note that this is not the preffered way of
  * stopping code execution.
  *
@@ -72,7 +72,7 @@ byte exec_dumpv(byte *data);
  */
 byte exec_killx(byte *data);
 
-/* Print a constant string to standard out. This is the preffered way of 
+/* Print a constant string to standard out. This is the preferred way of
  * printing constant strings, because it is much faster compared to calling 
  * DUMPV. 
  *

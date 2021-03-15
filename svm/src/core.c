@@ -90,7 +90,7 @@ void core_show_help()
 
 void core_init()
 {
-    xregister = salt_array_create(svm_xregister_size + 128, 0);
+    xregister = salt_array_create(svm_xregister_size + 128);
     xnullptr  = salt_object_create(0, SALT_NULL, 0, 1, NULL, NULL, 0, 0);
 
     // SVM registers
@@ -112,13 +112,13 @@ void core_load_header(FILE *_fp)
 
     fseek(_fp, 0, SEEK_SET);
     for (short i = 0; i < 64; i++) {
-        header[i] = fgetc(_fp);
+        header[i] = (char) fgetc(_fp);
     }
 
     if (strncmp(header, SCC_HEADER_MAGIC, 8) != 0)
         CORE_ERROR("This is not an SCC executable\n");
 
-    if (strncmp(header + 8, SCC_HEADER_VERSION, 8) != 0)
+    if (strcmp(header + 8, SCC_HEADER_VERSION) != 0)
         CORE_ERROR("Invalid SCC version\n");
 
     svm_instructions      = * (uint *) (header + 16);
@@ -157,13 +157,13 @@ void core_load_strings(FILE *_fp)
 void core_read_bytes(FILE *_fp, char *_str, uint _n)
 {
     for (uint i = 0; i < _n; i++)
-        _str[i] = fgetc(_fp);
+        _str[i] = (char) fgetc(_fp);
 }
 
 void core_read_until(FILE *_fp, char *_str, char _c)
 {
     for (uint i = 0 ;; i++) {
-        _str[i] = fgetc(_fp);
+        _str[i] = (char) fgetc(_fp);
         if (_str[i] == _c) {
             _str[i] = 0;
             break;
@@ -183,10 +183,9 @@ char **core_load_bytecode(FILE *_fp)
     return code;
 }
 
-void core_clean(char **bytecode)
-{
+void core_clean(char **bytecode) {
     dprintf("Cleaning core\n");
-    
+
     // xregister
     for (uint i = 0; i < xregister.space; i++) {
         vmfree(xregister.array[i].data, util_get_size(&xregister.array[i]));
@@ -200,7 +199,7 @@ void core_clean(char **bytecode)
     vmfree(bytecode, svm_instructions * sizeof(char *));
 
     for (uint i = 0; i < svm_const_strings; i++) {
-        vmfree(salt_const_strings[i].data, 
+        vmfree(salt_const_strings[i].data,
                salt_object_strlen(&salt_const_strings[i]));
     }
     vmfree(salt_const_strings, svm_const_strings * sizeof(SaltObject));
@@ -208,7 +207,6 @@ void core_clean(char **bytecode)
 
     if (svm_allocated > 0)
         dprintf("Memory leak of %lld bytes\n", svm_allocated);
-
 }
 
 void xregister_add(SaltObject _obj, int _perm)

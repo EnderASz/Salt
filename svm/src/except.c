@@ -4,7 +4,6 @@
  * @author bellrise
  */
 #include "../include/except.h"
-#include <string.h>
 
 
 void except_throw()

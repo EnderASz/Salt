@@ -65,7 +65,7 @@ extern uint svm_xregister_size;
 extern unsigned long long svm_allocated;
 
 /* The amount of instructions core_load_bytecode needs to allocate space for.
- This helps to speed up the compiler to not overallocate nor underallocate,
+ This helps to speed up the compiler to not over allocate nor under allocate,
  so it's generally faster and more memory efficient. */
 extern uint svm_instructions;
 

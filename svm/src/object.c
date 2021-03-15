@@ -65,7 +65,7 @@ uint salt_object_strlen(SaltObject *obj)
     return * (uint *) obj->typeinfo;
 }
 
-struct SaltArray salt_array_create(byte size, byte constant)
+struct SaltArray salt_array_create(byte size)
 {
     struct SaltArray arr;
     arr.array = vmalloc(sizeof(SaltObject), size);

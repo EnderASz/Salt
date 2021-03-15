@@ -141,7 +141,7 @@ uint salt_object_strlen(SaltObject *obj);
  *
  * returns: new salt object of type SALT_ARRAY
  */
-struct SaltArray salt_array_create(byte size, byte constant);
+struct SaltArray salt_array_create(byte size);
 
 /* Append a single object to the array. This copies the object data so you
  * can safely use local variables to append.

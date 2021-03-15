@@ -7,8 +7,6 @@
 #include "../include/os.h"
 #include "../include/utils.h"
 
-#include <time.h>
-
 const struct SaltExec salt_execs[] = {
     {"RXNEW", exec_rxnew},
     {"RXSET", exec_rxset},
@@ -56,11 +54,11 @@ void preload(char **code)
 {
     for (uint i = 0; i < svm_instructions; i++) {
 
-        if (strncmp(code[i], "@$__INIT__", 11) == 0) {
+        if (strncmp(code[i], "@$__INIT__", 10) == 0) {
             exec_label_init = i;
         }
 
-        if (strncmp(code[i], "@$__END__", 10) == 0) {
+        if (strncmp(code[i], "@$__END__", 9) == 0) {
             exec_label_end = i;
         }
 
@@ -91,6 +89,7 @@ byte exec_dumpv(byte *data)
 
 byte exec_killx(byte *data)
 {
+    (void) data;
     return EXEC_SIGKILL;   
 }
 
@@ -156,7 +155,6 @@ byte exec_rxset(byte *data)
     uint id   = * (uint *) data;
     byte type = *          data + 8; 
 
-    // TODO: other types
     int *val = vmalloc(sizeof(int), 1);
 
     SaltObject *obj = xregister_find(id);

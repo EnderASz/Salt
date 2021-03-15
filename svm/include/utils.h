@@ -1,3 +1,6 @@
+#define DEBUG
+#define DEBUG
+#define DEBUG
 /**
  * The utils module contains several functions mostly for printing data to 
  * standard out.
