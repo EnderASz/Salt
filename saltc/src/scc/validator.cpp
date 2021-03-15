@@ -4,8 +4,6 @@
  * @author bellrise
  */
 #include "../../include/scc/validator.h"
-#include <algorithm>
-#include <vector>
 #include <stdio.h>
 #include <string.h>
 #include <iostream>
@@ -57,24 +55,34 @@ namespace salt
         if (max_instruction_width % 16 != 0)
             throw ValidatorError::instruction_width_violation;
 
-        checkConstStrings();
+        uint pos = checkConstStrings();
+        checkInstructions(pos);
 
         printf("Amount of instructions: %d\n", instruction_amount);
         printf("Amount of const strings: %d\n", cstring_amount);
     }
 
-    void Validator::checkConstStrings()
+    uint Validator::checkConstStrings()
     {
         uint cursor = 64;
         uint len;
 
+        std::string buf;
+
         for (uint i = 0; i < cstring_amount; i++) {
-            len = getUint(cursor) + 5;
+            len = getUint(cursor) + 4;
+        
+            buf = bytecode.substr(cursor, len);
+            if (buf.find('\n') != std::string::npos)
+                throw ValidatorError::newline_in_string;
 
             if (bytecode[cursor + len] != '\n')
                 throw ValidatorError::const_string_size;
+            
             cursor += len + 1; 
         }
+
+        return cursor;
     }
 
     void Validator::checkMagic()
@@ -84,6 +92,27 @@ namespace salt
         // wtf.. I can't use std::string operator== here
         if (strncmp(MAGIC.c_str(), top.c_str(), 8) != 0)
             throw ValidatorError::invalid_header;
+    }
+
+    void Validator::checkInstructions(uint __n)
+    {
+        std::string ins;
+
+        for (uint i = 0; i < instruction_amount; i++) {
+            ins = getInstruction(__n);
+            __n += ins.size() + 1;
+
+            // Just check if the compiler didn't do anything stupid...
+            if (ins.size() + 1 >= max_instruction_width)
+                throw ValidatorError::instruction_width_violation;
+            
+            // If this checks, the compiler is very drunk so im just
+            // crashing at this point.
+            if (ins.size() < 5) {
+                std::cout << "what just happened\n";
+                exit(1);
+            }
+        }
     }
 
     void Validator::loadHeader()
@@ -119,6 +148,15 @@ namespace salt
             throw ValidatorError::invalid_data_width;
             
         return * (uint *) &bytecode.c_str()[__n];
+    }
+
+    std::string Validator::getInstruction(uint __n)
+    {
+        int endl = bytecode.find('\n', __n);
+        if (endl == std::string::npos)
+            throw ValidatorError::nonterminated_instruction;
+        
+        return bytecode.substr(__n, endl - __n); 
     }
 
 } // salt

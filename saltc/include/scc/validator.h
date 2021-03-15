@@ -22,6 +22,8 @@ namespace salt
         invalid_const_string_id,
         invalid_data_width,
         invalid_header,
+        newline_in_string,
+        nonterminated_instruction,
         undeleted_object,
         unknown_id,
     };
@@ -33,8 +35,10 @@ namespace salt
         "Invalid const string ID",
         "Invalid data width",
         "Invalid header",
+        "Newline in string",
+        "Non-terminated instruction",
         "Undeleted object",
-        "Unknown ID"
+        "Unknown ID",
     };
 
     /**
@@ -50,7 +54,6 @@ namespace salt
      *  - data width
      *  - unknown object IDs 
      *  - max instruction width
-     *
      */
     class Validator
     {
@@ -105,19 +108,34 @@ namespace salt
 
         /**
          * Check the constant string properties, like their length and amount.
+         *
+         * @return  last position of the constant string section
          * @throw   const_string_size, const_string_amount
          */
-        void checkConstStrings();
+        uint checkConstStrings();
 
         /**
          * Check the magic number at the beggining of the bytecode. This should
          * always be 7f53 4343 ffee 0000.
+         *
+         * @throw   invalid_header
          */
         void checkMagic();
 
         /**
+         * Check the amount and width of instructions. Starting from the first
+         * instruction byte, that is @a __n.
+         *
+         * @param   __n  start of instruction section
+         * @throw   instruction_width_violation
+         */
+        void checkInstructions(uint __n);
+
+        /**
          * Read the first 64 bytes from the bytecode and load the contents of
          * the header into the member fields.
+         *
+         * @throw   invalid_header
          */
         void loadHeader();
 
@@ -133,7 +151,7 @@ namespace salt
          * Return the hex value in string form from the passed char.
          *
          * @param   __c character to get
-         * @return  0x hex stirng representation
+         * @return  0xXX hex stirng representation
          */
         std::string getHex(char __c);
 
@@ -142,8 +160,20 @@ namespace salt
          * not change the initial structure of the code.
          *
          * @param   __n  position to fetch the 4 bytes from
+         * @throw   invalid_data_width
          */
         uint getUint(uint __n);
+
+        /**
+         * Fetch a single instruction starting from @a __n. This will read the
+         * bytecode until it finds a newline or the end of the code.
+         *
+         * @param   __n  position to start reading from
+         * @return  whole instruction (without the newline)
+         * @throw   nonterminated_instruction
+         */
+        std::string getInstruction(uint __n);
+
 
         bool is_callback_set = false;
         void (*f_callback) (int);
