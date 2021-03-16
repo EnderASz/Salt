@@ -28,6 +28,8 @@ void Params::initObject(std::queue<string> args) {
         string arg = pop<string>(args);
         if (Params::arg_comp(arg, "--help", "-h"))
             prints::help();
+        else if (Params::arg_comp(arg, "--not-builtins", NULL))
+            this->builtins = false;
         else if (Params::arg_comp(arg, "--output", "-o"))
             this->output_path = pop<string>(args);
         else if (arg[0] == '-')
@@ -81,11 +83,10 @@ Params::Params(uint argc, string argv[]) {
 Params::Params(std::queue<string> args) {this->initObject(args);}
 
 bool Params::arg_comp(
-    string str,
-    string long_arg,
+    const string str,
+    const string long_arg,
     const char short_arg[3]) {
-        return (!std::strcmp(str.c_str(), short_arg)) ||
-            (!std::strcmp(str.c_str(), long_arg.c_str()));
+        return !(str.compare(short_arg) || str.compare(long_arg));
     }
 
 /* Gets executable path argument value */
@@ -96,5 +97,8 @@ string Params::getInputPath() {return this->input_path;}
 
 /* Gets output path argument value */
 string Params::getOutputPath() {return this->output_path;}
+
+/* Gets builtins include switch value */
+bool Params::getBuiltinsSwitch() {return this->builtins;}
 
 };

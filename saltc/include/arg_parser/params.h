@@ -27,6 +27,7 @@ private:
     string executable_path;
     string input_path;
     string output_path = "a.scc";
+    bool builtins = true;
 
     /**
      * The initObject method is responsible for parse arguments and
@@ -42,8 +43,8 @@ public:
 
     /* Compares given string with given short and long argument names. */
     static bool arg_comp(
-        string str,
-        string long_arg,
+        const string str,
+        const string long_arg,
         const char short_arg[3]);
 
     /* Gets executable path argument value */
@@ -54,6 +55,10 @@ public:
 
     /* Gets output path argument value */
     string getOutputPath();
+
+    /* Gets import init switch value */
+    bool getBuiltinsSwitch();
+
 }; // salt::core::Params
 
 }; // salt::core

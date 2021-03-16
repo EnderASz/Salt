@@ -8,7 +8,7 @@
 
 #include "include/arg_parser/params.h"
 #include "include/utils.h"
-#include "include/precompiler.h"
+#include "include/source_file.h"
 
 using namespace salt;
 
@@ -18,9 +18,10 @@ using namespace salt;
  */
 int main(int argc, char* argv[]) {
     arg_parser::Params parameters((uint) argc, argv);
-    string salt_code = load_file(parameters.getInputPath());
-    precompiler::init_paste(salt_code);
-    precompiler::clean_comments(salt_code);
+
+    SourceFile main_source(parameters.getInputPath());
+    if(parameters.getBuiltinsSwitch())
+        main_source.includeBuiltins();
 
     return 0;
 }
