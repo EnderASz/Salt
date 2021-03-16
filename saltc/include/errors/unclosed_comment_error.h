@@ -1,3 +1,8 @@
+/**
+ * UnclosedCommentError is an error throwing on detect unclosed comment.
+ * 
+ * @author EnderASz
+ */
 #ifndef UNCLOSED_COMMENT_ERROR_H_
 #define UNCLOSED_COMMENT_ERROR_H_
 

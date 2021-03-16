@@ -1,3 +1,9 @@
+/**
+ * CompilationError is an general compilation error class mainly
+ * for inheritance purposes.
+ * 
+ * @author EnderASz
+ */
 #ifndef COMPILATION_ERROR_H_
 #define COMPILATION_ERROR_H_
 
