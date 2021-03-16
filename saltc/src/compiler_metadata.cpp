@@ -19,7 +19,7 @@ namespace salt
 
     /* Compiler signature */
     const std::array<byte, 8> CompilerMetadata::COMPILER_SIGNATURE = {
-        '\x7f','\x7a','\x7b','\x7c','\x20','\x10','\x02','\x0a'};
+        '\x7f','\x7a','\x7b','\x7c','\x00','\x00','\x00','\x0a'};
         /*                             xx     xx     xx         */
 
 }
