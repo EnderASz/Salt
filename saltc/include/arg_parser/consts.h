@@ -14,7 +14,7 @@ namespace salt::arg_parser::consts
         "\tFILE                 name of the file to be compiled\n"
         "\t-h, --help           show this page\n"
         "\t-o, --output <path>  path of the compilation output file\n"
-        "\t--no-builtins        don't include builtin functionality when compiling\n");
+        "\t--no-builtins        don't link builtin functionality when compiling\n");
 
     const char UNRECOGNIZED_OPTION_FORMAT[] = (
         "Error: unrecognized command line option '%s'. "
