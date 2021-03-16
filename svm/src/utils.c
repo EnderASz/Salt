@@ -20,20 +20,19 @@ static void (*_dumpv_calls[6]) (SaltObject *) = {
 };
 
 
-void *vmalloc(uint _size, uint _elements)
+void *_vmalloc(uint _size, uint _elements, const char *file, long line,
+               const char *function)
 {
     svm_allocated += _size * _elements;
-    dprintf("vmalloc(%d)\n", _size * _elements);
+    dprintf("vmalloc (%d) on line %ld in %s\n", _size * _elements, line, file);
 
     if (svm_max_mem && (svm_allocated > svm_max_mem)) {
-        except_set("MemoryException", "out of memory");
-        except_throw();
+        except_throw("MemoryException", "out of memory");
     }
 
     void *ptr = calloc(_size, _elements);
     if (ptr == NULL) {
-        except_set("MemoryException", "cannot allocate memory");
-        except_throw();        
+        except_throw("MemoryException", "cannot allocate memory");
     }
     return ptr;
 }
@@ -44,14 +43,12 @@ void *vmrealloc(void *_ptr, uint _initial, uint _new)
     dprintf("vmrealloc(%d)\n", _new);
 
     if (svm_max_mem && (svm_allocated > svm_max_mem)) {
-        except_set("MemoryException", "out of memory");
-        except_throw();
+        except_throw("MemoryException", "out of memory");
     }
 
     void *ptr = realloc(_ptr, _new);
     if (ptr == NULL) {
-        except_set("MemoryExeception", "cannot reallocate memory");
-        except_throw();
+        except_throw("MemoryException", "cannot reallocate memory");
     }
 
     return ptr;
@@ -132,9 +129,7 @@ void *util_generate_data(byte _type, void *_data)
         break;
 
     default:
-        except_set("TypeException", "invalid type for object creation");
-        except_throw();
-
+        except_throw("TypeException", "invalid type for object creation");
     }
     return ptr;
 }

@@ -17,12 +17,16 @@
   #define dprintf(...)
 #endif
 
+#define vmalloc(SIZE, ELEMENTS) _vmalloc(SIZE, ELEMENTS, __FILE__, \
+        __LINE__, __FUNCTION__)
+
 /* Wrapper for the calloc function, checks if the memory has been allocated. 
  *
  * @_size       size of each item
  * @_elements   amount of items
  */
-void *vmalloc(uint _size, uint _elements);
+void *_vmalloc(uint _size, uint _elements, const char *file, long line,
+               const char *function);
 
 /* Wrapper for the realloc function, counts memory.
  *

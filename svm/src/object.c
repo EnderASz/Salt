@@ -46,8 +46,7 @@ SaltObject salt_string_create(uint id, byte perm, int len, char *str)
 void salt_string_set(SaltObject *obj, char *str)
 {
     if (obj->type != SALT_STRING) {
-        except_set("TypeException", "cannot assign string to non-string type");
-        except_throw();
+        except_throw("TypeException", "Cannot assign string to non-string type");
     }
 
     uint strl = strlen(str);
@@ -65,7 +64,7 @@ uint salt_object_strlen(SaltObject *obj)
     return * (uint *) obj->typeinfo;
 }
 
-struct SaltArray salt_array_create(byte size)
+struct SaltArray salt_array_create(uint size)
 {
     struct SaltArray arr;
     arr.array = vmalloc(sizeof(SaltObject), size);

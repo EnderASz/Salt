@@ -90,17 +90,8 @@ void core_show_help()
 
 void core_init()
 {
-    xregister = salt_array_create(svm_xregister_size + 128);
+    xregister = salt_array_create(svm_xregister_size);
     xnullptr  = salt_object_create(0, SALT_NULL, 0, 1, NULL, NULL, 0, 0);
-
-    // SVM registers
-    SaltObject err_msg  = salt_string_create(9, PERM_USER, 17, 
-                          "RuntimeException");
-    SaltObject err_text = salt_string_create(10, PERM_USER, 26,
-                          "Program failed to execute");
-
-    xregister_add(err_msg,  PERM_SVM);
-    xregister_add(err_text, PERM_SVM);
 
     dprintf("Loaded xregister with size %d\n", svm_xregister_size);
     dprintf("Defined max memory: %d\n", svm_max_mem);
@@ -213,11 +204,6 @@ void core_clean(char **bytecode) {
 void xregister_add(SaltObject _obj, int _perm)
 {
     dprintf("Adding Object %d\n", _obj.id);
-    if ((_obj.id <= 128) && (!FLAG_UNSAFE) && (_perm == PERM_USER)) {
-        except_set("PermissionException", 
-                   "cannot add object to xregister: protected ID");
-        except_throw();
-    }
     if (xregister.space <= xregister.size) {
         xregister.array = vmrealloc(&xregister, sizeof(SaltObject) 
                           * xregister.space, sizeof(SaltObject) 
