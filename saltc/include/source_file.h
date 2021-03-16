@@ -4,6 +4,7 @@
 #include <string>
 #include <vector>
 #include <array>
+#include <stdint.h>
 #include "utils.h"
 
 using std::string;
@@ -19,6 +20,9 @@ private:
     const string filepath;
     struct {
         bool include_builtins = false;
+        uint32_t instructions = 0;
+        //uint32_t string_literals = 0; ??
+        uint32_t max_instruction_width = 0;
     } meta;
 
 public:

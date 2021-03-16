@@ -49,7 +49,7 @@ namespace salt
          * @param   id  object ID
          * @return  svm call instruction
          */
-        std::vector<byte> dumpi(uint id);
+        static std::vector<byte> dumpi(uint id);
 
         /**
          * Print the value of the object to standard out  (without a newline). 
@@ -60,7 +60,7 @@ namespace salt
          * @param   id  object ID
          * @return  svm call instruction
          */
-        std::vector<byte> dumpv(uint id);
+        static std::vector<byte> dumpv(uint id);
 
         /**
          * Load external dynamic library.
@@ -68,7 +68,7 @@ namespace salt
          * @param   name  name of the external library 
          * @return  svm call instruction
          */
-        std::vector<byte> extld(std::string name);
+        static std::vector<byte> extld(std::string name);
 
         /**
          * Brutally kill the program and all its threads stopping the execution
@@ -77,7 +77,7 @@ namespace salt
          *
          * @return  svm call instruction
          */
-        std::vector<byte> killx();
+        static std::vector<byte> killx();
 
         /**
          * Print a constant string to standard out. This is the preffered way
@@ -87,7 +87,7 @@ namespace salt
          * @param   id  object ID
          * @return  svm call instruction
          */
-        std::vector<byte> print(uint id);
+        static std::vector<byte> print(uint id);
 
         /** 
          * Sleep the given amount of miliseconds. 
@@ -95,7 +95,7 @@ namespace salt
          * @param   ms  miliseconds to sleep
          * @return  svm call instruction
          */
-        std::vector<byte> sleep(uint ms);
+        static std::vector<byte> sleep(uint ms);
 
         /**
          * Create a new object with the specified destination id and copy the 
@@ -105,7 +105,7 @@ namespace salt
          * @param   src   source object ID
          * @return  svm call instruction
          */
-        std::vector<byte> rxcpy(uint dest, uint src);
+        static std::vector<byte> rxcpy(uint dest, uint src);
 
         /**
          * Delete the object by freeing the allocated memory for the value and 
@@ -114,7 +114,7 @@ namespace salt
          * @param   id  object ID
          * @return  svm call instruction
          */
-        std::vector<byte> rxdel(uint id);
+        static std::vector<byte> rxdel(uint id);
 
         /**
          * Create a new object and allocate a sufficent amount of memory. 
@@ -125,11 +125,11 @@ namespace salt
          *                 as constant
          * @return  svm call instruction
          */
-        std::vector<byte> rxnew(uint id, bool const_);
-        std::vector<byte> rxnew(uint id, int val, bool const_);
-        std::vector<byte> rxnew(uint id, float val, bool const_);
-        std::vector<byte> rxnew(uint id, std::string val, bool const_);    
-        std::vector<byte> rxnew(uint id, bool val, bool const_);
+        static std::vector<byte> rxnew(uint id, bool const_);
+        static std::vector<byte> rxnew(uint id, int val, bool const_);
+        static std::vector<byte> rxnew(uint id, float val, bool const_);
+        static std::vector<byte> rxnew(uint id, std::string val, bool const_);    
+        static std::vector<byte> rxnew(uint id, bool val, bool const_);
         
         /**
          * Assign a new value to the object. This replaces the previous value
@@ -140,11 +140,11 @@ namespace salt
          * @param   val value to s
          * @return  svm call instruction
          */
-        std::vector<byte> rxset(uint id);
-        std::vector<byte> rxset(uint id, int val);
-        std::vector<byte> rxset(uint id, float val);
-        std::vector<byte> rxset(uint id, std::string val);
-        std::vector<byte> rxset(uint id, bool val);
+        static std::vector<byte> rxset(uint id);
+        static std::vector<byte> rxset(uint id, int val);
+        static std::vector<byte> rxset(uint id, float val);
+        static std::vector<byte> rxset(uint id, std::string val);
+        static std::vector<byte> rxset(uint id, bool val);
 
         // Synthesizing
         
@@ -157,7 +157,7 @@ namespace salt
          * @return  array of bytes representing the value
          */
         template<typename T>
-        std::vector<byte> makeNum(T val);
+        static std::vector<byte> makeNum(T val);
         
         /**
          * Convert the string or boolean value of the type into the SVM byte
@@ -166,26 +166,26 @@ namespace salt
          * @param   val value
          * @return  array of bytes representing the value
          */
-        std::vector<byte> makeString(std::string val);
-        std::vector<byte> makeBool(bool val);
+        static std::vector<byte> makeString(std::string val);
+        static std::vector<byte> makeBool(bool val);
 
     private:
 
         /* Create an empty collector with the given label */
-        std::vector<byte> makeLabel(const char label[6]);
+        static std::vector<byte> makeLabel(const char label[6]);
 
         /* Construct a full instruction from the passed bytes */
-        std::vector<byte> make(const char label[6], std::vector<byte> bytes);
-        std::vector<byte> make(const char label[6]);
+        static std::vector<byte> make(const char label[6], std::vector<byte> bytes);
+        static std::vector<byte> make(const char label[6]);
 
         /* Push the raw bytes into the vector */
-        void pushBytes(std::vector<byte>& collector, std::string bytes);
-        void pushBytes(std::vector<byte>& collector, std::vector<byte> bytes);
+        static void pushBytes(std::vector<byte>& collector, std::string bytes);
+        static void pushBytes(std::vector<byte>& collector, std::vector<byte> bytes);
 
         /* Make a RXNEW svm call */
-        std::vector<byte> makeRxnew(uint id, SaltType type, 
+        static std::vector<byte> makeRxnew(uint id, SaltType type, 
                           std::vector<byte> value, bool const_);
-        std::vector<byte> makeRxset(uint id, SaltType type, 
+        static std::vector<byte> makeRxset(uint id, SaltType type, 
                           std::vector<byte> value);
 
     };
