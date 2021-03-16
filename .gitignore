@@ -10,6 +10,10 @@ test.*
 # Compiled files
 *.scc
 
+# Windows compiled executables
+saltc.exe
+svm.exe
+
 # Swap files
 *.swp
 
