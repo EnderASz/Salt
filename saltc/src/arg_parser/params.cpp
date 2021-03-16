@@ -7,7 +7,6 @@
 
 #include "../../include/arg_parser/prints.h"
 #include "../../include/utils.h"
-#include <cstdio>
 #include <queue>
 #include <cstring>
 #include <string>
@@ -23,23 +22,23 @@ namespace salt::arg_parser
  */
 void Params::initObject(std::queue<string> args) {
     this->executable_path = pop<string>(args);
-
     while(!args.empty()) {
         string arg = pop<string>(args);
         if (Params::arg_comp(arg, "--help", "-h"))
             prints::help();
-        else if (Params::arg_comp(arg, "--not-builtins", NULL))
+        else if (Params::arg_comp(arg, "--no-builtins", ""))
             this->builtins = false;
         else if (Params::arg_comp(arg, "--output", "-o"))
             this->output_path = pop<string>(args);
         else if (arg[0] == '-')
             prints::unrecognized_option_error(arg);
-        else // Nameless arguments
+        else { // Nameless arguments
             if (this->input_path.empty())
                 this->input_path = arg;
             else {
                 prints::too_many_nameless_error();
             }
+        }
     }
 
     if (this->input_path.empty()) {
@@ -86,7 +85,7 @@ bool Params::arg_comp(
     const string str,
     const string long_arg,
     const char short_arg[3]) {
-        return !(str.compare(short_arg) || str.compare(long_arg));
+        return !(str.compare(short_arg) && str.compare(long_arg));
     }
 
 /* Gets executable path argument value */
