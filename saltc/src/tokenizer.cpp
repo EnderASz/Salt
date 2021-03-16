@@ -26,7 +26,7 @@ Tokenizer::Tokenizer(string content) {
  * uses a std::vector<Token> or a Token*, depending on the implementation.
  */
 std::vector<Token> Tokenizer::render() {
-    std::vector<Token> tokens = {token_create(META_INIT)};
+    std::vector<Token> tokens;
     
     return tokens;
 }
