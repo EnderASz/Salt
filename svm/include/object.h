@@ -6,8 +6,6 @@
 #ifndef SVM_OBJECT_H
 #define SVM_OBJECT_H
 
-#include "core.h"
-
 #define ACCESS_PUBLIC  0
 #define ACCESS_PRIVATE 1
 
@@ -18,6 +16,9 @@
 #define OBJECT_TYPE_FLOAT  (0x02)
 #define OBJECT_TYPE_BOOL   (0x03)
 #define OBJECT_TYPE_STRING (0x04)
+
+typedef unsigned char byte;
+typedef unsigned int  uint;
 
 /* This represents a single object, which can hold different types of data
  depending on the [type] byte. When building a new object, default values are

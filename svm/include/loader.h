@@ -18,8 +18,8 @@
  *  - allocate space for a new salt module
  *  - load symbols from bytecode
  *
- * @param filename name of the module
+ * @param module name of the module
  */
-void load(char *filename);
+void load(char *module);
 
 #endif // SVM_LOADER_H

@@ -33,7 +33,7 @@ struct SaltModule {
     uint instruction_amount;
     struct SaltInstruction *instructions;
 
-    /* symbols */
+    /* functions */
     uint  function_ptr_amount;
     uint *function_ptr;
 

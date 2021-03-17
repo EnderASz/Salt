@@ -2,7 +2,7 @@
 // Created by bellrise on 17.03.2021.
 //
 #include "../include/object.h"
-
+#include "../include/core.h"
 
 SaltObject *salt_object_create()
 {

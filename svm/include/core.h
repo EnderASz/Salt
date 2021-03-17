@@ -6,6 +6,10 @@
 #ifndef SVM_CORE_H
 #define SVM_CORE_H
 
+#include "core.h"
+#include "object.h"
+#include "module.h"
+#include "data.h"
 #include <stdio.h>
 
 #ifdef _WIN32
@@ -54,5 +58,17 @@ void *vmalloc(uint size);
  * @param size amount of bytes to deallocate
  */
 void vmfree(void *ptr, uint size);
+
+/**
+ * Clean all variables from the module.
+ *
+ * @param   module  pointer to module
+ */
+void clean_module(struct SaltModule *module);
+
+/**
+ * Deallocate all memory.
+ */
+void clean_all();
 
 #endif // SVM_CORE_H

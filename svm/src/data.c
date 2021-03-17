@@ -7,3 +7,6 @@
 char *data_filename = NULL;
 
 unsigned long long data_memory_used = 0;
+
+uint MODULE_AMOUNT = 0;
+struct SaltModule *MODULES = NULL;
