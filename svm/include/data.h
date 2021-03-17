@@ -13,4 +13,6 @@
 /* Name of the compiled salt code (FILE argument) */
 extern char *data_filename;
 
+extern unsigned long long data_memory_used;
+
 #endif // SVM_DATA_H

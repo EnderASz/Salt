@@ -22,7 +22,7 @@ struct SaltModule {
     char name[64];
 
     /* local objects */
-    uint        size;
+    uint object_amount;
     SaltObject *objects;
 
     /* imports */
@@ -31,10 +31,11 @@ struct SaltModule {
 
     /* bytecode */
     uint instruction_amount;
-    byte **instructions;
+    struct SaltInstruction *instructions;
 
-    /*  */
-
+    /* symbols */
+    uint  function_ptr_amount;
+    uint *function_ptr;
 
 };
 

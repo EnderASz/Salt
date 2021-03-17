@@ -38,4 +38,21 @@ struct SaltInstruction {
 
 };
 
+/**
+ * Allocate n bytes in the heap, registering the memory usage in the global
+ * MEMORY_USED variable.
+ *
+ * @param size  amount of bytes to allocate
+ */
+void *vmalloc(uint size);
+
+/**
+ * Free n bytes from the heap at the given pointer. Removes [size] bytes from
+ * the MEMORY_USED variable.
+ *
+ * @param ptr  pointer to memory
+ * @param size amount of bytes to deallocate
+ */
+void vmfree(void *ptr, uint size);
+
 #endif // SVM_CORE_H

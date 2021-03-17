@@ -46,6 +46,8 @@
 #include "include/args.h"
 #include "include/data.h"
 #include "include/core.h"
+#include "include/module.h"
+#include "include/object.h"
 
 #include <stdio.h>
 
@@ -53,19 +55,30 @@
  grep to, checking the format. */
 const char *svm_version_string = "SVM: format 3";
 
+static void size_check();
 
 int main(int argc, char **argv)
 {
     dprintf("Starting %s\n", SVM_VERSION);
     args_parse(argc, argv);
 
-    dprintf("sizeof(SaltInstruction) = %ld\n", sizeof(struct SaltInstruction));
+    size_check();
 
     if (data_filename == NULL) {
         printf("Please provide a filename. See \"--help\" for more\n");
         goto end;
     }
 
+    if (data_memory_used != 0)
+        printf("[!] You have a memory leak of %lld bytes\n", data_memory_used);
+
 end:
     return 0;
+}
+
+static void size_check()
+{
+    dprintf("sizeof(SaltObject) = %ld\n", sizeof(SaltObject));
+    dprintf("sizeof(SaltModule) = %ld\n", sizeof(struct SaltModule));
+    dprintf("sizeof(SaltInstruction) = %ld\n", sizeof(struct SaltInstruction));
 }
