@@ -48,6 +48,7 @@
 #include "include/core.h"
 #include "include/module.h"
 #include "include/object.h"
+#include "include/loader.h"
 
 #include <stdio.h>
 
@@ -68,6 +69,10 @@ int main(int argc, char **argv)
         printf("Please provide a filename. See \"--help\" for more\n");
         goto end;
     }
+
+    load(data_filename, "__main__");
+
+    module_delete_all();
 
     if (data_memory_used != 0)
         printf("[!] You have a memory leak of %lld bytes\n", data_memory_used);

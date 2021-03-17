@@ -17,9 +17,11 @@
  and then linked live during execution. */
 struct SaltModule {
 
-    /* the maximum size of a module "namespace" is 63 chars (the compiler should
-     not compile modules with names larger than 63 chars. ) */
-    char name[64];
+    byte open_byte;
+
+    /* the maximum size of a module "namespace" is 62 chars (the compiler should
+     not compile modules with names larger than 62 chars. ) */
+    char name[63];
 
     /* local objects */
     uint object_amount;
@@ -39,14 +41,24 @@ struct SaltModule {
 
 };
 
-typedef struct SaltModule SaltModule;
-
 /**
- * Create a new SaltModule and allocate
+ * Create a new SaltModule and put it on the global list.
  *
  * @param name  name of the object
  * @return      heap-allocated SaltModule.
  */
-SaltModule *salt_module_create(char *name);
+struct SaltModule *module_create(char *name);
+
+/**
+ * Delete the module from the array.
+ *
+ * @param name
+ */
+void module_delete(char *name);
+
+/**
+ * Remove all modules from memory.
+ */
+void module_delete_all();
 
 #endif // SVM_MODULE_H

@@ -60,15 +60,13 @@ void *vmalloc(uint size);
 void vmfree(void *ptr, uint size);
 
 /**
- * Clean all variables from the module.
+ * Reallocate the given piece of memory to another location.
  *
- * @param   module  pointer to module
+ * @param   ptr     pointer to initial memory
+ * @param   before  amount of memory used before
+ * @param   after   amount of memory used after
+ * @return pointer to memory
  */
-void clean_module(struct SaltModule *module);
-
-/**
- * Deallocate all memory.
- */
-void clean_all();
+void *vmrealloc(void *ptr, uint before, uint after);
 
 #endif // SVM_CORE_H
