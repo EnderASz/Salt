@@ -157,7 +157,15 @@ namespace salt
          * @return  array of bytes representing the value
          */
         template<typename T>
-        static std::vector<byte> makeNum(T val);
+        static std::vector<byte> makeNum(T val)
+        {
+            std::vector<byte> collector;
+            for (short i = 0; i < (short) sizeof(T); i++) {
+                collector.push_back(((byte *) &val)[i]);
+            }
+                
+            return collector;
+        }
         
         /**
          * Convert the string or boolean value of the type into the SVM byte

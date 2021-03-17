@@ -104,17 +104,6 @@ namespace salt
 
     // make
 
-    template<typename T>
-    std::vector<byte> Synthesizer::makeNum(T val)
-    {
-        std::vector<byte> collector;
-        for (short i = 0; i < (short) sizeof(T); i++) {
-            collector.push_back(((byte *) &val)[i]);
-        }
-            
-        return collector;
-    }
-
     std::vector<byte> Synthesizer::makeString(std::string val)
     {
         std::vector<byte> collector;

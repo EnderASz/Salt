@@ -5,6 +5,8 @@
 #include "../include/compiler_metadata.h"
 
 #include "../include/utils.h"
+#include "../include/scc/synthesizer.h"
+#include <stdint.h>
 #include <array>
 
 namespace salt
@@ -15,7 +17,9 @@ namespace salt
         '\x7F', 'S', 'C', 'C', '\xFF', '\xEE'};
 
     /* Format version identificator */
-    const std::array<byte, 2> CompilerMetadata::SCC_VERSION = {'\x01', '\x00'};
+    const std::array<byte, 2> CompilerMetadata::SCC_VERSION =
+        ptr_to_array<byte, 2>(Synthesizer::makeNum((uint16_t) 1).data());
+        /*                     format version number (uint16) ^         */
 
     /* Compiler signature */
     const std::array<byte, 8> CompilerMetadata::COMPILER_SIGNATURE = {

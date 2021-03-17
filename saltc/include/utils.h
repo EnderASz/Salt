@@ -7,6 +7,8 @@
 
 #include <queue>
 #include <string>
+#include <array>
+#include <vector>
 
 using std::string;
 
@@ -22,5 +24,12 @@ T pop(Q& container) {
 }
 
 string load_file(string filepath);
+
+template<typename T, size_t N, class A = std::array<T, N>>
+A ptr_to_array(T* data) {
+    A array;
+    std::copy(data, data+N, array.begin());
+    return array;
+}
 
 #endif // UTILS_H_
