@@ -24,7 +24,7 @@
             font-family: monospace;
         }
         .struct th, td {
-            border: 1px solid black;
+            border: 1px solid #000000;
             padding: 8px;
             text-align: left;
         }
@@ -41,9 +41,9 @@
 </head>
 <body>
     <h1>
-        Salt Compiled Code (scc) documentation
+        Salt Compiled Code (scc3) documentation
     </h1>
-    
+
     <hr>
     <p>
         The Salt programming langauge is compiled to a SCC file before it gets executed, to
@@ -55,8 +55,8 @@
         <code>0x0a</code> bytes in strings must be replaced with <code>0x11</code> bytes, which
         will then get converted to newlines.
         <br>
-        Important note: <b>all object IDs created by the user must start from <code>0080 0000</code> 
-        (128)</b>. The first 127 object IDs are reserved by the SVM. Assigning an object to these
+        Important note: <b>all object IDs created by the user must start from <code>0800 0000</code>
+        (8)</b>. The first 8 object IDs are reserved by the SVM. Assigning an object to these
         reserved IDs may cause unexpected problems.
     </p>
     
@@ -83,7 +83,7 @@
             </tr>
             <tr>
                 <td><code>8</code></td>
-                <td><code>xxxx 0000 0000 0000</code></td>
+                <td><code>0300 0000 0000 0000</code></td>
                 <td>
                     <code>SCC_VERSION</code>: format version
                 </td>
@@ -97,23 +97,9 @@
             </tr>
             <tr>
                 <td><code>24</code></td>
-                <td><code>xxxx xxxx 0000 0000</code></td>
+                <td><code>0000 0000 0000 0000<br>0000 0000 0000 0000<br>0000 0000 0000 0000<br>0000 0000 0000 0000</code></td>
                 <td>
-                    amount of constant strings 
-                </td>
-            </tr>
-            <tr>
-                <td><code>32</code></td>
-                <td><code>xxxx xxxx 0000 0000</code></td>
-                <td>
-                    max instruction width; has to be a multiple of 16. 
-                </td>
-            </tr>
-            <tr>
-                <td><code>40</code></td>
-                <td><code>0000 0000 0000 0000<br>0000 0000 0000 0000</code></td>
-                <td>
-                    none (yet)
+                    none
                 </td>
             </tr>
             <tr>
@@ -200,155 +186,38 @@
     <hr>
     <h2>SVM Calls</h2>
     <p>
-        Each byte is marked with 2 "exes".
+        This is a list of SVM calls you can make in the latest format.
     </p>
 
-    <div id="s_dumpi">
-        <h2 class="svmcall">DUMPI id</h2>
+
+    <div id="s_vmake">
+        <h2 class="svmcall">RMAKE id</h2>
         <p>
-            Print the ID of the object (without a newline).
+            Print the object value
         </p>
         <table class="struct">
             <tr>
                 <td>xxxx xxxx</td>
             </tr>
+            <tr>
                 <td>uint id: object id</td>
-        </table>
-    </div>
-
-    <div id="s_dumpv">
-        <h2 class="svmcall">DUMPV id</h2>
-        <p>
-            Print the value of the object to standard out (without a newline). Note that this
-            is based on a switch case statement reading the type of the object to call the correct
-            function, so it's a lot slower than just calling <code><a href="#s_print">PRINT</a></code>.
-        </p>
-        <table class="struct">
-            <tr>
-                <td>xxxx xxxx</td>
             </tr>
-                <td>uint id: object id</td>
         </table>
     </div>
 
-    <div id="s_extld">
-        <h2 class="svmcall">EXTLD strl ...</h2>
-        <p>
-            Load external dynamic library.
-        </p>
-        <table class="struct">
-            <tr>
-                <td>xxxx xxxx</td>
-                <td>...</td>
-            </tr>
-                <td>uint strl: length of string</td>
-                <td>payload: library name</td>
-        </table>
-    </div>
-
-    <div id="s_killx">
-        <h2 class="svmcall">KILLX</h2>
-        <p>
-            Brutally kill the program and all its threads stopping the execution and immediately calling
-            <code>core_clean</code>. Note that this is not the preffered way of stopping code execution.
-        </p>
-    </div>
 
     <div id="s_print">
         <h2 class="svmcall">PRINT id</h2>
         <p>
-            Print a constant string to standard out. This is the preffered way of printing
-            constant strings, because it is much faster compared to calling 
-            <code><a href="#s_dumpv">DUMPV</a></code>.
+            Print the object value
         </p>
         <table class="struct">
             <tr>
                 <td>xxxx xxxx</td>
             </tr>
-                <td>uint id: const string id</td>
-        </table>
-    </div>
-
-    <div id="s_sleep">
-        <h2 class="svmcall">SLEEP ms</h2>
-        <p>
-            Sleep the given amount of miliseconds.
-        </p>
-        <table class="struct">
             <tr>
-                <td>xxxx xxxx</td>
-            </tr>
-                <td>uint ms: amount of miliseconds</td>
-        </table>
-    </div>
-
-    <div id="s_rxcpy">
-        <h2 class="svmcall">RXCPY dest src</h2>
-        <p>
-            Create a new object with the specified destination id and copy the object 
-            from the source id to it.
-        </p>
-        <table class="struct">
-            <tr>
-                <td>xxxx xxxx</td>
-                <td>xxxx xxxx</td>
-            </tr>
-                <td>uint dest: destination id</td>
-                <td>uint src: source id</td>
-        </table>
-    </div>
-
-    <div id="s_rxdel">
-        <h2 class="svmcall">RXDEL id</h2>
-        <p>
-            Delete the object by freeing the allocated memory for the value and removing
-            the ID from the register.
-        </p>
-        <table class="struct">
-            <tr>
-                <td>xxxx xxxx</td>
-            </tr>
                 <td>uint id: object id</td>
-        </table>
-    </div>
-
-    <div id="s_rxnew">
-        <h2 class="svmcall">RXNEW id const type [strl] ...</h2>
-        <p>
-            Create a new object and allocate a sufficent amount of memory.
-        </p>
-        <table class="struct">
-            <tr>
-                <td>xxxx xxxx</td>
-                <td>xx</td>
-                <td>xx</td>
-                <td>xxxx xxxx</td>
-                <td>...</td>
             </tr>
-                <td>uint id: object id</td>
-                <td>byte const: 0x01 for const object, else 0x00</td>
-                <td>byte <a href="#s_type">type</a></td>
-                <td>uint strl: string length only if type is string</td>
-                <td>payload</td>
-        </table>
-    </div>
-
-    <div id="s_rxset">
-        <h2 class="svmcall">RXSET id type [strl] ...</h2>
-        <p>
-            Assign a new value to the object.
-        </p>
-        <table class="struct">
-            <tr>
-                <td>xxxx xxxx</td>
-                <td>xx</td>
-                <td>xxxx xxxx</td>
-                <td>...</td>
-            </tr>
-                <td>uint id: destination object id</td>
-                <td>byte <a href="#s_type">type</a></td>
-                <td>uint strl: string length only if type is string</td>
-                <td>payload</td>
         </table>
     </div>
 

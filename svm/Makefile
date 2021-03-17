@@ -21,7 +21,6 @@ debug: all
 # Clean after compilation, moving the compiled result to
 # the top folder.
 clean:
-	mv build/$(RESULT) ./$(RESULT)
 	rm -r build
 .PHONY: clean
 
