@@ -3,8 +3,8 @@
  *
  * @author bellrise
  */
-#ifndef ARGS_H
-#define ARGS_H
+#ifndef SVM_ARGS_H
+#define SVM_ARGS_H
 
 /**
  * Parse the given arguments of the program and set variables depending on
@@ -16,4 +16,4 @@
 void args_parse(int argc, char **argv);
 
 
-#endif // ARGS_H
+#endif // SVM_ARGS_H

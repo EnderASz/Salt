@@ -3,13 +3,24 @@
  * for the whole virtual machine.
  *
  */
-#ifndef CORE_H
-#define CORE_H
+#ifndef SVM_CORE_H
+#define SVM_CORE_H
 
 #include <stdio.h>
 
+#ifdef _WIN32
+#define _ARCH 32
+#elif defined(_WIN64) || defined(__linux__)
+#define _ARCH 64
+#endif
+
 #ifdef DEBUG
-#define dprintf(...) printf(__VA_ARGS__)
+#define dprintf(...) \
+{                              \
+        printf("\033[96m%s: \033[0m", __FILE__);    \
+        printf(__VA_ARGS__);                        \
+}
+
 #else
 #define dprintf(...)
 #endif
@@ -20,4 +31,4 @@ typedef unsigned int  uint;
 typedef unsigned char byte;
 
 
-#endif // CORE_H
+#endif // SVM_CORE_H

@@ -4,8 +4,8 @@
  *
  * @author  bellrise
  */
-#ifndef DATA_H
-#define DATA_H
+#ifndef SVM_DATA_H
+#define SVM_DATA_H
 
 #include "core.h"
 #include <stddef.h>
@@ -13,4 +13,4 @@
 /* Name of the compiled salt code (FILE argument) */
 extern char *data_filename;
 
-#endif // DATA_H
+#endif // SVM_DATA_H

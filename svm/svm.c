@@ -55,15 +55,13 @@ const char *svm_version_string = "SVM: format 3";
 
 int main(int argc, char **argv)
 {
+    dprintf("Starting %s\n", SVM_VERSION);
     args_parse(argc, argv);
 
     if (data_filename == NULL) {
         printf("Please provide a filename. See \"--help\" for more\n");
         goto end;
     }
-    else
-        printf("Opening %s\n", data_filename);
-
 
 end:
     return 0;
