@@ -18,6 +18,7 @@ struct SaltObject {
     /* object information */
     uint id;
     byte readonly;
+    byte access;
     byte type;
 
     /* value data */

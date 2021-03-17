@@ -45,6 +45,7 @@
  */
 #include "include/args.h"
 #include "include/data.h"
+#include "include/core.h"
 
 #include <stdio.h>
 
@@ -57,6 +58,8 @@ int main(int argc, char **argv)
 {
     dprintf("Starting %s\n", SVM_VERSION);
     args_parse(argc, argv);
+
+    dprintf("sizeof(SaltInstruction) = %ld\n", sizeof(struct SaltInstruction));
 
     if (data_filename == NULL) {
         printf("Please provide a filename. See \"--help\" for more\n");
