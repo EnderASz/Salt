@@ -8,6 +8,13 @@
 
 static uint64_t g_memory_used = 0;
 
+void core_exit()
+{
+    module_delete_all();
+    vibe_check();
+    exit(0);
+}
+
 void *vmalloc(uint size)
 {
     g_memory_used += size;
@@ -31,4 +38,14 @@ void *vmrealloc(void *ptr, uint before, uint after)
 uint64_t vmused()
 {
     return g_memory_used;
+}
+
+void vibe_check()
+{
+    if (g_memory_used == 0) {
+        dprintf("heap memory clean\n");
+    }
+    else {
+        dprintf("( %ld ) bytes are not free'd yet!\n", g_memory_used);
+    }
 }

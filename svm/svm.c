@@ -50,10 +50,11 @@
 #include "include/loader.h"
 
 #include <stdio.h>
+#include <string.h>
 
 /* This string will show up in the compiled version of SVM which you can then
  grep to, checking the format. */
-const char *svm_version_string = "SVM: format 3";
+const char *svm_grep_string = "SVM: f3 "SVM_VERSION" "__TIMESTAMP__;
 
 static void size_check();
 
@@ -69,13 +70,11 @@ int main(int argc, char **argv)
         goto end;
     }
 
-    if (!load(filename, "__main__"))
-        return 1;
+    struct SaltModule *main = load(filename);
+    strcpy(main->name, "__main__");
 
     module_delete_all();
-
-    if (vmused() != 0)
-        printf("[!] You have a memory leak of %ld bytes\n", vmused());
+    vibe_check();
 
 end:
     return 0;

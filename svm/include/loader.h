@@ -8,6 +8,7 @@
 #define SVM_LOADER_H
 
 #include "core.h"
+#include "module.h"
 
 /**
  * Load the given compiled salt code into the global module list. Here is
@@ -18,9 +19,8 @@
  *  - load symbols from bytecode
  *
  * @param   name name of the module
- * @param   alternative alternative name
- * @returns load status, 0 for failed 1 for success
+ * @returns pointer to acquired SaltModule
  */
-int load(char *name, const char *alternative);
+struct SaltModule *load(char *name);
 
 #endif // SVM_LOADER_H

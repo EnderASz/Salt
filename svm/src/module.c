@@ -9,7 +9,7 @@ static uint g_module_size = 0;
 static uint g_module_space = 0;
 static struct SaltModule* g_modules = NULL;
 
-static struct SaltModule *module_aquire_new()
+static struct SaltModule *module_acquire_new()
 {
     if (g_module_space == 0) {
         g_module_space++;
@@ -29,12 +29,14 @@ static struct SaltModule *module_aquire_new()
 
 struct SaltModule* module_create(char *name)
 {
-    struct SaltModule *mod = module_aquire_new();
+    struct SaltModule *mod = module_acquire_new();
     mod->open_byte = 0x01;
 
     if (strlen(name) > 62) {
         exception_throw(EXCEPTION_RUNTIME, "Cannot open module");
     }
+
+    strncpy(mod->name, name, strlen(name));
 
     mod->object_amount = 0;
     mod->objects = NULL;

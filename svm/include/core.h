@@ -11,6 +11,7 @@
 #include "module.h"
 #include <stdio.h>
 #include <stdint.h>
+#include <string.h>
 
 #ifdef _WIN32
 #define _ARCH 32
@@ -18,15 +19,39 @@
 #define _ARCH 64
 #endif
 
+/* dprintf implementations */
 #ifdef DEBUG
-#define dprintf(...)                                \
-{                                                   \
-        printf("\033[96m%s: \033[0m", __FILE__);    \
-        printf(__VA_ARGS__);                        \
+
+#if defined(_WIN32)
+
+#include <windows.h>
+#define dprintf(...)                                                \
+{                                                                   \
+    HANDLE hOut = GetStdHandle(STD_OUTPUT_HANDLE);                  \
+    SetConsoleTextAttribute(hOut, ((0 & 0x0F) << 4) + (3 & 0x0F));  \
+    printf("%s", __FILE__);                                         \
+    SetConsoleTextAttribute(hOut, ((0 & 0x0F) << 4) + (1 & 0x0F));  \
+    printf("::");                                                   \
+    SetConsoleTextAttribute(hOut, ((0 & 0x0F) << 4) + (2 & 0x0F));  \
+    printf("%s: ", __FUNCTION__);                                   \
+    SetConsoleTextAttribute(hOut, ((0 & 0x0F) << 4) + (15 & 0x0F)); \
+    printf(__VA_ARGS__);                                            \
 }
+#elif defined(__linux__)
+
+#define dprintf(...)                                  \
+{                                                     \
+    printf("\033[96m%s\033[34m::\033[92m%s: \033[0m", \
+    __FILE__, __FUNCTION__);                          \
+    printf(__VA_ARGS__);                              \
+}
+
+#endif
+
 #else
 #define dprintf(...)
 #endif
+/* end of dprintf implementations */
 
 // Types
 
@@ -43,6 +68,13 @@ struct SaltInstruction {
 };
 
 // Globals
+
+/**
+ * Always call this instead of the normal exit, because this function
+ * additionally cleans up the heap allocated memory before calling exit
+ * from stdlib.
+ */
+void core_exit();
 
 /**
  * Allocate n bytes in the heap, registering the memory usage in the global
@@ -77,5 +109,10 @@ void *vmrealloc(void *ptr, uint before, uint after);
  * @return g_memory_used
  */
 uint64_t vmused();
+
+/**
+ * Check the current status of the memory.
+ */
+void vibe_check();
 
 #endif // SVM_CORE_H

@@ -19,8 +19,15 @@ static void help_page()
     printf("Usage: svm [OPTION]... FILE\n"
            "svm - Salt Virtual Machine for executing compiled salt code\n\n"
            "  FILE          the compiled salt executable\n"
-           "  -h, --help    show this and exit\n");
-    exit(1);
+           "  -h, --help    show this and exit\n"
+           "  -v, --version show the version and exit\n");
+    core_exit();
+}
+
+static void version_page()
+{
+    printf("%s\n", SVM_VERSION);
+    core_exit();
 }
 
 char* args_parse(int argc, char **argv)
@@ -31,6 +38,8 @@ char* args_parse(int argc, char **argv)
 
         if (arg(argv[i], "--help", "-h"))
             help_page();
+        else if (arg(argv[i], "--version", "-v"))
+            version_page();
         else
             filename = argv[i];
     }
