@@ -69,6 +69,7 @@ static void module_deallocate(struct SaltModule *module)
 void module_delete_all()
 {
     for (uint i = 0; i < g_module_size; i++) {
+        dprintf("Removed module: %s\n", g_modules[i].name);
         module_deallocate(&g_modules[i]);
     }
 

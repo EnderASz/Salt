@@ -44,7 +44,6 @@
  * @version  0.1
  */
 #include "include/args.h"
-#include "include/data.h"
 #include "include/core.h"
 #include "include/module.h"
 #include "include/object.h"
@@ -61,21 +60,22 @@ static void size_check();
 int main(int argc, char **argv)
 {
     dprintf("Starting %s\n", SVM_VERSION);
-    args_parse(argc, argv);
+    char *filename = args_parse(argc, argv);
 
     size_check();
 
-    if (data_filename == NULL) {
+    if (filename == NULL) {
         printf("Please provide a filename. See \"--help\" for more\n");
         goto end;
     }
 
-    load(data_filename, "__main__");
+    if (!load(filename, "__main__"))
+        return 1;
 
     module_delete_all();
 
-    if (data_memory_used != 0)
-        printf("[!] You have a memory leak of %lld bytes\n", data_memory_used);
+    if (vmused() != 0)
+        printf("[!] You have a memory leak of %ld bytes\n", vmused());
 
 end:
     return 0;

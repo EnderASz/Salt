@@ -9,8 +9,8 @@
 #include "core.h"
 #include "object.h"
 #include "module.h"
-#include "data.h"
 #include <stdio.h>
+#include <stdint.h>
 
 #ifdef _WIN32
 #define _ARCH 32
@@ -42,6 +42,8 @@ struct SaltInstruction {
 
 };
 
+// Globals
+
 /**
  * Allocate n bytes in the heap, registering the memory usage in the global
  * MEMORY_USED variable.
@@ -68,5 +70,12 @@ void vmfree(void *ptr, uint size);
  * @return pointer to memory
  */
 void *vmrealloc(void *ptr, uint before, uint after);
+
+/**
+ * Check the current used heap memory.
+ *
+ * @return g_memory_used
+ */
+uint64_t vmused();
 
 #endif // SVM_CORE_H

@@ -13,7 +13,7 @@
  * @param argc amount of arguments
  * @param argv string array of arguments
  */
-void args_parse(int argc, char **argv);
+char *args_parse(int argc, char **argv);
 
 
 #endif // SVM_ARGS_H

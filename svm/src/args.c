@@ -3,7 +3,6 @@
 //
 #include "../include/args.h"
 #include "../include/core.h"
-#include "../include/data.h"
 #include <string.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -24,14 +23,16 @@ static void help_page()
     exit(1);
 }
 
-void args_parse(int argc, char **argv)
+char* args_parse(int argc, char **argv)
 {
+    char* filename = NULL;
     for (int i = 1; i < argc; i++) {
         dprintf("Checking [%d] \"%s\"\n", i, argv[i]);
 
         if (arg(argv[i], "--help", "-h"))
             help_page();
         else
-            data_filename = argv[i];
+            filename = argv[i];
     }
+    return filename;
 }

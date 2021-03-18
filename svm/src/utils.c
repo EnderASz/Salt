@@ -11,6 +11,8 @@ static void dump_hexes(byte *bytes, short amount)
         if (i % 2 != 0)
             printf(" ");
     }
+    if (amount)
+        printf("\n");
 }
 
 void util_hexdump(byte *bytes, uint amount)
@@ -25,11 +27,7 @@ void util_hexdump(byte *bytes, uint amount)
 
     for (uint i = 0; i < lines; i++) {
         dump_hexes(bytes + (i * 16), 16);
-        printf("\n");
     }
-
     dump_hexes(bytes + (amount - rest), rest);
-    printf("\n");
-
 }
 
