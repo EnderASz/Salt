@@ -4,6 +4,8 @@
 #include "../include/loader.h"
 #include "../include/utils.h"
 #include "../include/exception.h"
+#include "../include/exec.h"
+
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
@@ -51,20 +53,43 @@ static void read_instruction(struct SaltInstruction *ins, FILE *fp)
     dprintf("[%d] {%s}\n", width, ins->content);
 }
 
-static void load_instructions(struct SaltModule *module, FILE *fp, int instructions)
+static void process_instruction(struct SaltInstruction *ins)
 {
+    struct SVMCall *exec = exec_get(ins->content);
+    if (exec == NULL)
+        *ins->name = 0;
+    else
+        strncpy(ins->name, exec->instruction, 5);
+}
+
+static void load_instructions(struct SaltModule *module, FILE *fp, int instructions) {
     dprintf("Loading instructions for '%s'\n", module->name);
 
     module->instructions = vmalloc(sizeof(struct SaltInstruction) * instructions);
     module->instruction_amount = instructions;
 
-    for (uint i = 0; i < instructions; i++)
+    for (int i = 0; i < instructions; i++) {
         read_instruction(&module->instructions[i], fp);
+        process_instruction(&module->instructions[i]);
+    }
+}
 
-    for (uint i = 0; i < instructions; i++) {
-
+static void load_labels(struct SaltModule *module)
+{
+    for (uint i = 0; i < module->instruction_amount; i++) {
+        if (module->instructions[i].content[0] == '@')
+            module->label_amount++;
     }
 
+    module->labels = vmalloc(sizeof(uint) * module->label_amount);
+    int curlabel = 0;
+    for (uint i = 0; i < module->instruction_amount; i++) {
+        if (module->instructions[i].content[0] == '@') {
+            module->labels[curlabel] = i;
+            curlabel++;
+        }
+    }
+    dprintf("Found %d labels in %s\n", module->label_amount, module->name);
 }
 
 struct SaltModule *load(char *name)
@@ -98,6 +123,9 @@ struct SaltModule *load(char *name)
     int instructions = load_header(mod);
 
     load_instructions(module, mod, instructions);
+    load_labels(module);
+
+    dprintf("Loaded module %s\n", module->name);
 
     fclose(mod);
     return module;

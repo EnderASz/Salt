@@ -27,6 +27,8 @@ typedef unsigned int  uint;
  object yourself, instead use salt_object_create(...). */
 struct SaltObject {
 
+    byte locked;
+
     /* object information */
     uint id;
     byte readonly;
@@ -58,6 +60,15 @@ typedef struct SaltObject SaltObject;
  * @return brand new heap allocated salt object.
  */
 SaltObject *salt_object_create();
+
+/**
+ * Create a new salt object from the given payload. See doc/scc.html for
+ * information about the payload.
+ *
+ * @param  payload pointer to bytes
+ * @return brand new heap allocated SaltObject.
+ */
+void salt_object_define(SaltObject *obj, byte *payload);
 
 /**
  * This should be assigned to each created salt object in order to free

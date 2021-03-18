@@ -30,7 +30,7 @@ directories:
 	mkdir -p build/objects/arg_parser
 	mkdir -p build/objects/tokenizer
 	mkdir -p build/objects/scc
-
+	mkdir -p build/objects/errors
 
 .PHONY: build
 # This is a seperate target to build the object files on multiple

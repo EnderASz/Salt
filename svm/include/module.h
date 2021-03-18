@@ -10,6 +10,8 @@
 #include "core.h"
 #include "object.h"
 
+#define MODULE_OBJECT_SPACE 32
+
 /* This container stores a single loaded salt module. One module translates
  one compiled .scc file. The big difference between SCC format 1 and format 3
  is the salt modules. Because there would be namespace clashes for externally
@@ -17,14 +19,14 @@
  and then linked live during execution. */
 struct SaltModule {
 
-    byte open_byte;
-
-    /* the maximum size of a module "namespace" is 62 chars (the compiler should
-     not compile modules with names larger than 62 chars. ) */
-    char name[63];
+    /* the maximum size of a module "namespace" is 63 chars (the compiler should
+     not compile modules with names larger than 63 chars. ) */
+    char name[64];
 
     /* local objects */
-    uint object_amount;
+    uint objects_size;
+    uint objects_locked;
+    uint objects_space;
     SaltObject *objects;
 
     /* imports */
@@ -36,8 +38,8 @@ struct SaltModule {
     struct SaltInstruction *instructions;
 
     /* functions */
-    uint  function_ptr_amount;
-    uint *function_ptr;
+    uint  label_amount;
+    uint *labels;
 
 };
 
@@ -55,6 +57,20 @@ struct SaltModule *module_create(char *name);
  * @param name
  */
 void module_delete(char *name);
+
+/**
+ * Acquire a new object pointer. This allocates the needed memory.
+ *
+ * @return brand new object
+ */
+SaltObject *module_acquire_new_object(struct SaltModule *module);
+
+/**
+ * Delete the given object from the module (by ID)
+ *
+ * @param  id  ID of the object that will be unlinked.
+ */
+void module_delete_object(struct SaltModule *module, uint id);
 
 /**
  * Remove all modules from memory.

@@ -29,11 +29,11 @@ namespace salt
     /**
      * The synthesizer class is responsible for generating SCC bytecode.  See
      * Synthesizer.FORMAT for the current used SCC format. This class should be
-     * initialzed before use. Every method that generates a SVM call returns a
+     * initialized before use. Every method that generates a SVM call returns a
      * full instruction, with newline formatting so no external work has to be
      * done.
      *
-     * Each SVM call method has it's desription above the definition, please
+     * Each SVM call method has it's description above the definition, please
      * your time to read that before using it.
      */
     class Synthesizer
@@ -42,6 +42,25 @@ namespace salt
 
         /* Current version of the SCC format. */
         static const int FORMAT = 1;
+
+        /* if the object should be read-only */
+        constexpr static byte CONSTANT_FALSE = 0x00;
+        constexpr static byte CONSTANT_TRUE  = 0x01;
+
+        /* access level (the scope is the module) */
+        constexpr static byte ACCESS_PUBLIC  = 0x00;
+        constexpr static byte ACCESS_PRIVATE = 0x01;
+
+        /* type of the object  */
+        constexpr static byte TYPE_NULL      = 0x00;
+        constexpr static byte TYPE_INT       = 0x01;
+        constexpr static byte TYPE_FLOAT     = 0x02;
+        constexpr static byte TYPE_BOOL      = 0x03;
+        constexpr static byte TYPE_STRING    = 0x04;
+
+        /* prepare the object for threading support */
+        constexpr static byte THREADED_FALSE = 0x00;
+        constexpr static byte THREADED_TRUE  = 0x01;
 
         /** 
          * Print the ID of the object (without a newline). 
@@ -80,9 +99,9 @@ namespace salt
         static std::vector<byte> killx();
 
         /**
-         * Print a constant string to standard out. This is the preffered way
+         * Print a constant string to standard out. This is the preferred way
          * of printing constant strings, because it is much faster compared to
-         * calling DUMPV. 
+         * calling `DUMPV`.
          *
          * @param   id  object ID
          * @return  svm call instruction
@@ -90,9 +109,9 @@ namespace salt
         static std::vector<byte> print(uint id);
 
         /** 
-         * Sleep the given amount of miliseconds. 
+         * Sleep the given amount of milliseconds.
          *
-         * @param   ms  miliseconds to sleep
+         * @param   ms  milliseconds to sleep
          * @return  svm call instruction
          */
         static std::vector<byte> sleep(uint ms);
@@ -199,4 +218,5 @@ namespace salt
     };
 
 } // salt
+
 #endif // SYNTHESIZER_H_

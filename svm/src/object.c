@@ -8,6 +8,8 @@ SaltObject *salt_object_create()
 {
     SaltObject *ptr = vmalloc(sizeof(SaltObject));
 
+    ptr->locked = 0;
+
     ptr->id = 0;
     ptr->readonly = 0;
     ptr->access = ACCESS_PUBLIC;
@@ -22,6 +24,16 @@ SaltObject *salt_object_create()
     ptr->threaded = 0;
     ptr->mutex_aquired = 0;
     return ptr;
+}
+
+static void render_value(SaltObject *obj, byte *payload)
+{
+
+}
+
+void salt_object_define(SaltObject *obj, byte *payload)
+{
+
 }
 
 void salt_object_destructor(SaltObject *obj)

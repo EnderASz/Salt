@@ -30,7 +30,6 @@ static struct SaltModule *module_acquire_new()
 struct SaltModule* module_create(char *name)
 {
     struct SaltModule *mod = module_acquire_new();
-    mod->open_byte = 0x01;
 
     if (strlen(name) > 62) {
         exception_throw(EXCEPTION_RUNTIME, "Cannot open module");
@@ -38,22 +37,74 @@ struct SaltModule* module_create(char *name)
 
     strncpy(mod->name, name, strlen(name));
 
-    mod->object_amount = 0;
+    mod->objects_size = 0;
+    mod->objects_locked = 0;
+    mod->objects_space = 0;
     mod->objects = NULL;
 
     mod->instruction_amount = 0;
     mod->instructions = NULL;
 
-    mod->function_ptr_amount = 0;
-    mod->function_ptr = NULL;
+    mod->label_amount = 0;
+    mod->labels = NULL;
 
     return mod;
 }
 
+static void compress_object_container(struct SaltModule *module)
+{
+    // todo: container compression
+    // dear future me, you wanted to compress the module.objects array by moving
+    // over the pointers to places where there are 'locked' objects, but then you
+    // realised you need to copy over the whole object because the memory where
+    // the objects were before is going to be free'd so a segfault will happen.
+    // I don't have the brain power now at 20 past midnight, but I know you will
+    // later.
+    //
+    // Also, be sure to not leave any null pointers inside the list, because
+    // there are functions checking each element and the pointers can't point
+    // to nothing right?
+    //                                                   Have fun, bellrise <3
+}
+
+static void control_allocation(struct SaltModule *module)
+{
+    if (module->objects_size >= module->objects_space) {
+        uint new_size = MODULE_OBJECT_SPACE + module->objects_space;
+        module->objects = vmrealloc(
+            module->objects,
+            sizeof(SaltObject) * module->objects_space,
+            sizeof(SaltObject) * new_size
+        );
+        module->objects_space = new_size;
+    }
+
+    if (module->objects_space - MODULE_OBJECT_SPACE >= module->objects_size) {
+        compress_object_container(module);
+    }
+}
+
+SaltObject *module_acquire_new_object(struct SaltModule *module)
+{
+    // todo: dont return null?
+    return NULL;
+}
+
+void module_delete_object(struct SaltModule *module, uint id)
+{
+    for (uint i = 0; i < module->objects_size; i++) {
+        if (module->objects[i].id == id && !module->objects[i].locked) {
+            module->objects[i].locked = 1;
+            module->objects_locked++;
+            return;
+        }
+    }
+}
+
 static void module_deallocate(struct SaltModule *module)
 {
-    // Functions pointers
-    vmfree(module->function_ptr, module->function_ptr_amount * sizeof(uint));
+    // Labels
+    vmfree(module->labels, module->label_amount * sizeof(uint));
 
     // Instructions
     for (uint i = 0; i < module->instruction_amount; i++) {
@@ -62,10 +113,10 @@ static void module_deallocate(struct SaltModule *module)
     vmfree(module->instructions, module->instruction_amount * sizeof(struct SaltInstruction));
 
     // Objects
-    for (uint i = 0; i < module->object_amount; i++) {
+    for (uint i = 0; i < module->objects_size; i++) {
         module->objects[i].destructor(&module->objects[i]);
     }
-    vmfree(module->objects, module->object_amount * sizeof(struct SaltObject));
+    vmfree(module->objects, module->objects_space * sizeof(struct SaltObject));
 }
 
 void module_delete_all()
