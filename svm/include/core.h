@@ -19,6 +19,9 @@
 #define _ARCH 64
 #endif
 
+/* marks functions that may return null */
+#define __NULLABLE
+
 /* dprintf implementations */
 #ifdef DEBUG
 

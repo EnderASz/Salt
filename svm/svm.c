@@ -46,6 +46,7 @@
 #include "include/args.h"
 #include "include/core.h"
 #include "include/module.h"
+#include "include/callstack.h"
 #include "include/object.h"
 #include "include/loader.h"
 #include "include/exec.h"
@@ -89,4 +90,5 @@ static void size_check()
     dprintf("sizeof(SaltModule) = %ld\n", sizeof(struct SaltModule));
     dprintf("sizeof(SaltInstruction) = %ld\n", sizeof(struct SaltInstruction));
     dprintf("sizeof(SaltObjectNode) = %ld\n", sizeof(struct SaltObjectNode));
+    dprintf("sizeof(StackFrame) = %ld\n", sizeof(struct StackFrame));
 }

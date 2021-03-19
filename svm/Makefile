@@ -15,6 +15,10 @@ debug : FDEBUG := -D DEBUG=1
 all: directories $(SOURCES) link
 .PHONY: all
 
+# Just a compilation target so you can use -j with make
+compile: $(SOURCES)
+.PHONY: compile
+
 # Compile debug version
 debug: all
 .PHONY: debug
