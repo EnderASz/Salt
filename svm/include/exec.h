@@ -12,7 +12,7 @@
 struct SVMCall {
 
     char instruction[6];
-    int ( *f_exec ) (struct SaltModule *module, int pos);
+    int ( *f_exec ) (struct SaltModule *module, byte *payload, int pos);
 
 };
 
@@ -39,33 +39,33 @@ struct SVMCall *exec_get(char *title);
 /**
  * Exit the program.
  */
-int exec_exite(struct SaltModule *module, int pos);
+int exec_exite(struct SaltModule *module, byte *payload, int pos);
 
 /**
  * Load an external SCC file and add it to the global module register.
  */
-int exec_extld(struct SaltModule *module, int pos);
+int exec_extld(struct SaltModule *module, byte *payload, int pos);
 
 /**
  * Kill the whole program on-the-spot. This tried to free any memory it can as
  * fast as possible, and this kills the whole program. Note that this almost
  * certainly produce unwanted memory leaks, so it's recommended not to use it.
  */
-int exec_killx(struct SaltModule *module, int pos);
+int exec_killx(struct SaltModule *module, byte *payload, int pos);
 
 /**
  * Create a new object in the current module. This should be handled by
  * an external function in the compiler, to always get it right because
  * it's a quite complex instruction.
  */
-int exec_objmk(struct SaltModule *module, int pos);
+int exec_objmk(struct SaltModule *module, byte *payload, int pos);
 
 /**
  * Delete the object in the current module. This doesn't actually remove
  * the object from memory, but signs it as "inactive". The virtual machine
  * decides when to actually free the memory and remove the object permanently.
  */
-int exec_objdl(struct SaltModule *module, int pos);
+int exec_objdl(struct SaltModule *module, byte *payload, int pos);
 
 /**
  * Print the value of the object (without a newline). Most prints require
@@ -73,11 +73,11 @@ int exec_objdl(struct SaltModule *module, int pos);
  * string with only a newline character, and chain the PRINT object & PRINT
  * const_newline.
  */
-int exec_print(struct SaltModule *module, int pos);
+int exec_print(struct SaltModule *module, byte *payload, int pos);
 
 /**
  * Load an external SCC file and add it to the global module register.
  */
-int exec_retrn(struct SaltModule *module, int pos);
+int exec_retrn(struct SaltModule *module, byte *payload, int pos);
 
 #endif // SVM_EXEC_H
