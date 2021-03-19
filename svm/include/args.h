@@ -6,6 +6,8 @@
 #ifndef SVM_ARGS_H
 #define SVM_ARGS_H
 
+#include "core.h"
+
 /**
  * Parse the given arguments of the program and set variables depending on
  * the parameters.
@@ -13,7 +15,6 @@
  * @param argc amount of arguments
  * @param argv string array of arguments
  */
-char *args_parse(int argc, char **argv);
-
+char __NULLABLE *args_parse(int argc, char **argv);
 
 #endif // SVM_ARGS_H

@@ -44,8 +44,8 @@ struct SaltObject {
     uint size;
 
     /* methods */
-    void (*constructor) (struct SaltObject *obj, char *bytes);
-    void (*destructor ) (struct SaltObject *obj);
+    void (* vhandler  ) (struct SaltObject *obj, byte *bytes);
+    void (* destructor) (struct SaltObject *obj);
 };
 
 /* Because the salt object will be used very often, I add a typedef here.
@@ -55,11 +55,18 @@ typedef struct SaltObject SaltObject;
 
 /**
  * Create a raw salt object. Assign all the needed values, settings the object
- * to a null type & value.
+ * to a null type & value. This calls salt_object_init under the hood.
  *
  * @return brand new heap allocated salt object.
  */
 SaltObject *salt_object_create();
+
+/**
+ * Initializes the passed object with all the default values.
+ *
+ * @param   obj  pointer to salt object
+ */
+void salt_object_init(SaltObject *obj);
 
 /**
  * Create a new salt object from the given payload. See doc/scc.html for
@@ -69,6 +76,13 @@ SaltObject *salt_object_create();
  * @return brand new heap allocated SaltObject.
  */
 void salt_object_define(SaltObject *obj, byte *payload);
+
+/**
+ * Print the object without a newline or space after it.
+ *
+ * @param   obj  pointer to the object
+ */
+void salt_object_print(SaltObject *obj);
 
 /**
  * This should be assigned to each created salt object in order to free

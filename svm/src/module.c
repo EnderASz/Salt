@@ -27,44 +27,71 @@ static struct SaltModule *module_acquire_new()
     return &g_modules[g_module_size - 1];
 }
 
-static void collapse_object_nodes(struct SaltObjectNode *node)
+// Node operations
+
+static void nodes_collapse(struct SaltModule *module)
 {
-    // If the current node is null, it means there is no objects to be collapsed.
-    // This needs to be returned early in this case, because there is the while
-    // loop which depends on the next element in the node.
-    if (node == NULL)
-        return;
+    struct SaltObjectNode *node = module->object_first;
+    while (node->next != NULL) {
+        node = node->next;
+        dprintf("Collapsing %p : %d : %p\n", node->previous, node->data.id, node->next);
+        node->previous->data.destructor(&node->previous->data);
+        vmfree(node->previous, sizeof(struct SaltObjectNode));
+        node->previous = NULL;
+    }
+    // Free self
+    node->data.destructor(&node->data);
+    vmfree(node, sizeof(struct SaltObjectNode));
+}
 
-    // This collapses each node from the back, making this a very intensive
-    // operation which should be done only at the end when removing the module.
-    // I'll explain how it works because the next time you'll look at this code
-    // you'll have no idea what this does: This finds the last node in the
-    // linked list and then removes it from memory, setting the pointer to the
-    // last object from the previous object to NULL. This is done until every
-    // element from the list is removed.
+SaltObject *module_object_acquire(struct SaltModule *module)
+{
+    struct SaltObjectNode *new_node = vmalloc(sizeof(struct SaltObjectNode));
+    new_node->next = NULL;
+    new_node->previous = module->object_last;
 
-    struct SaltObjectNode *current_node  = node;
-    struct SaltObjectNode *previous_node = NULL;
+    module->object_last->next = new_node;
+    module->object_last = new_node;
 
+    salt_object_init(&new_node->data);
+    return &new_node->data;
+}
+
+SaltObject *module_object_find(struct SaltModule *module, uint id)
+{
+    struct SaltObjectNode *node = module->object_first;
     while (node != NULL) {
+        if (node->data.id == id)
+            return &node->data;
+        node = node->next;
+    }
+    // Return null value otherwise
+    return &module->object_first->data;
+}
 
-        while (1) {
-            if (current_node->next == NULL)
-                break;
-            previous_node = current_node;
-            current_node = current_node->next;
+void module_object_delete(struct SaltModule *module, uint id)
+{
+    if (id == 0)
+        exception_throw(EXCEPTION_RUNTIME, "Cannot remove object of ID 0");
+
+    struct SaltObjectNode *node = module->object_last;
+    while (node->previous != NULL) {
+        if (node->data.id == id) {
+
+            // Unlink from list
+            node->previous->next = node->next;
+            node->next->previous = node->previous;
+
+            node->data.destructor(&node->data);
+            vmfree(node, sizeof(struct SaltObjectNode));
+
         }
-
-        // Unlink
-        previous_node->next = NULL;
-        current_node->object.destructor(&current_node->object);
-        vmfree(current_node, sizeof(struct SaltObjectNode));
-
-        // Reset data
-        current_node  = node;
-        previous_node = NULL;
+        node = node->previous;
     }
 }
+
+
+// Module operations
 
 struct SaltModule* module_create(char *name)
 {
@@ -76,46 +103,24 @@ struct SaltModule* module_create(char *name)
 
     strncpy(mod->name, name, strlen(name));
 
-    mod->objects = NULL;
-
     mod->instruction_amount = 0;
     mod->instructions = NULL;
 
     mod->label_amount = 0;
     mod->labels = NULL;
 
-    return mod;
-}
-
-SaltObject *module_object_acquire(struct SaltModule *module)
-{
-    // Find last in linked list
-    struct SaltObjectNode *node = NULL;
-    do {
-        node = node->next;
-    } while (node != NULL);
-
-    node = vmalloc(sizeof(struct SaltObjectNode));
+    // Linked list requires to have at least one element, in this case
+    // the default object at location one is the NULLPTR object (id 0)
+    struct SaltObjectNode *node = vmalloc(sizeof(struct SaltObjectNode));
     node->next = NULL;
+    node->previous = NULL;
 
-    node->object.id = 0;
-    node->object.type = OBJECT_TYPE_NULL;
-    node->object.access = ACCESS_PUBLIC;
-    node->object.readonly = READONLY_FALSE;
-    node->object.mutex_aquired = 0;
+    salt_object_init(&node->data);
 
-    node->object.value = NULL;
-    node->object.size = 0;
+    mod->object_first = node;
+    mod->object_last = node;
 
-    node->object.destructor = salt_object_destructor;
-    node->object.constructor = NULL;
-
-    return node;
-}
-
-void module_object_delete(struct SaltModule *module, uint id)
-{
-    // todo: remove objects by relinking
+    return mod;
 }
 
 static void module_deallocate(struct SaltModule *module)
@@ -127,7 +132,7 @@ static void module_deallocate(struct SaltModule *module)
     }
     vmfree(module->instructions, module->instruction_amount * sizeof(struct SaltInstruction));
 
-    collapse_object_nodes(module->objects);
+    nodes_collapse(module);
 }
 
 void module_delete_all()

@@ -17,8 +17,10 @@
  linked list. */
 struct SaltObjectNode {
 
-    SaltObject object;
+    struct SaltObjectNode *previous;
     struct SaltObjectNode *next;
+
+    SaltObject data;
 
 };
 
@@ -33,8 +35,9 @@ struct SaltModule {
      not compile modules with names larger than 63 chars. ) */
     char name[64];
 
-    /* the objects are stored in a linked list */
-    struct SaltObjectNode *objects;
+    /* objects - a linked list */
+    struct SaltObjectNode *object_first;
+    struct SaltObjectNode *object_last;
 
     /* imports */
     uint import_amount;
@@ -70,14 +73,22 @@ void module_delete(char *name);
  *
  * @return brand new object
  */
-SaltObject *module_acquire_new_object(struct SaltModule *module);
+SaltObject *module_object_acquire(struct SaltModule *module);
+
+/**
+ * Return the pointer to the given object which matches the ID.
+ *
+ * @param   id  ID of the object
+ * @return  pointer to object
+ */
+SaltObject *module_object_find(struct SaltModule *module, uint id);
 
 /**
  * Delete the given object from the module (by ID)
  *
  * @param  id  ID of the object that will be unlinked.
  */
-void module_delete_object(struct SaltModule *module, uint id);
+void module_object_delete(struct SaltModule *module, uint id);
 
 /**
  * Remove all modules from memory.

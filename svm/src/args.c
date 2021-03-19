@@ -30,7 +30,7 @@ static void version_page()
     core_exit();
 }
 
-char* args_parse(int argc, char **argv)
+char* __NULLABLE args_parse(int argc, char **argv)
 {
     char* filename = NULL;
     for (int i = 1; i < argc; i++) {
