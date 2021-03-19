@@ -56,9 +56,6 @@ int exec(struct SaltModule *main)
         dprintf("[%d] Trying to execute '%s'\n", i, main->instructions[i].name);
 
         struct SVMCall *exec = exec_get(main->instructions[i].name);
-        if (exec == NULL)
-            continue;
-
         i = exec->f_exec(main, (byte *) main->instructions[i].content + 5, i);
     }
     return 0;
@@ -74,15 +71,20 @@ struct SVMCall *exec_get(char *title)
     return &g_execs[0];
 }
 
-int exec_exite(struct SaltModule *module, byte *payload, int pos)
+static int exec_find_end(struct SaltModule *module)
 {
     for (uint i = 0; i < module->label_amount; i++) {
         char *content = module->instructions[module->labels[i]].content;
         if (strcmp(content, "@$__END__") == 0)
-            return i;
+            return module->labels[i];
     }
     exception_throw(EXCEPTION_RUNTIME, "Cannot find end label");
-    return ++pos;
+    return -1;
+}
+
+int exec_exite(struct SaltModule *module, byte *payload, int pos)
+{
+    return exec_find_end(module);
 }
 
 int exec_extld(struct SaltModule *module, byte *payload, int pos)
@@ -106,7 +108,7 @@ int exec_objmk(struct SaltModule *module, byte *payload, int pos)
 
 int exec_objdl(struct SaltModule *module, byte *payload, int pos)
 {
-    exception_throw(EXCEPTION_RUNTIME, "OBJDL is not implemented yet");
+    module_object_delete(module, * (uint *) payload);
     return ++pos;
 }
 
@@ -119,6 +121,14 @@ int exec_print(struct SaltModule *module, byte *payload, int pos)
 
 int exec_retrn(struct SaltModule *module, byte *payload, int pos)
 {
-    exception_throw(EXCEPTION_RUNTIME, "RETRN is not implemented yet");
-    return ++pos;
+    callstack_pop();
+    struct StackFrame *frame = callstack_peek();
+    if (frame == NULL) {
+        pos = exec_find_end(module);
+    }
+    else {
+        pos = frame->line;
+    }
+    dprintf("Jumping back to [%d]\n", pos);
+    return pos;
 }

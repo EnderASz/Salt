@@ -15,7 +15,7 @@ void exception_throw(const char *exception, const char *msg)
     int size = callstack_size();
     for (uint i = 0; i < size; i++) {
         struct StackFrame *frame = callstack_peek();
-        fprintf(stderr, "  at: %s.%s\n", frame->module,
+        fprintf(stderr, "  at %s.%s\n", frame->module,
                 frame->function);
         callstack_pop();
     }

@@ -35,6 +35,8 @@ int callstack_size()
 struct StackFrame __NULLABLE *callstack_peek()
 {
     dprintf("Peeking at [%d]\n", g_callstack_size - 1);
+    if (g_callstack_size - 1 < 0)
+        return NULL;
     return &g_callstack[g_callstack_size - 1];
 }
 
