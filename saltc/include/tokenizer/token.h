@@ -18,7 +18,6 @@ enum TokenType
     // Keywords
     KW_PUBLIC,      // public
     KW_PRIVATE,     // private
-    KW_INTERNAL,    // internal
     KW_CONST,       // const
 
     // Control keywords
@@ -27,6 +26,7 @@ enum TokenType
     KW_RETURN,      // return
     KW_IF,          // if
     KW_ELSE,        // else
+    KW_ELIF,        // elif
     KW_WHILE,       // while
     KW_FOR,         // for
     KW_THROW,       // throw
@@ -96,7 +96,6 @@ enum TokenType
     MULTOP_NOT,     // !
 
     // Base types
-    TYPE_NULL,       // null
     TYPE_BOOL,       // bool
     TYPE_INT,        // int
     TYPE_FLOAT,      // float
@@ -110,7 +109,7 @@ enum TokenType
     TOKL_BOOL,      // true | false
 
     // Name
-    TOK_NAME,       // names used to call functions, access variables etc.
+    TOK_NAME,       // names used to calls, accesses, imports etc.
 }; // salt::tokenizer::TokenType
  
 /**
