@@ -46,7 +46,8 @@ static void read_instruction(struct SaltInstruction *ins, FILE *fp)
         width++;
 
     ins->size = width;
-    ins->content = vmalloc(sizeof(char) * (ins->size));
+    ins->content = vmalloc(sizeof(char) * (width));
+    ins->content[width - 1] = 0;
     fseek(fp, -width, SEEK_CUR);
     fread(ins->content, 1, width - 1, fp);
     fgetc(fp);
@@ -86,10 +87,11 @@ static void load_labels(struct SaltModule *module)
     for (uint i = 0; i < module->instruction_amount; i++) {
         if (module->instructions[i].content[0] == '@') {
             module->labels[curlabel] = i;
+            dprintf("Label '%s'\n", module->instructions[i].content + 1);
             curlabel++;
         }
     }
-    dprintf("Found %d labels in %s\n", module->label_amount, module->name);
+    dprintf("Found %d labels in '%s'\n", module->label_amount, module->name);
 }
 
 struct SaltModule *load(char *name)

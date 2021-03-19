@@ -5,16 +5,36 @@
 #include "../include/exception.h"
 #include <string.h>
 
+/* killx is the last instruction if no other is found. */
 static struct SVMCall g_execs[] = {
     {"EXITE", exec_exite},
     {"EXTLD", exec_extld},
     {"OBJMK", exec_objmk},
     {"OBJDL", exec_objdl},
     {"PRINT", exec_print},
-    {"RETRN", exec_retrn}
+    {"RETRN", exec_retrn},
+    {"KILLX", exec_killx},
 };
 
-static uint g_exec_amount = 6;
+static uint g_exec_amount = 7;
+
+/* main exec */
+
+int exec(struct SaltModule *main)
+{
+    for (uint i = 0; i < main->instruction_amount; ) {
+
+        // Find matching exec
+        uint j = 0;
+        for (j = 0; j < g_exec_amount; j++) {
+            if (strncmp(main->instructions->content, g_execs[j].instruction, 5) == 0)
+                break;
+        }
+
+        i = g_execs[i].f_exec(main, i);
+    }
+}
+
 
 struct SVMCall *exec_get(char *title)
 {
@@ -38,25 +58,36 @@ int exec_exite(struct SaltModule *module, int pos)
 
 int exec_extld(struct SaltModule *module, int pos)
 {
+    exception_throw(EXCEPTION_RUNTIME, "EXTLD is not implemented yet");
+    return 0;
+}
 
+int exec_killx(struct SaltModule *module, int pos)
+{
+    core_exit();
+    return 0;
 }
 
 int exec_objmk(struct SaltModule *module, int pos)
 {
-
+    exception_throw(EXCEPTION_RUNTIME, "OBJMK is not implemented yet");
+    return 0;
 }
 
 int exec_objdl(struct SaltModule *module, int pos)
 {
-
+    exception_throw(EXCEPTION_RUNTIME, "OBJDL is not implemented yet");
+    return 0;
 }
 
 int exec_print(struct SaltModule *module, int pos)
 {
-
+    exception_throw(EXCEPTION_RUNTIME, "PRINT is not implemented yet");
+    return 0;
 }
 
 int exec_retrn(struct SaltModule *module, int pos)
 {
-
+    exception_throw(EXCEPTION_RUNTIME, "RETRN is not implemented yet");
+    return 0;
 }

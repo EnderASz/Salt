@@ -48,6 +48,7 @@
 #include "include/module.h"
 #include "include/object.h"
 #include "include/loader.h"
+#include "include/exec.h"
 
 #include <stdio.h>
 #include <string.h>
@@ -73,6 +74,8 @@ int main(int argc, char **argv)
     struct SaltModule *main = load(filename);
     strcpy(main->name, "__main__");
 
+    exec(main);
+
     module_delete_all();
     vibe_check();
 
@@ -85,4 +88,5 @@ static void size_check()
     dprintf("sizeof(SaltObject) = %ld\n", sizeof(SaltObject));
     dprintf("sizeof(SaltModule) = %ld\n", sizeof(struct SaltModule));
     dprintf("sizeof(SaltInstruction) = %ld\n", sizeof(struct SaltInstruction));
+    dprintf("sizeof(SaltObjectNode) = %ld\n", sizeof(struct SaltObjectNode));
 }

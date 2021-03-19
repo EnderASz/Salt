@@ -12,6 +12,16 @@
 
 #define MODULE_OBJECT_SPACE 32
 
+/* Objects in the SaltModule are stored in a linked list for greater efficiency
+ when removing objects, which do not require any data movement when stored in a
+ linked list. */
+struct SaltObjectNode {
+
+    SaltObject object;
+    struct SaltObjectNode *next;
+
+};
+
 /* This container stores a single loaded salt module. One module translates
  one compiled .scc file. The big difference between SCC format 1 and format 3
  is the salt modules. Because there would be namespace clashes for externally
@@ -23,11 +33,8 @@ struct SaltModule {
      not compile modules with names larger than 63 chars. ) */
     char name[64];
 
-    /* local objects */
-    uint objects_size;
-    uint objects_locked;
-    uint objects_space;
-    SaltObject *objects;
+    /* the objects are stored in a linked list */
+    struct SaltObjectNode *objects;
 
     /* imports */
     uint import_amount;

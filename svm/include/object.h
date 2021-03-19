@@ -6,8 +6,11 @@
 #ifndef SVM_OBJECT_H
 #define SVM_OBJECT_H
 
-#define ACCESS_PUBLIC  0
-#define ACCESS_PRIVATE 1
+#define ACCESS_PUBLIC  (0x00)
+#define ACCESS_PRIVATE (0x01)
+
+#define READONLY_FALSE (0x00)
+#define READONLY_TRUE  (0x01)
 
 // Simple types
 
@@ -17,8 +20,8 @@
 #define OBJECT_TYPE_BOOL   (0x03)
 #define OBJECT_TYPE_STRING (0x04)
 
-typedef unsigned char byte;
-typedef unsigned int  uint;
+typedef __UINT8_TYPE__  byte;
+typedef __UINT32_TYPE__ uint;
 
 /* This represents a single object, which can hold different types of data
  depending on the [type] byte. When building a new object, default values are
@@ -27,25 +30,22 @@ typedef unsigned int  uint;
  object yourself, instead use salt_object_create(...). */
 struct SaltObject {
 
-    byte locked;
-
     /* object information */
     uint id;
     byte readonly;
     byte access;
     byte type;
 
-    uint size;
+    /* threading support */
+    byte mutex_aquired;
+
+    /* object value */
     void *value;
+    uint size;
 
     /* methods */
     void (*constructor) (struct SaltObject *obj, char *bytes);
     void (*destructor ) (struct SaltObject *obj);
-
-    /* threading support */
-    uint threaded;
-    byte mutex_aquired;
-
 };
 
 /* Because the salt object will be used very often, I add a typedef here.

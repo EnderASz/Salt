@@ -27,6 +27,45 @@ static struct SaltModule *module_acquire_new()
     return &g_modules[g_module_size - 1];
 }
 
+static void collapse_object_nodes(struct SaltObjectNode *node)
+{
+    // If the current node is null, it means there is no objects to be collapsed.
+    // This needs to be returned early in this case, because there is the while
+    // loop which depends on the next element in the node.
+    if (node == NULL)
+        return;
+
+    // This collapses each node from the back, making this a very intensive
+    // operation which should be done only at the end when removing the module.
+    // I'll explain how it works because the next time you'll look at this code
+    // you'll have no idea what this does: This finds the last node in the
+    // linked list and then removes it from memory, setting the pointer to the
+    // last object from the previous object to NULL. This is done until every
+    // element from the list is removed.
+
+    struct SaltObjectNode *current_node  = node;
+    struct SaltObjectNode *previous_node = NULL;
+
+    while (node != NULL) {
+
+        while (1) {
+            if (current_node->next == NULL)
+                break;
+            previous_node = current_node;
+            current_node = current_node->next;
+        }
+
+        // Unlink
+        previous_node->next = NULL;
+        current_node->object.destructor(&current_node->object);
+        vmfree(current_node, sizeof(struct SaltObjectNode));
+
+        // Reset data
+        current_node  = node;
+        previous_node = NULL;
+    }
+}
+
 struct SaltModule* module_create(char *name)
 {
     struct SaltModule *mod = module_acquire_new();
@@ -37,9 +76,6 @@ struct SaltModule* module_create(char *name)
 
     strncpy(mod->name, name, strlen(name));
 
-    mod->objects_size = 0;
-    mod->objects_locked = 0;
-    mod->objects_space = 0;
     mod->objects = NULL;
 
     mod->instruction_amount = 0;
@@ -51,72 +87,47 @@ struct SaltModule* module_create(char *name)
     return mod;
 }
 
-static void compress_object_container(struct SaltModule *module)
+SaltObject *module_object_acquire(struct SaltModule *module)
 {
-    // todo: container compression
-    // dear future me, you wanted to compress the module.objects array by moving
-    // over the pointers to places where there are 'locked' objects, but then you
-    // realised you need to copy over the whole object because the memory where
-    // the objects were before is going to be free'd so a segfault will happen.
-    // I don't have the brain power now at 20 past midnight, but I know you will
-    // later.
-    //
-    // Also, be sure to not leave any null pointers inside the list, because
-    // there are functions checking each element and the pointers can't point
-    // to nothing right?
-    //                                                   Have fun, bellrise <3
+    // Find last in linked list
+    struct SaltObjectNode *node = NULL;
+    do {
+        node = node->next;
+    } while (node != NULL);
+
+    node = vmalloc(sizeof(struct SaltObjectNode));
+    node->next = NULL;
+
+    node->object.id = 0;
+    node->object.type = OBJECT_TYPE_NULL;
+    node->object.access = ACCESS_PUBLIC;
+    node->object.readonly = READONLY_FALSE;
+    node->object.mutex_aquired = 0;
+
+    node->object.value = NULL;
+    node->object.size = 0;
+
+    node->object.destructor = salt_object_destructor;
+    node->object.constructor = NULL;
+
+    return node;
 }
 
-static void control_allocation(struct SaltModule *module)
+void module_object_delete(struct SaltModule *module, uint id)
 {
-    if (module->objects_size >= module->objects_space) {
-        uint new_size = MODULE_OBJECT_SPACE + module->objects_space;
-        module->objects = vmrealloc(
-            module->objects,
-            sizeof(SaltObject) * module->objects_space,
-            sizeof(SaltObject) * new_size
-        );
-        module->objects_space = new_size;
-    }
-
-    if (module->objects_space - MODULE_OBJECT_SPACE >= module->objects_size) {
-        compress_object_container(module);
-    }
-}
-
-SaltObject *module_acquire_new_object(struct SaltModule *module)
-{
-    // todo: dont return null?
-    return NULL;
-}
-
-void module_delete_object(struct SaltModule *module, uint id)
-{
-    for (uint i = 0; i < module->objects_size; i++) {
-        if (module->objects[i].id == id && !module->objects[i].locked) {
-            module->objects[i].locked = 1;
-            module->objects_locked++;
-            return;
-        }
-    }
+    // todo: remove objects by relinking
 }
 
 static void module_deallocate(struct SaltModule *module)
 {
-    // Labels
     vmfree(module->labels, module->label_amount * sizeof(uint));
 
-    // Instructions
     for (uint i = 0; i < module->instruction_amount; i++) {
         vmfree(module->instructions[i].content, module->instructions[i].size);
     }
     vmfree(module->instructions, module->instruction_amount * sizeof(struct SaltInstruction));
 
-    // Objects
-    for (uint i = 0; i < module->objects_size; i++) {
-        module->objects[i].destructor(&module->objects[i]);
-    }
-    vmfree(module->objects, module->objects_space * sizeof(struct SaltObject));
+    collapse_object_nodes(module->objects);
 }
 
 void module_delete_all()

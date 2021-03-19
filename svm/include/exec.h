@@ -17,6 +17,21 @@ struct SVMCall {
 };
 
 /**
+ * This is the code execution loop function, which executed the passed module
+ * structure. Here is a short explanation on what happens:
+ *
+ * During: if the current instruction does not start with a @, indicating that
+ * it is not a label, it finds the matching SVMCall and executes it.
+ *
+ * After: after exiting the main execution loop, it deallocates all used heap
+ * memory and safely exits the program.
+ *
+ * @param   main  main module (named __main__)
+ * @return  return status of exec_ instructions.
+ */
+int exec(struct SaltModule* main);
+
+/**
  * Return the pointer to the svm call.
  */
 struct SVMCall *exec_get(char *title);
@@ -30,6 +45,13 @@ int exec_exite(struct SaltModule *module, int pos);
  * Load an external SCC file and add it to the global module register.
  */
 int exec_extld(struct SaltModule *module, int pos);
+
+/**
+ * Kill the whole program on-the-spot. This tried to free any memory it can as
+ * fast as possible, and this kills the whole program. Note that this almost
+ * certainly produce unwanted memory leaks, so it's recommended not to use it.
+ */
+int exec_killx(struct SaltModule *module, int pos);
 
 /**
  * Create a new object in the current module. This should be handled by

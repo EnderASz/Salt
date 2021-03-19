@@ -240,7 +240,7 @@
     <div id="s_exite">
         <h2 class="svmcall">EXITE</h2>
         <p>
-            Exit the program.
+            Exit the current executed module.
         </p>
     </div>
 
@@ -266,6 +266,14 @@
         </table>
     </div>
 
+    <div id="s_killx">
+        <h2 class="svmcall">KILLX</h2>
+        <p>
+            Kill the whole program on-the-spot. This tried to free any memory it can as fast
+            as possible, and this kills the whole program. Note that this almost certainly
+            produce unwanted memory leaks, so it's recommended not to use it.
+        </p>
+    </div>
 
     <div id="s_objmk">
         <h2 class="svmcall">OBJMK id readonly access type threaded ...</h2>

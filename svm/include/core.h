@@ -55,8 +55,8 @@
 
 // Types
 
-typedef unsigned int  uint;
-typedef unsigned char byte;
+typedef __UINT8_TYPE__  byte;
+typedef __UINT32_TYPE__ uint;
 
 /* This stores a single salt instruction that can be executed */
 struct SaltInstruction {
