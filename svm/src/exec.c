@@ -45,8 +45,6 @@ int exec(struct SaltModule *main)
 
     // "Call" the main instruction
     callstack_push(i, main->name, "main");
-    callstack_push(i, main->name, "main2");
-    callstack_push(i, main->name, "main3");
 
     for (; i < main->instruction_amount; ) {
 
