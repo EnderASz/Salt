@@ -11,193 +11,136 @@
 namespace salt
 {
 
-    std::vector<byte> Synthesizer::dumpi(uint id)
-    { return make("DUMPI", makeNum<uint>(id)); }
+std::vector<byte> Synthesizer::callLocal(std::string function)
+{
+    return make("CALLF", makeString(function));
+}
 
-    std::vector<byte> Synthesizer::dumpv(uint id)
-    { return make("DUMPV", makeNum<uint>(id)); }
+std::vector<byte> Synthesizer::exit()
+{
+    return make("EXITE", std::vector<byte>());
+}
 
-    std::vector<byte> Synthesizer::extld(std::string name)
-    { return make("EXTLD", makeString(name)); }
+std::vector<byte> Synthesizer::externalLoad(std::string module)
+{
+    return make("EXTLD", makeString(module));
+}
 
-    std::vector<byte> Synthesizer::killx()
-    { return make("KILLX"); }
+std::vector<byte> Synthesizer::kill()
+{
+    return make("KILLX", std::vector<byte>());
+}
 
-    std::vector<byte> Synthesizer::print(uint id)
-    { return make("PRINT", makeNum<uint>(id)); }
+std::vector<byte> Synthesizer::objectMake(uint id, bool readonly)
+{
+    std::vector<byte> collector;
+    pushObjectData(collector, id, readonly, false, TYPE_NULL,
+                   std::vector<byte>());
+    return collector;
+}
 
-    std::vector<byte> Synthesizer::sleep(uint ms)
-    { return make("SLEEP", makeNum<uint>(ms)); }
+std::vector<byte> Synthesizer::objectMake(uint id, bool readonly, int value)
+{
+    std::vector<byte> collector;
+    pushObjectData(collector, id, readonly, false, TYPE_INT,
+                   makeNum<int>(value));
+    return collector;
+}
 
-    std::vector<byte> Synthesizer::rxcpy(uint dest, uint src)
-    {
-        std::vector<byte> collector = makeLabel("RXCPY");
-        pushBytes(collector, makeNum<uint>(dest));
-        pushBytes(collector, makeNum<uint>(src));
-        collector.push_back('\n');
-        return collector;
-    }
+std::vector<byte> Synthesizer::objectMake(uint id, bool readonly, float value)
+{
+    std::vector<byte> collector;
+    pushObjectData(collector, id, readonly, false, TYPE_FLOAT,
+                   makeNum<float>(value));
+    return collector;
+}
 
-    std::vector<byte> Synthesizer::rxdel(uint id)
-    { return make("RXDEL", makeNum<uint>(id)); }
+std::vector<byte> Synthesizer::objectMake(uint id, bool readonly, bool value)
+{
+    std::vector<byte> collector;
+    pushObjectData(collector, id, readonly, false, TYPE_BOOL,
+                   makeBool(value));
+    return collector;
+}
 
-    // RXNEW
+std::vector<byte> Synthesizer::objectMake(uint id, bool readonly,
+                                          std::string value)
+{
+    std::vector<byte> collector;
+    pushObjectData(collector, id, readonly, false, TYPE_STRING,
+                   makeString(value));
+    return collector;
+}
 
-    std::vector<byte> Synthesizer::rxnew(uint id, bool const_ = false)
-    {
-        std::vector<byte> null_;
-        return makeRxnew(id, SaltType::Null, null_, const_);
-    }
+std::vector<byte> Synthesizer::objectDelete(uint id)
+{
+    return make("OBJDL", makeNum<uint>(id));
+}
 
-    std::vector<byte> Synthesizer::rxnew(uint id, int val, 
-                      bool const_ = false)
-    { 
-        return makeRxnew(id, SaltType::Int, makeNum<int>(val), const_); 
-    }
+std::vector<byte> Synthesizer::return_()
+{
+    return make("RETRN", std::vector<byte>());
+}
 
-    std::vector<byte> Synthesizer::rxnew(uint id, float val, 
-                      bool const_ = false)
-    { 
-        return makeRxnew(id, SaltType::Float, makeNum<float>(val), const_); 
-    }
+// private
 
-    std::vector<byte> Synthesizer::rxnew(uint id, std::string val, 
-                      bool const_ = false)
-    { 
-        return makeRxnew(id, SaltType::String, makeString(val), const_);
-    }
+std::vector<byte> Synthesizer::makeString(std::string value)
+{
+    std::vector<byte> collector;
+    pushBytes(collector, makeNum<int>((int) value.size()));
+    value.replace(value.begin(), value.end(), '\n', '\x11');
+    pushBytes(collector, value);
+    return collector;
+}
 
-    std::vector<byte> Synthesizer::rxnew(uint id, bool val, 
-                      bool const_ = false)
-    { 
-        return makeRxnew(id, SaltType::Bool, makeBool(val), const_); 
-    }
+std::vector<byte> Synthesizer::makeBool(bool value)
+{
+    std::vector<byte> collector;
+    if (value)
+        collector.push_back(CONSTANT_TRUE);
+    else
+        collector.push_back(CONSTANT_FALSE);
+    return collector;
+}
 
-    // RXSET
+std::vector<byte> Synthesizer::make(const char instruction[6],
+                                    std::vector<byte> bytes)
+{
+    std::vector<byte> collector;
+    for (short i = 0; i < 5; i++)
+        collector.push_back(instruction[i]);
 
-    std::vector<byte> Synthesizer::rxset(uint id)
-    { 
-        std::vector<byte> null_;
-        null_.push_back(SaltType::Null);
-        return makeRxset(id, SaltType::Null, null_);
-    }
+    pushBytes(collector, bytes);
 
-    std::vector<byte> Synthesizer::rxset(uint id, int val)
-    { 
-        return makeRxset(id, SaltType::Int, makeNum<int>(val)); 
-    }
+    collector.push_back('\n');
+    return collector;
+}
 
-    std::vector<byte> Synthesizer::rxset(uint id, float val)
-    { 
-        return makeRxset(id, SaltType::Float, makeNum<float>(val)); 
-    }
+void Synthesizer::pushBytes(std::vector<byte>& collector,
+                            std::string bytes)
+{
+    for (size_t i = 0; i < bytes.size(); i++)
+        collector.push_back(bytes[i]);
+}
 
-    std::vector<byte> Synthesizer::rxset(uint id, std::string val)
-    { 
-        return makeRxset(id, SaltType::String, makeString(val)); 
-    }
+void Synthesizer::pushBytes(std::vector<byte>& collector,
+                            std::vector<byte> bytes)
+{
+    for (size_t i = 0; i < bytes.size(); i++)
+        collector.push_back(bytes[i]);
+}
 
-    std::vector<byte> Synthesizer::rxset(uint id, bool val)
-    { 
-        return makeRxset(id, SaltType::Bool, makeBool(val)); 
-    }
-
-    // make
-
-    std::vector<byte> Synthesizer::makeString(std::string val)
-    {
-        std::vector<byte> collector;
-        pushBytes(collector, makeNum<uint>(val.size() + 1));
-        for (char& chr : val) {
-            if (chr == '\n')
-                collector.push_back('\x11');
-            else
-                collector.push_back(chr);
-        }
-        collector.push_back(0);
-        return collector;
-    }
-
-    std::vector<byte> Synthesizer::makeBool(bool val)
-    {
-        std::vector<byte> collector;
-        if (val)
-            collector.push_back('\x01');
-        else
-            collector.push_back('\x00');
-        return collector;
-    }
-
-    // private
-
-    std::vector<byte> Synthesizer::makeLabel(const char label[6])
-    {
-        std::vector<byte> collector;
-        for (short i = 0; i < 5; i++)
-            collector.push_back(label[i]);
-        return collector;
-    }
-
-    std::vector<byte> Synthesizer::make(const char label[6], 
-                      std::vector<byte> bytes)
-    {
-        std::vector<byte> collector = makeLabel(label);
-        for (byte& chr : bytes)
-            collector.push_back(chr);
-        collector.push_back('\n');
-        return collector;
-    }
-
-    std::vector<byte> Synthesizer::make(const char label[6])
-    {
-        std::vector<byte> collector = makeLabel(label);
-        collector.push_back('\n');
-        return collector;
-    }
-
-    void Synthesizer::pushBytes(std::vector<byte>& collector, 
-                                std::string bytes)
-    {
-        for (char& chr : bytes) {
-            collector.push_back(chr);
-        }
-    }
-
-    void Synthesizer::pushBytes(std::vector<byte>& collector, 
-                                std::vector<byte> bytes)
-    {
-        for (byte& chr : bytes) {
-            collector.push_back(chr);
-        }
-    }
-
-    std::vector<byte> Synthesizer::makeRxnew(uint id, SaltType type, 
-                      std::vector<byte> value, bool const_)
-    {
-        std::vector<byte> collector = makeLabel("RXNEW");
-        
-        pushBytes(collector, makeNum<uint>(id));
-        pushBytes(collector, makeBool(const_));
-        collector.push_back(type);
-        
-        pushBytes(collector, value);
-
-        collector.push_back('\n');
-        return collector;
-    }
-
-    std::vector<byte> Synthesizer::makeRxset(uint id, SaltType type, 
-                      std::vector<byte> value)
-    {
-        std::vector<byte> collector = makeLabel("RXSET");
-
-        pushBytes(collector, makeNum<uint>(id));
-        collector.push_back(type);
-
-        pushBytes(collector, value);
-
-        return collector;
-    }
+void Synthesizer::pushObjectData(std::vector<byte>& collector, uint id,
+                                 bool readonly, bool threading, byte type,
+                                 std::vector<byte> value)
+{
+    // Don't look at that argument list please, look into my eyes and show
+    // me a better way of doing this.
+    pushBytes(collector, makeNum<uint>(id));
+    pushBytes(collector, makeBool(readonly));
+    collector.push_back(type);
+    pushBytes(collector, value);
+}
 
 
 } // salt

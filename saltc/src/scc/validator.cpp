@@ -153,7 +153,7 @@ namespace salt
     std::string Validator::getInstruction(uint __n)
     {
         int endl = bytecode.find('\n', __n);
-        if (endl == std::string::npos)
+        if ((const size_t) endl == std::string::npos)
             throw ValidatorError::nonterminated_instruction;
         
         return bytecode.substr(__n, endl - __n); 
