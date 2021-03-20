@@ -17,8 +17,6 @@ void salt_object_init(SaltObject *obj)
 {
     obj->id = 0;
     obj->readonly = 0;
-    obj->access = ACCESS_PUBLIC;
-    obj->type = OBJECT_TYPE_NULL;
     obj->mutex_aquired = 0;
 
     obj->value = NULL;
@@ -110,10 +108,9 @@ void salt_object_define(SaltObject *obj, byte *payload)
 {
     obj->id       = * (uint *) payload;
     obj->readonly = * (byte *) (payload + 4);
-    obj->access   = * (byte *) (payload + 5);
-    obj->type     = * (byte *) (payload + 6);
-    obj->mutex_aquired = * (byte *) (payload + 7);
-    render_value(obj, payload + 8);
+    obj->type     = * (byte *) (payload + 5);
+    obj->mutex_aquired = * (byte *) (payload + 6);
+    render_value(obj, payload + 7);
     dprintf("Created object {%d} of type 0x%02hhx\n", obj->id, obj->type);
 }
 

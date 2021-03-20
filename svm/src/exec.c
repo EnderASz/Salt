@@ -102,6 +102,7 @@ int exec_callf(struct SaltModule *module, byte *payload, int pos)
 
     vmfree(name, strl + 1);
     exception_throw(EXCEPTION_LABEL, "Cannot find function");
+    return 0;
 }
 
 int exec_exite(struct SaltModule *module, byte *payload, int pos)

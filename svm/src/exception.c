@@ -9,6 +9,7 @@
 
 void exception_throw(const char *exception, const char *msg)
 {
+    dprintf("Throwing exception: %s\n", exception);
     fprintf(stderr, "An exception occured during execution: %s\n", exception);
 
     dprintf("Deconstructing %d elements from the stack\n", callstack_size());

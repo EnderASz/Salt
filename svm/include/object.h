@@ -6,9 +6,6 @@
 #ifndef SVM_OBJECT_H
 #define SVM_OBJECT_H
 
-#define ACCESS_PUBLIC  (0x00)
-#define ACCESS_PRIVATE (0x01)
-
 #define READONLY_FALSE (0x00)
 #define READONLY_TRUE  (0x01)
 
@@ -33,7 +30,6 @@ struct SaltObject {
     /* object information */
     uint id;
     byte readonly;
-    byte access;
     byte type;
 
     /* threading support */
