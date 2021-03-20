@@ -37,6 +37,11 @@ int exec(struct SaltModule* main);
 struct SVMCall *exec_get(char *title);
 
 /**
+ * Call a different function and jump to it.
+ */
+int exec_callf(struct SaltModule *module, byte *payload, int pos);
+
+/**
  * Exit the program.
  */
 int exec_exite(struct SaltModule *module, byte *payload, int pos);

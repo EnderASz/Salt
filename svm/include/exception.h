@@ -9,6 +9,7 @@
 #define EXCEPTION_RUNTIME  "RuntimeException"
 #define EXCEPTION_TYPE     "TypeException"
 #define EXCEPTION_MEMORY   "MemoryException"
+#define EXCEPTION_LABEL    "LabelException"
 
 /**
  * Throw an exception and exit the virtual machine.

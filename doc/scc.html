@@ -237,6 +237,40 @@
         This is a list of SVM calls you can make in the latest format. Note that the
     </p>
 
+
+    <div id="s_callf">
+        <h2 class="svmcall">CALLF strl ...</h2>
+        <p>
+            Call a function and push the current position and call onto the stack pointer.
+            Note that this only works for local functions in the same module, and should be
+            used when possible because it's a lot faster than the alternative,
+            <code><a href="s_callx">CALLX</a></code>. The only argument is the label name,
+            so if you want to call a function rendered as <code>@function_name</code>, you
+            call: <code>CALLFxxxxxxxxfunction_name\0</code>.
+        </p>
+        <table class="struct">
+            <tr>
+                <th>Offset</th>
+                <th>Width</th>
+                <th>Type</th>
+                <th>What</th>
+            </tr>
+            <tr>
+                <td>0</td>
+                <td>uint</td>
+                <td>uint</td>
+                <td>string length</td>
+            </tr>
+            <tr>
+                <td>4</td>
+                <td>...</td>
+                <td>string</td>
+                <td>null terminated string</td>
+            </tr>
+        </table>
+    </div>
+
+
     <div id="s_exite">
         <h2 class="svmcall">EXITE</h2>
         <p>

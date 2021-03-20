@@ -35,7 +35,7 @@ void salt_object_print(SaltObject *obj)
         return;
     }
 
-    dprintf("Printing %d of type 0x%02hhx\n", obj->id, obj->type);
+    dprintf("Printing {%d} of type 0x%02hhx\n", obj->id, obj->type);
 
     switch (obj->type) {
 
@@ -114,6 +114,7 @@ void salt_object_define(SaltObject *obj, byte *payload)
     obj->type     = * (byte *) (payload + 6);
     obj->mutex_aquired = * (byte *) (payload + 7);
     render_value(obj, payload + 8);
+    dprintf("Created object {%d} of type 0x%02hhx\n", obj->id, obj->type);
 }
 
 void salt_object_destructor(SaltObject *obj)

@@ -74,19 +74,28 @@ void module_object_delete(struct SaltModule *module, uint id)
     if (id == 0)
         exception_throw(EXCEPTION_RUNTIME, "Cannot remove object of ID 0");
 
-    struct SaltObjectNode *node = module->object_last;
-    while (node->previous != NULL) {
+    struct SaltObjectNode *node = module->object_first;
+    while (node != NULL) {
         if (node->data.id == id) {
 
-            // Unlink from list
-            node->previous->next = node->next;
-            node->next->previous = node->previous;
+            // Last element in object list
+            if (node->next == NULL) {
+                dprintf("Unlinking object {%d} where next is NULL\n", id);
+                node->previous->next = NULL;
+            }
+
+            // Somewhere in the middle
+            else {
+                dprintf("Unlinking object {%d} where next points to other\n", id);
+                node->previous->next = node->next;
+                node->next->previous = node->previous;
+            }
 
             node->data.destructor(&node->data);
             vmfree(node, sizeof(struct SaltObjectNode));
 
         }
-        node = node->previous;
+        node = node->next;
     }
 }
 
