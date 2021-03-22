@@ -5,6 +5,8 @@
 #define TOKEN_H_
 
 #include <string>
+#include <map>
+
 using std::string;
 
 namespace salt::tokenizer
@@ -15,23 +17,31 @@ enum TokenType
 {
     TOK_0,          // Literally nothing
 
-    // Keywords
+    // Access keywords
     KW_PUBLIC,      // public
     KW_PRIVATE,     // private
-    KW_CONST,       // const
 
-    // Control keywords
-    KW_IMPORT,      // import
-    KW_DEL,         // del
-    KW_RETURN,      // return
+    // Flow control keywords
     KW_IF,          // if
     KW_ELSE,        // else
     KW_ELIF,        // elif
     KW_WHILE,       // while
     KW_FOR,         // for
-    KW_THROW,       // throw
     KW_BREAK,       // break
     KW_CONTINUE,    // continue
+
+    // Import keywords
+    KW_IMPORT,      // import
+    KW_AS,          // as
+    KW_DYNAMIC,     // dynamic
+
+    // Variable manipulation keywords
+    KW_CONST,       // const
+    KW_DEL,         // del
+
+    // Keywords
+    KW_RETURN,      // return
+    KW_THROW,       // throw
 
     // Brackets
     BKT_ROUNDL,     // (
@@ -111,6 +121,47 @@ enum TokenType
     // Name
     TOK_NAME,       // names used to calls, accesses, imports etc.
 }; // salt::tokenizer::TokenType
+ 
+std::map<string, TokenType> no_value_token_types {
+    // Access keywords
+    {"public", KW_PUBLIC},
+    {"private", KW_PRIVATE},
+
+    // Flow control keywords
+    {"if", KW_IF},
+    {"else", KW_ELSE},
+    {"elif", KW_ELIF},
+    {"while", KW_WHILE},
+    {"for", KW_FOR},
+    {"break", KW_BREAK},   
+    {"continue", KW_CONTINUE},
+
+    // Import keywords
+    {"import", KW_IMPORT},
+    {"as", KW_AS},
+    {"dynamic", KW_DYNAMIC},
+
+    // Variable manipulation keywords
+    {"const", KW_CONST},
+    {"del", KW_DEL},
+
+    // Keywords
+    {"return", KW_RETURN},
+    {"throw", KW_THROW},
+
+    // Base types
+    {"bool", TYPE_BOOL},
+    {"int", TYPE_INT},
+    {"float", TYPE_FLOAT},
+    {"string", TYPE_STRING},
+
+    // Bool literals
+    {"true", TOKL_BOOL},
+    {"false", TOKL_BOOL},
+
+    // Null literal
+    {"null", TOKL_NULL}
+};
  
 /**
  * The token type stores a single token, which can than be turned
