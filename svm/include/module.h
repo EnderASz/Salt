@@ -81,7 +81,7 @@ SaltObject *module_object_acquire(struct SaltModule *module);
  * @param   id  ID of the object
  * @return  pointer to object
  */
-SaltObject *module_object_find(struct SaltModule *module, uint id);
+SaltObject __NULLABLE *module_object_find(struct SaltModule *module, uint id);
 
 /**
  * Delete the given object from the module (by ID)

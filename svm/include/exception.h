@@ -10,13 +10,15 @@
 #define EXCEPTION_TYPE     "TypeException"
 #define EXCEPTION_MEMORY   "MemoryException"
 #define EXCEPTION_LABEL    "LabelException"
+#define EXCEPTION_NULLPTR  "NullPointerException"
+#define EXCEPTION_REGISTER "RegisterException"
 
 /**
  * Throw an exception and exit the virtual machine.
  *
  * @param exception title of exception
- * @param msg       message under the exception (cause of problem)
+ * @param fmt       printf format style
  */
-void exception_throw(const char *exception, const char *msg);
+void exception_throw(const char *exception, const char *fmt, ...);
 
 #endif // SVM_EXCEPTION_H

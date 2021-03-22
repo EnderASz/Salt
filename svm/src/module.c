@@ -3,6 +3,7 @@
 //
 #include "../include/module.h"
 #include "../include/exception.h"
+#include "../include/core.h"
 #include <string.h>
 
 static uint g_module_size = 0;
@@ -31,33 +32,54 @@ static struct SaltModule *module_acquire_new()
 
 static void nodes_collapse(struct SaltModule *module)
 {
+    dprintf("Collapsing nodes from the top\n");
+
     struct SaltObjectNode *node = module->object_first;
-    while (node->next != NULL) {
-        node = node->next;
-        dprintf("Collapsing %p : %d : %p\n", node->previous, node->data.id, node->next);
-        node->previous->data.destructor(&node->previous->data);
-        vmfree(node->previous, sizeof(struct SaltObjectNode));
-        node->previous = NULL;
+    struct SaltObjectNode *hook = NULL;
+
+    while (1) {
+        dprintf("Collapsing : %p : {%d}\n", node, node->data.id);
+
+        // Assign the pointer to the next element to the hook and check if it's
+        // not null. This is used because we are free-ing memory right under
+        // out feet, and we still need to know the location of the next object.
+        hook = node->next;
+        if (hook == NULL)
+            break;
+
+        vmfree(node->data.value, node->data.size);
+        vmfree(node, sizeof(struct SaltObjectNode));
+
+        // And set the pointer to the current work node to the hook to the next
+        // object.
+        node = hook;
     }
-    // Free self
-    node->data.destructor(&node->data);
+
+    // Delete ourself when we reach the last object
+    vmfree(node->data.value, node->data.size);
     vmfree(node, sizeof(struct SaltObjectNode));
 }
 
 SaltObject *module_object_acquire(struct SaltModule *module)
 {
+    dprintf("Acquiring new object\n");
     struct SaltObjectNode *new_node = vmalloc(sizeof(struct SaltObjectNode));
+
+    // Setup new node
     new_node->next = NULL;
     new_node->previous = module->object_last;
 
+    // Link last object to new node
     module->object_last->next = new_node;
+
+    // Move last object pointer to last object
     module->object_last = new_node;
 
     salt_object_init(&new_node->data);
     return &new_node->data;
 }
 
-SaltObject *module_object_find(struct SaltModule *module, uint id)
+SaltObject __NULLABLE *module_object_find(struct SaltModule *module, uint id)
 {
     struct SaltObjectNode *node = module->object_first;
     while (node != NULL) {
@@ -66,7 +88,7 @@ SaltObject *module_object_find(struct SaltModule *module, uint id)
         node = node->next;
     }
     // Return null value otherwise
-    return &module->object_first->data;
+    return NULL;
 }
 
 void module_object_delete(struct SaltModule *module, uint id)
@@ -134,8 +156,11 @@ struct SaltModule* module_create(char *name)
 
 static void module_deallocate(struct SaltModule *module)
 {
+    dprintf("Clearing module '%s'\n", module->name);
+    dprintf("Deallocating label list\n");
     vmfree(module->labels, module->label_amount * sizeof(uint));
 
+    dprintf("Deallocating instructions\n");
     for (uint i = 0; i < module->instruction_amount; i++) {
         vmfree(module->instructions[i].content, module->instructions[i].size);
     }
@@ -146,10 +171,8 @@ static void module_deallocate(struct SaltModule *module)
 
 void module_delete_all()
 {
-    for (uint i = 0; i < g_module_size; i++) {
-        dprintf("Removed module: %s\n", g_modules[i].name);
+    for (uint i = 0; i < g_module_size; i++)
         module_deallocate(&g_modules[i]);
-    }
 
     vmfree(g_modules, g_module_space * sizeof(struct SaltModule));
 }

@@ -37,12 +37,20 @@ int exec(struct SaltModule* main);
 struct SVMCall *exec_get(char *title);
 
 /**
+ * Clear all registers.
+ */
+void register_clear();
+
+/**
  * Call a different function and jump to it.
  */
 int exec_callf(struct SaltModule *module, byte *payload, int pos);
 
 /**
- * Exit the program.
+ * Exit the current executed module. This is the safe version of KILLX, because
+ * it jumps to the $__END__ label and leaves exec to pop everything from the
+ * stack and finish execution. This is different to said kill instruction,
+ * which immediately collapses the module tapes and exits the program.
  */
 int exec_exite(struct SaltModule *module, byte *payload, int pos);
 
@@ -84,5 +92,32 @@ int exec_print(struct SaltModule *module, byte *payload, int pos);
  * Load an external SCC file and add it to the global module register.
  */
 int exec_retrn(struct SaltModule *module, byte *payload, int pos);
+
+/**
+ * Print the value at the register.
+ */
+int exec_regdp(struct SaltModule *module, byte *payload, int pos);
+
+/**
+ * Move the value from the register onto the module object list, making it
+ * a constant object with a set ID. Note that this does not remove any previous
+ * objects with the same IDs from the list, but adds a brand new object at the
+ * end.
+ */
+int exec_regmv(struct SaltModule *module, byte *payload, int pos);
+
+/**
+ * Set all the registers to NULL.
+ */
+int exec_regnl(struct SaltModule *module, byte *payload, int pos);
+
+/**
+ * Set the value of the given register to the selected object by ID. Important
+ * note: this removes the original object from the module object list,
+ * assigning it only to the register. There are only 8 registers to use, with
+ * the 0 register used for return values from a couple of different
+ * instructions.
+ */
+int exec_regst(struct SaltModule *module, byte *payload, int pos);
 
 #endif // SVM_EXEC_H

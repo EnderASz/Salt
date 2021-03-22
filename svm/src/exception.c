@@ -6,10 +6,14 @@
 #include "../include/callstack.h"
 #include <stdio.h>
 #include <stdlib.h>
+#include <stdarg.h>
 
-void exception_throw(const char *exception, const char *msg)
+void exception_throw(const char *exception, const char *fmt, ...)
 {
-    dprintf("Throwing exception: %s\n", exception);
+    va_list args;
+    va_start(args, fmt);
+
+    dprintf("\033[91mThrowing exception: %s\033[0m\n", exception);
     fprintf(stderr, "An exception occured during execution: %s\n", exception);
 
     dprintf("Deconstructing %d elements from the stack\n", callstack_size());
@@ -21,7 +25,10 @@ void exception_throw(const char *exception, const char *msg)
         callstack_pop();
     }
 
-    fprintf(stderr, "\n~ %s\n", msg);
+    fprintf(stderr, "\n ~ ");
+    vfprintf(stderr, fmt, args);
+    fprintf(stderr, "\n");
 
+    va_end(args);
     core_exit();
 }

@@ -65,6 +65,14 @@ SaltObject *salt_object_create();
 void salt_object_init(SaltObject *obj);
 
 /**
+ * Deep copy a salt object.
+ *
+ * @param   dest  destination object
+ * @param   src   source object
+ */
+void salt_object_copy(SaltObject *dest, SaltObject *src);
+
+/**
  * Create a new salt object from the given payload. See doc/scc.html for
  * information about the payload.
  *

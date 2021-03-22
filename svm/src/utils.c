@@ -30,4 +30,3 @@ void util_hexdump(byte *bytes, uint amount)
     }
     dump_hexes(bytes + (amount - rest), rest);
 }
-

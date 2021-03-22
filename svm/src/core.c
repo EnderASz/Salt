@@ -5,7 +5,10 @@
 #include "../include/module.h"
 #include "../include/object.h"
 #include "../include/exception.h"
+#include "../include/exec.h"
 #include <stdlib.h>
+
+#define DEBUG_ALLOCATIONS 1
 
 static uint64_t g_memory_used = 0;
 static uint64_t g_max_used    = 0;
@@ -14,6 +17,7 @@ static uint64_t g_frees       = 0;
 
 void core_exit()
 {
+    register_clear();
     module_delete_all();
     vibe_check();
     exit(0);
@@ -21,6 +25,9 @@ void core_exit()
 
 void *vmalloc(uint size)
 {
+#ifdef DEBUG_ALLOCATIONS
+    dprintf("\033[90mAllocating \033[32m%d\033[90m bytes\033[0m\n", size);
+#endif
     g_allocations++;
 
     g_memory_used += size;
@@ -35,6 +42,9 @@ void *vmalloc(uint size)
 
 void vmfree(void *ptr, uint size)
 {
+#ifdef DEBUG_ALLOCATIONS
+    dprintf("\033[90mFreeing \033[33m%d\033[90m bytes\033[0m\n", size);
+#endif
     g_frees++;
 
     g_memory_used -= size;
@@ -43,6 +53,10 @@ void vmfree(void *ptr, uint size)
 
 void *vmrealloc(void *ptr, uint before, uint after)
 {
+#ifdef DEBUG_ALLOCATIONS
+    dprintf("\033[90mReallocating \033[33m%d\033[90m to \033[32m%d\033[90m"
+            " bytes\033[0m\n", before, after);
+#endif
     g_allocations++;
 
     g_memory_used -= before;
@@ -64,7 +78,7 @@ uint64_t vmused()
 void vibe_check()
 {
     if (g_memory_used == 0) {
-        dprintf("heap memory clean, humus: (%ld, %ld, %ld)\n", g_max_used,
+        dprintf("heap memory clean (%ld, %ld, %ld)\n", g_max_used,
                 g_allocations, g_frees);
         return;
     }

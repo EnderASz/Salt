@@ -26,12 +26,36 @@ void salt_object_init(SaltObject *obj)
     obj->destructor = salt_object_destructor;
 }
 
+void salt_object_copy(SaltObject *dest, SaltObject *src)
+{
+    dprintf("Copying object {%d} to {%d}\n", src->id, dest->id);
+    dest->id = src->id;
+    dest->type = src->type;
+    dest->readonly = src->readonly;
+    dest->mutex_aquired = src->mutex_aquired;
+
+    dest->vhandler = src->vhandler;
+    dest->destructor = src->destructor;
+
+    dest->size = src->size;
+    if (dest->size != 0) {
+        dest->value = vmalloc(dest->size);
+        memcpy(dest->value, src->value, dest->size);
+    }
+    else {
+        dest->value = NULL;
+    }
+}
+
 void salt_object_print(SaltObject *obj)
 {
     if (obj == NULL) {
         puts("null");
         return;
     }
+
+    if (obj->id == 0)
+        exception_throw(EXCEPTION_NULLPTR, "Cannot resolve object");
 
     dprintf("Printing {%d} of type 0x%02hhx\n", obj->id, obj->type);
 
@@ -56,7 +80,7 @@ void salt_object_print(SaltObject *obj)
                 printf("false");
             break;
 
-        default:
+        case OBJECT_TYPE_NULL:
             printf("null");
     }
 }
@@ -88,6 +112,8 @@ static void render_value(SaltObject *obj, byte *payload)
                     ((char *) obj->value)[i] = '\n';
             }
 
+            // Add null terminator in case of some wacky file reading
+            ((char *) obj->value)[obj->size - 1] = 0;
             return;
 
         case OBJECT_TYPE_BOOL:

@@ -3,10 +3,13 @@
  * for the whole virtual machine.
  *
  */
+#ifndef __NULLABLE
+#define __NULLABLE /* may return null */
+#endif
+
 #ifndef SVM_CORE_H
 #define SVM_CORE_H
 
-#include "core.h"
 #include "object.h"
 #include "module.h"
 #include <stdio.h>
@@ -18,9 +21,6 @@
 #elif defined(_WIN64) || defined(__linux__)
 #define _ARCH 64
 #endif
-
-/* marks functions that may return null */
-#define __NULLABLE
 
 /* dprintf implementations */
 #ifdef DEBUG

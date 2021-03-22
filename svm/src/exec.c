@@ -4,21 +4,34 @@
 #include "../include/exec.h"
 #include "../include/exception.h"
 #include "../include/callstack.h"
+#include "../include/utils.h"
 #include <string.h>
 
 /* killx is the last instruction if no other is found. */
 static struct SVMCall g_execs[] = {
-    {"KILLX", exec_killx},
-    {"EXITE", exec_exite},
-    {"CALLF", exec_callf},
-    {"EXTLD", exec_extld},
-    {"OBJMK", exec_objmk},
-    {"OBJDL", exec_objdl},
-    {"PRINT", exec_print},
-    {"RETRN", exec_retrn},
+        {"KILLX", exec_killx},
+        {"REGMV", exec_regmv},
+        {"REGST", exec_regst},
+        {"EXITE", exec_exite},
+        {"CALLF", exec_callf},
+        {"EXTLD", exec_extld},
+        {"OBJMK", exec_objmk},
+        {"OBJDL", exec_objdl},
+        {"PRINT", exec_print},
+        {"REGDP", exec_regdp},
+        {"RETRN", exec_retrn},
+        {"REGNL", exec_regnl}
 };
 
-static uint g_exec_amount = 8;
+static const uint g_exec_amount = 12;
+
+/* global registers */
+static SaltObject *g_registers[8] = {
+        NULL, NULL, NULL, NULL,
+        NULL, NULL, NULL, NULL
+};
+
+static const uint g_register_amount = 8;
 
 static int exec_find_end(struct SaltModule *module)
 {
@@ -59,14 +72,14 @@ int exec(struct SaltModule *main)
     // "Call" the main instruction
     callstack_push(exec_find_end(main), main->name, "main");
 
-    for (; i < main->instruction_amount; ) {
+    for (; i < main->instruction_amount;) {
 
         if (*main->instructions[i].content == '@') {
             i++;
             continue;
         }
 
-        dprintf("[%d] Trying to execute '%s'\n", i, main->instructions[i].name);
+        dprintf("[%d] < \033[95m%s\033[0m >\n", i, main->instructions[i].name);
 
         struct SVMCall *exec = exec_get(main->instructions[i].name);
         i = exec->f_exec(main, (byte *) main->instructions[i].content + 5, i);
@@ -74,6 +87,19 @@ int exec(struct SaltModule *main)
     return 0;
 }
 
+void register_clear()
+{
+    dprintf("Clearing registers\n");
+    for (uint i = 0; i < g_register_amount; i++) {
+
+        if (g_registers[i] != NULL) {
+            vmfree(g_registers[i]->value, g_registers[i]->size);
+            vmfree(g_registers[i], sizeof(SaltObject));
+            g_registers[i] = NULL;
+        }
+
+    }
+}
 
 struct SVMCall *exec_get(char *title)
 {
@@ -138,6 +164,9 @@ int exec_objdl(struct SaltModule *module, byte *payload, int pos)
 int exec_print(struct SaltModule *module, byte *payload, int pos)
 {
     SaltObject *obj = module_object_find(module, * (uint *) payload);
+    if (obj == NULL)
+        exception_throw(EXCEPTION_NULLPTR, "Cannot find object %d", * (uint *) payload);
+
     salt_object_print(obj);
     return ++pos;
 }
@@ -156,5 +185,29 @@ int exec_retrn(struct SaltModule *module, byte *payload, int pos)
     }
     dprintf("Jumping back to [%d]\n", pos);
     callstack_pop();
-    return pos;
+    return ++pos;
+}
+
+int exec_regdp(struct SaltModule *module, byte *payload, int pos)
+{
+    exception_throw(EXCEPTION_RUNTIME, "REGDP is not implemented yet");
+    return ++pos;
+}
+
+int exec_regmv(struct SaltModule *module, byte *payload, int pos)
+{
+    exception_throw(EXCEPTION_RUNTIME, "REGMV is not implemented yet");
+    return ++pos;
+}
+
+int exec_regnl(struct SaltModule *module, byte *payload, int pos)
+{
+    register_clear();
+    return ++pos;
+}
+
+int exec_regst(struct SaltModule *module, byte *payload, int pos)
+{
+    exception_throw(EXCEPTION_RUNTIME, "REGST is not implemented yet");
+    return ++pos;
 }
