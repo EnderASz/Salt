@@ -8,7 +8,7 @@
 
 #include <map>
 
-namespace salt::tokenizer {
+namespace salt {
 
     enum SpecialChar {
         BACKSPACE = 'b',
@@ -25,7 +25,7 @@ namespace salt::tokenizer {
         PAGE_BREAK = 'f',
 
         ESCAPE_CHARACTER = 'e'
-    }; // salt::tokenizer::SpecialChar
+    }; // salt::SpecialChar
 
     std::map<char, SpecialChar> special_chars {
         {'b', BACKSLASH},
@@ -42,7 +42,7 @@ namespace salt::tokenizer {
         {'f', PAGE_BREAK},
 
         {'e', ESCAPE_CHARACTER},
-    }; // salt::tokenizer::special_chars
+    }; // salt::special_chars
 
 }; // salt::tokenizer
 
