@@ -77,8 +77,7 @@ int main(int argc, char **argv)
 
     exec(main);
 
-    module_delete_all();
-    vibe_check();
+    core_exit();
 
 end:
     return 0;

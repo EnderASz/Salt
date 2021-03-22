@@ -13,6 +13,28 @@
 #define SCC_HEADER "\x7fSCC\xff\xee\0\0\0"
 #define SCC_VERSION 3
 
+struct LoaderIPad {
+    char instruction[6];
+    int pad;
+};
+
+static const struct LoaderIPad ipads[] = {
+        {"CALLF", 4},
+        {"EXITE", 0},
+        {"EXTLD", 4},
+        {"KILLX", 0},
+        {"OBJMK", 8},
+        {"OBJDL", 4},
+        {"PRINT", 4},
+        {"RETRN", 0},
+        {"REGDP", 1},
+        {"REGMV", 5},
+        {"REGST", 5},
+};
+
+static const int ipad_amount = 11;
+
+
 static int validate_header(char *header)
 {
     if (strncmp(header, SCC_HEADER, 8) != 0)
@@ -41,17 +63,63 @@ static int load_header(FILE *fp)
 
 static void read_instruction(struct SaltInstruction *ins, FILE *fp)
 {
-    int width = 1;
-    while (fgetc(fp) != '\n')
-        width++;
+    dprintf("Instruction at pos: %ld\n", ftell(fp));
 
-    ins->size = width;
-    ins->content = vmalloc(sizeof(char) * (width));
+    // Check for label
+    char label_char = fgetc(fp);
+    int width = 0;
+
+    // If it's a label, do a normal read
+    if (label_char == '@') {
+        while (fgetc(fp) != '\n')
+            width++;
+        fseek(fp, -width - 2, SEEK_CUR);
+        width += 1;
+    }
+    // Else add the proper amount of initial padding, which it the amount
+    // of bytes that should be ignored when looking for the 0x0a byte,
+    // splitting instructions.
+    // Before doing anything, prepare a 5 byte buffer and move the FILE cursor
+    // back by one char.
+    else {
+
+        fseek(fp, -1, SEEK_CUR);
+        char buf[6] = {0};
+        fread(buf, 1, 5, fp);
+
+        int i = 0;
+        for (; i < ipad_amount; i++) {
+            if (strncmp(buf, ipads[i].instruction, 5) == 0)
+                break;
+        }
+
+        if (i >= ipad_amount)
+            exception_throw(EXCEPTION_RUNTIME,"Cannot load instruction. "
+                            "It's either not supported or broken");
+
+        width += 5;
+
+        // Read [pad] bytes before checking for the newline
+        for (int j = 0; j < ipads[i].pad; j++) {
+            fgetc(fp);
+            width++;
+        }
+
+        while (fgetc(fp) != '\n')
+            width++;
+
+        fseek(fp, -width - 1, SEEK_CUR);
+    }
+
+    dprintf("Location after reading: %ld, promise for %d\n", ftell(fp), width);
+
+    ins->size = width + 1;
+    ins->content = vmalloc(sizeof(char) * (width + 1));
     ins->content[width - 1] = 0;
-    fseek(fp, -width, SEEK_CUR);
-    fread(ins->content, 1, width - 1, fp);
+    fread(ins->content, 1, width, fp);
+
+    dprintf("Read [%d]<%.5s...>\n", width, ins->content);
     fgetc(fp);
-    dprintf("[%d] {%s}\n", width, ins->content);
 }
 
 static void process_instruction(struct SaltInstruction *ins)
@@ -63,7 +131,8 @@ static void process_instruction(struct SaltInstruction *ins)
         strncpy(ins->name, exec->instruction, 5);
 }
 
-static void load_instructions(struct SaltModule *module, FILE *fp, int instructions) {
+static void load_instructions(struct SaltModule *module, FILE *fp, int instructions)
+{
     dprintf("Loading instructions for '%s'\n", module->name);
 
     module->instructions = vmalloc(sizeof(struct SaltInstruction) * instructions);
