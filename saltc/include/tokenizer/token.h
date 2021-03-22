@@ -121,7 +121,7 @@ enum TokenType
     // Name
     TOK_NAME,       // names used to calls, accesses, imports etc.
 }; // salt::tokenizer::TokenType
- 
+
 std::map<string, TokenType> no_value_token_types {
     // Access keywords
     {"public", KW_PUBLIC},
@@ -173,14 +173,23 @@ struct Token
 {
     TokenType type;
     string    value;
-    size_t    index; // Position in code
+    InStringPosition position;
+
+    /* Return true if an instance of Token has TOK_0 type. */
+    bool isNothing() const;
 };
 
 /**
  * Create a new token from the given parameters. This doesn't really
  * do anything, it's just a shorthand.
  */
-Token token_create(TokenType _tok, size_t _idx, string _val = NULL);
+Token token_create(
+    TokenType _tok,
+    InStringPosition position,
+    string _val = NULL);
+
+/* Return Token with type TOK_0, NULL value and NULL positions. */
+Token create_null_token();
 
 } // salt::tokenizer
 

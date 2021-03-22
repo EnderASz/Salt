@@ -20,3 +20,16 @@ string load_file(string filepath) {
     file.close();
     return buffer.str();
 }
+
+InStringPosition::InStringPosition(string& str, string::iterator iterator)
+    :line_idx(std::count(str.begin(), iterator, '\n')),
+    idx(std::distance(str.begin(), iterator)),
+    inline_idx(idx - str.find_last_of("\n", idx) - 1) {}
+InStringPosition::InStringPosition(
+    size_t line_idx,
+    size_t inline_idx,
+    size_t idx)
+        :line_idx(line_idx),
+        inline_idx(inline_idx),
+        idx(idx) {}
+
