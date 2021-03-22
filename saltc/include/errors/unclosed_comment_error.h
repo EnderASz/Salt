@@ -22,7 +22,11 @@ class UnclosedCommentError: public CompilationError
 public:
     UnclosedCommentError(
         const uint line,
-        const uint position,
+        const uint inline_position,
+        const SourceFile& source_file);
+
+    UnclosedCommentError(
+        const InStringPosition position,
         const SourceFile& source_file);
 
     const char* what() const throw ();

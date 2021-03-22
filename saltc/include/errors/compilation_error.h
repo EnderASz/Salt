@@ -25,7 +25,7 @@ protected:
     const uint line;
 
     /* In line index where error occured. */
-    const uint position;
+    const uint inline_position;
 
     /* Source file where error occured. */
     const SourceFile& source_file;
@@ -38,14 +38,18 @@ public:
      */ 
     explicit CompilationError(
         const uint line,
-        const uint position,
+        const uint inline_position,
+        const SourceFile& source_file);
+
+    explicit CompilationError(
+        const InStringPosition position,
         const SourceFile& source_file);
 
     /* Getter for protected 'line' member. */
     uint getLine() const;
 
-    /* Getter for protected 'position' member. */
-    uint getPosition() const;
+    /* Getter for protected 'inline_position' member. */
+    uint getInlinePosition() const;
 
     /* Virtual method inherited from std::exception. */
     virtual const char* what() const throw() = 0;

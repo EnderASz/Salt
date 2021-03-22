@@ -14,9 +14,14 @@ namespace salt::errors
 
 UnclosedCommentError::UnclosedCommentError(
     const uint line,
-    const uint position,
+    const uint inline_position,
     const SourceFile& source_file)
-        :CompilationError(line, position, source_file) {}
+        :CompilationError(line, inline_position, source_file) {}
+
+UnclosedCommentError::UnclosedCommentError(
+    const InStringPosition position,
+    const SourceFile& source_file)
+        :CompilationError(position, source_file) {}
 
 const char* UnclosedCommentError::what() const throw() {
     string error_message = 
@@ -25,7 +30,7 @@ const char* UnclosedCommentError::what() const throw() {
         "' at line " +
         to_string(this->line) +
         " at position " +
-        to_string(this->position) +
+        to_string(this->inline_position) +
         ".";
 
     return error_message.c_str();
