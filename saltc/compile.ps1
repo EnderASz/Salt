@@ -2,13 +2,21 @@
 
 param (
     [Parameter()]
-    [switch]$AllWarnings = $false
+    [switch]$AllWarnings = $false,
+
+    [Parameter()]
+    [switch]$Debug = $false
 )
 
 if($AllWarnings) {
     $wall_flag = "-Wall"
 } else {
     $wall_flag = ""
+}
+if($Debug) {
+    $debug_flag = "-D DEBUG"
+} else {
+    $debug_flag = ""
 }
 
 # region - Setup before compilation
@@ -40,11 +48,11 @@ if($AllWarnings) {
     For($i = 0; $i -lt $CPPObjectsPaths.count; $i++) {
         $CPPObjectPath = $CPPObjectsPaths[$i]
         $CPPSourcePath = $CPPSourcesPaths[$i]
-        g++ -std="c++1z" $wall_flag -c -o $CPPObjectPath $CPPSourcePath
+        g++ -std="c++1z" $debug_flag $wall_flag -c -o $CPPObjectPath $CPPSourcePath
     }
 
     # Compile the main file and link with object files
-    g++ -std="c++1z" $wall_flag -o $BuildedMainPath $MAIN_SOURCE_PATH $CPPObjectsPaths
+    g++ -std="c++1z" $debug_flag $wall_flag -o $BuildedMainPath $MAIN_SOURCE_PATH $CPPObjectsPaths
 # endregion
 
 # region - Cleaning after compilation
