@@ -17,7 +17,7 @@ static uint64_t g_callstack_size = 0;
 void callstack_push(uint32_t line, char *__restrict module, 
                     char *__restrict function)
 {
-    dprintf("Pushing stack frame [%d](%d, %s, %s)\n", g_callstack_size, 
+    dprintf("Pushing stack frame [%ld](%d, %s, %s)\n", g_callstack_size, 
             line, module, function);
 
     if (strlen(module) > 61 || strlen(function) > 61) {
@@ -44,7 +44,7 @@ uint64_t callstack_size()
 
 Nullable struct StackFrame *callstack_peek()
 {
-    dprintf("Peeking at [%d]\n", g_callstack_size - 1);
+    dprintf("Peeking at [%ld]\n", g_callstack_size - 1);
     if (g_callstack_size - 1 < 0)
         return NULL;
     return &g_callstack[g_callstack_size - 1];
@@ -52,7 +52,7 @@ Nullable struct StackFrame *callstack_peek()
 
 void callstack_pop()
 {
-    dprintf("Popping [%d]\n", g_callstack_size - 1);
+    dprintf("Popping [%ld]\n", g_callstack_size - 1);
     if (g_callstack_size == 1) {
         vmfree(g_callstack, sizeof(struct StackFrame));
         g_callstack_size = 0;

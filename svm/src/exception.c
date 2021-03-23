@@ -20,7 +20,7 @@ void exception_throw(const char *exception, const char *fmt, ...)
     dprintf("\033[91mThrowing exception: %s\033[0m\n", exception);
     fprintf(stderr, "An exception occured during execution: %s\n", exception);
 
-    dprintf("Deconstructing %d elements from the stack\n", callstack_size());
+    dprintf("Deconstructing %ld elements from the stack\n", callstack_size());
     int size = callstack_size();
     for (uint i = 0; i < size; i++) {
         struct StackFrame *frame = callstack_peek();
