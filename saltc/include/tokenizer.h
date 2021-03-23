@@ -29,11 +29,10 @@ private:
     std::vector<Token> tokens;
     
     string::iterator current;
-    struct UnparsedToken {
+    struct {
         InStringPosition position;
         string str;
-    } curr_token;
-    
+    } curr_token = {{0, 0, 0}, ""};
     void skipComment();
 
     void skipBlank();

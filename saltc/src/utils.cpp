@@ -7,6 +7,7 @@
 #include <fstream>
 #include <sstream>
 #include <string>
+#include <algorithm>
 
 using std::string;
 
@@ -30,6 +31,6 @@ InStringPosition::InStringPosition(
     size_t inline_idx,
     size_t idx)
         :line_idx(line_idx),
-        inline_idx(inline_idx),
-        idx(idx) {}
+        idx(idx),
+        inline_idx(inline_idx) {}
 

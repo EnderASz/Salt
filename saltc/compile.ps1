@@ -5,7 +5,7 @@ param (
     [switch]$AllWarnings = $false,
 
     [Parameter()]
-    [switch]$Debug = $false
+    [switch]$SDebug = $false
 )
 
 if($AllWarnings) {
@@ -13,7 +13,7 @@ if($AllWarnings) {
 } else {
     $wall_flag = ""
 }
-if($Debug) {
+if($SDebug) {
     $debug_flag = "-D DEBUG"
 } else {
     $debug_flag = ""

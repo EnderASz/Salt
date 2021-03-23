@@ -4,6 +4,7 @@
 #ifndef TOKEN_H_
 #define TOKEN_H_
 
+#include "../utils.h"
 #include <string>
 #include <map>
 
@@ -122,46 +123,7 @@ enum TokenType
     TOK_NAME,       // names used to calls, accesses, imports etc.
 }; // salt::tokenizer::TokenType
 
-std::map<string, TokenType> no_value_token_types {
-    // Access keywords
-    {"public", KW_PUBLIC},
-    {"private", KW_PRIVATE},
-
-    // Flow control keywords
-    {"if", KW_IF},
-    {"else", KW_ELSE},
-    {"elif", KW_ELIF},
-    {"while", KW_WHILE},
-    {"for", KW_FOR},
-    {"break", KW_BREAK},   
-    {"continue", KW_CONTINUE},
-
-    // Import keywords
-    {"import", KW_IMPORT},
-    {"as", KW_AS},
-    {"dynamic", KW_DYNAMIC},
-
-    // Variable manipulation keywords
-    {"const", KW_CONST},
-    {"del", KW_DEL},
-
-    // Keywords
-    {"return", KW_RETURN},
-    {"throw", KW_THROW},
-
-    // Base types
-    {"bool", TYPE_BOOL},
-    {"int", TYPE_INT},
-    {"float", TYPE_FLOAT},
-    {"string", TYPE_STRING},
-
-    // Bool literals
-    {"true", TOKL_BOOL},
-    {"false", TOKL_BOOL},
-
-    // Null literal
-    {"null", TOKL_NULL}
-};
+extern std::map<string, TokenType> no_value_token_types;
  
 /**
  * The token type stores a single token, which can than be turned
@@ -188,8 +150,11 @@ Token token_create(
     InStringPosition position,
     string _val = NULL);
 
-/* Return Token with type TOK_0, NULL value and NULL positions. */
-Token create_null_token();
+/**
+ * Token with type TOK_0, NULL value and NULL positions.
+ * It represents null token.
+ */
+const Token null_token = token_create(TOK_0, {0, 0, 0}, 0);
 
 } // salt::tokenizer
 

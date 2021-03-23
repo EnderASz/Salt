@@ -8,7 +8,6 @@
 #include <queue>
 #include <string>
 #include <array>
-#include <vector>
 
 using std::string;
 
@@ -34,9 +33,9 @@ A ptr_to_array(T* data) {
 
 /*Stucture storage informations about position e.g in file. */
 struct InStringPosition {
-    const size_t line_idx;
-    const size_t inline_idx;
-    const size_t idx;
+    size_t line_idx;
+    size_t idx;
+    size_t inline_idx;
     InStringPosition(string& str, string::iterator iterator);
     InStringPosition(size_t line_idx, size_t inline_idx, size_t idx);
 };

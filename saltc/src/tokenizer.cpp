@@ -75,7 +75,12 @@ string::iterator Tokenizer::sourceEnd() const {return source->code.end();}
 string::iterator Tokenizer::sourceLast() const {return source->code.end()-1;}
 
 string::iterator Tokenizer::findFirst(string value) const {
-    return find(current, sourceEnd(), value);
+    size_t found = source->code.find(
+        value.c_str(),
+        distance(sourceBegin(), current),
+        distance(current, sourceEnd()));
+    if(found == string::npos) return sourceEnd();
+    return sourceBegin()+found;
 }
 
 bool Tokenizer::isCommentChar() const {return isCommentChar(current);}

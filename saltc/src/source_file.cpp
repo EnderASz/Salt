@@ -21,7 +21,7 @@ namespace salt
 {
 
     SourceFile::SourceFile(string filepath)
-        :filepath(filepath), filename(path(filepath).filename().string()) {
+        :filename(path(filepath).filename().string()), filepath(filepath) {
             this->code = load_file(filepath);
     }
 
