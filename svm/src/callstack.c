@@ -45,7 +45,7 @@ uint64_t callstack_size()
 Nullable struct StackFrame *callstack_peek()
 {
     dprintf("Peeking at [%ld]\n", g_callstack_size - 1);
-    if (g_callstack_size - 1 < 0)
+    if (g_callstack_size == 0)
         return NULL;
     return &g_callstack[g_callstack_size - 1];
 }

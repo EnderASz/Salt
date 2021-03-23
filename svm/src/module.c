@@ -41,7 +41,7 @@ static void nodes_collapse(struct SaltModule *module)
     struct SaltObjectNode *hook = NULL;
 
     while (1) {
-        dprintf("Collapsing : %p : {%d}\n", node, node->data.id);
+        dprintf("Collapsing : %p : {%d}\n", (void *) node, node->data.id);
 
         // Assign the pointer to the next element to the hook and check if it's
         // not null. This is used because we are free-ing memory right under

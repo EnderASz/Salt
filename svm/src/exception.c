@@ -21,8 +21,8 @@ void exception_throw(const char *exception, const char *fmt, ...)
     fprintf(stderr, "An exception occured during execution: %s\n", exception);
 
     dprintf("Deconstructing %ld elements from the stack\n", callstack_size());
-    int size = callstack_size();
-    for (uint i = 0; i < size; i++) {
+    uint64_t size = callstack_size();
+    for (uint64_t i = 0; i < size; i++) {
         struct StackFrame *frame = callstack_peek();
         fprintf(stderr, "  at %s.%s\n", frame->module,
                 frame->function);
