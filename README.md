@@ -2,7 +2,6 @@
 
 <p align="center">
     <img src="https://img.shields.io/badge/Language-C & C++-aF405D?style=flat-square">
-    <img src="https://img.shields.io/badge/Version-0.1-00ccff?style=flat-square">
     <img src="https://img.shields.io/github/last-commit/EnderASz/Salt?label=Last%20commit&style=flat-square">
     <img src="https://img.shields.io/tokei/lines/github/EnderASz/Salt?label=Total%20lines&style=flat-square">
 </p>
