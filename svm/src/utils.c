@@ -1,7 +1,11 @@
-//
-// utils.h implementation
-//
+/**
+ * utils.h implementation
+ *
+ * @author bellrise, 2021
+ */
+#include "../include/core.h"
 #include "../include/utils.h"
+
 #include <stdio.h>
 
 static void dump_hexes(byte *bytes, short amount)

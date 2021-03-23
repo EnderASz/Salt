@@ -1,5 +1,22 @@
 /**
  * Salt Virtual Machine
+ * 
+ * Copyright (C) 2021  The Salt Programming Language Developers
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <https://www.gnu.org/licenses/>.
+ *
+ * END OF COPYRIGHT NOTICE
  *
  * The Salt Virtual Machine is the interpreter for compiled Salt code generated
  * by saltc, the Salt compiler. It is written in C to have more control over 
@@ -40,8 +57,10 @@
  * and every major release should get a new `major` version. Simple as that.
  *
  *
- * @author   bellrise
- * @version  0.1
+ *
+ *
+ *
+ * @version  Salt Virtual Machine; format 3 version 0.9  
  */
 #include "include/args.h"
 #include "include/core.h"
@@ -56,7 +75,8 @@
 
 /* This string will show up in the compiled version of SVM which you can then
  grep to, checking the format. */
-const char *svm_grep_string = "SVM: f3 "SVM_VERSION" "__TIMESTAMP__;
+const char *svm_grep_string = "SVM: f3 "SVM_VERSION" on "__TIMESTAMP__" ("
+            STRINGIFY(ARCHITECTURE)" bit)";
 
 static void size_check();
 

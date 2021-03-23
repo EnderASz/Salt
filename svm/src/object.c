@@ -1,8 +1,10 @@
-//
-// Created by bellrise on 17.03.2021.
-//
-#include "../include/object.h"
+/**
+ * object.h implementation
+ *
+ * @author bellrise, 2021
+ */
 #include "../include/core.h"
+#include "../include/object.h"
 #include "../include/utils.h"
 #include "../include/exception.h"
 
@@ -17,7 +19,7 @@ void salt_object_init(SaltObject *obj)
 {
     obj->id = 0;
     obj->readonly = 0;
-    obj->mutex_aquired = 0;
+    obj->mutex_acquired = 0;
 
     obj->value = NULL;
     obj->size = 0;
@@ -32,7 +34,7 @@ void salt_object_copy(SaltObject *dest, SaltObject *src)
     dest->id = src->id;
     dest->type = src->type;
     dest->readonly = src->readonly;
-    dest->mutex_aquired = src->mutex_aquired;
+    dest->mutex_acquired = src->mutex_acquired;
 
     dest->vhandler = src->vhandler;
     dest->destructor = src->destructor;
@@ -135,7 +137,7 @@ void salt_object_define(SaltObject *obj, byte *payload)
     obj->id       = * (uint *) payload;
     obj->readonly = * (byte *) (payload + 4);
     obj->type     = * (byte *) (payload + 5);
-    obj->mutex_aquired = * (byte *) (payload + 6);
+    obj->mutex_acquired = * (byte *) (payload + 6);
     render_value(obj, payload + 7);
     dprintf("Created object {%d} of type 0x%02hhx\n", obj->id, obj->type);
 }

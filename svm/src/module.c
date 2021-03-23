@@ -1,9 +1,12 @@
-//
-// module.h implementation
-//
+/**
+ * module.h implementation
+ *
+ * @author bellrise, 2021
+ */
+#include "../include/core.h"
 #include "../include/module.h"
 #include "../include/exception.h"
-#include "../include/core.h"
+
 #include <string.h>
 
 static uint g_module_size = 0;
@@ -79,7 +82,7 @@ SaltObject *module_object_acquire(struct SaltModule *module)
     return &new_node->data;
 }
 
-SaltObject __NULLABLE *module_object_find(struct SaltModule *module, uint id)
+Nullable SaltObject *module_object_find(struct SaltModule *module, uint id)
 {
     struct SaltObjectNode *node = module->object_first;
     while (node != NULL) {

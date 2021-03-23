@@ -1,11 +1,15 @@
-//
-// Created by bellrise on 17.03.2021.
-//
+/**
+ * args.h implementation
+ *
+ * @author  bellrise, 2021
+ */
 #include "../include/args.h"
 #include "../include/core.h"
+
 #include <string.h>
 #include <stdio.h>
 #include <stdlib.h>
+
 
 static byte arg(char *str, const char *_long, const char *_short)
 {
@@ -30,9 +34,9 @@ static void version_page()
     core_exit();
 }
 
-char* __NULLABLE args_parse(int argc, char **argv)
+Nullable char *args_parse(int argc, char **argv)
 {
-    char* filename = NULL;
+    char *filename = NULL;
     for (int i = 1; i < argc; i++) {
         dprintf("Checking [%d] \"%s\"\n", i, argv[i]);
 

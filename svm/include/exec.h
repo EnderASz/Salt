@@ -1,18 +1,48 @@
 /**
- * The exec library is responsible for executing code.
+ * Salt Virtual Machine
+ * 
+ * Copyright (C) 2021  The Salt Programming Language Developers
  *
- * @author  bellrise
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <https://www.gnu.org/licenses/>.
+ *
+ * END OF COPYRIGHT NOTICE
+ *
+ * The exec library is responsible for executing code. All exec functions and
+ * register operations can be found here.
+ *
+ * @author  bellrise, 2021
  */
 #ifndef SVM_EXEC_H
 #define SVM_EXEC_H
 
 #include "core.h"
+#include "module.h"
 
-/* This structure is used for storing a single svm instruction. */
+/**
+ * This structure is used for storing a single SVM instruction. An array of 
+ * these is created in the exec.c source file called g_execs. 
+ *
+ * @a instruction   the 5 char opcode to the instruction
+ * @a f_exec        pointer to function
+ */
 struct SVMCall {
 
     char instruction[6];
-    int ( *f_exec ) (struct SaltModule *module, byte *payload, int pos);
+    
+    /* the exec function */
+    uint ( * f_exec )
+    (struct SaltModule *module, byte *payload, uint pos);
 
 };
 
@@ -26,13 +56,16 @@ struct SVMCall {
  * After: after exiting the main execution loop, it deallocates all used heap
  * memory and safely exits the program.
  *
- * @param   main  main module (named __main__)
- * @return  return status of exec_ instructions.
+ * @param   main  main module, the first loaded module should be named __main__
+ * @return  status of exec_ instructions.
  */
 int exec(struct SaltModule* main);
 
 /**
- * Return the pointer to the svm call.
+ * Return the pointer to the svm call. This will return
+ *
+ * @param   title  string to the title
+ * @return  pointer to the SVMCall struct 
  */
 struct SVMCall *exec_get(char *title);
 
@@ -42,9 +75,22 @@ struct SVMCall *exec_get(char *title);
 void register_clear();
 
 /**
+ * This comment is for all function below.
+ *
+ * All these functions are exec functions which get executed per instruction. 
+ * Each function is registered in the g_execs static variable.
+ *
+ * @param   module  pointer to the module. restricted
+ * @param   payload the instruction payload
+ * @param   pos     current instruction number the execution is at
+ * @return  instruction number to jump to
+ */
+
+/**
  * Call a different function and jump to it.
  */
-int exec_callf(struct SaltModule *module, byte *payload, int pos);
+uint exec_callf(struct SaltModule *__restrict module, byte *__restrict payload,
+                uint pos);
 
 /**
  * Exit the current executed module. This is the safe version of KILLX, because
@@ -52,33 +98,38 @@ int exec_callf(struct SaltModule *module, byte *payload, int pos);
  * stack and finish execution. This is different to said kill instruction,
  * which immediately collapses the module tapes and exits the program.
  */
-int exec_exite(struct SaltModule *module, byte *payload, int pos);
+uint exec_exite(struct SaltModule *__restrict module, byte *__restrict payload, 
+                uint pos);
 
 /**
  * Load an external SCC file and add it to the global module register.
  */
-int exec_extld(struct SaltModule *module, byte *payload, int pos);
+uint exec_extld(struct SaltModule *__restrict module, byte *__restrict payload,  
+                uint pos);
 
 /**
  * Kill the whole program on-the-spot. This tried to free any memory it can as
  * fast as possible, and this kills the whole program. Note that this almost
  * certainly produce unwanted memory leaks, so it's recommended not to use it.
  */
-int exec_killx(struct SaltModule *module, byte *payload, int pos);
+uint exec_killx(struct SaltModule *__restrict module, byte *__restrict payload,  
+                uint pos);
 
 /**
  * Create a new object in the current module. This should be handled by
  * an external function in the compiler, to always get it right because
  * it's a quite complex instruction.
  */
-int exec_objmk(struct SaltModule *module, byte *payload, int pos);
+uint exec_objmk(struct SaltModule *__restrict module, byte *__restrict payload,  
+                uint pos);
 
 /**
  * Delete the object in the current module. This doesn't actually remove
  * the object from memory, but signs it as "inactive". The virtual machine
  * decides when to actually free the memory and remove the object permanently.
  */
-int exec_objdl(struct SaltModule *module, byte *payload, int pos);
+uint exec_objdl(struct SaltModule *__restrict module, byte *__restrict payload,  
+                uint pos);
 
 /**
  * Print the value of the object (without a newline). Most prints require
@@ -86,17 +137,20 @@ int exec_objdl(struct SaltModule *module, byte *payload, int pos);
  * string with only a newline character, and chain the PRINT object & PRINT
  * const_newline.
  */
-int exec_print(struct SaltModule *module, byte *payload, int pos);
+uint exec_print(struct SaltModule *__restrict module, byte *__restrict payload,  
+                uint pos);
 
 /**
  * Load an external SCC file and add it to the global module register.
  */
-int exec_retrn(struct SaltModule *module, byte *payload, int pos);
+uint exec_retrn(struct SaltModule *__restrict module, byte *__restrict payload,  
+                uint pos);
 
 /**
  * Print the value at the register.
  */
-int exec_regdp(struct SaltModule *module, byte *payload, int pos);
+uint exec_regdp(struct SaltModule *__restrict module, byte *__restrict payload,  
+                uint pos);
 
 /**
  * Move the value from the register onto the module object list, making it
@@ -104,12 +158,14 @@ int exec_regdp(struct SaltModule *module, byte *payload, int pos);
  * objects with the same IDs from the list, but adds a brand new object at the
  * end.
  */
-int exec_regmv(struct SaltModule *module, byte *payload, int pos);
+uint exec_regmv(struct SaltModule *__restrict module, byte *__restrict payload,  
+                uint pos);
 
 /**
  * Set all the registers to NULL.
  */
-int exec_regnl(struct SaltModule *module, byte *payload, int pos);
+uint exec_regnl(struct SaltModule *__restrict module, byte *__restrict payload,  
+                uint pos);
 
 /**
  * Set the value of the given register to the selected object by ID. Important
@@ -118,6 +174,7 @@ int exec_regnl(struct SaltModule *module, byte *payload, int pos);
  * the 0 register used for return values from a couple of different
  * instructions.
  */
-int exec_regst(struct SaltModule *module, byte *payload, int pos);
+uint exec_regst(struct SaltModule *__restrict module, byte *__restrict payload,  
+                uint pos);
 
 #endif // SVM_EXEC_H

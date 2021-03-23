@@ -1,7 +1,26 @@
 /**
+ * Salt Virtual Machine
+ * 
+ * Copyright (C) 2021  The Salt Programming Language Developers
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <https://www.gnu.org/licenses/>.
+ *
+ * END OF COPYRIGHT NOTICE
+ *
  * This module provides the structure & functionality for the SaltObject
  *
- * @author  bellrise
+ * @author bellrise, 2021
  */
 #ifndef SVM_OBJECT_H
 #define SVM_OBJECT_H
@@ -20,28 +39,44 @@
 typedef __UINT8_TYPE__  byte;
 typedef __UINT32_TYPE__ uint;
 
-/* This represents a single object, which can hold different types of data
- depending on the [type] byte. When building a new object, default values are
- assigned an the constructor & destructor pointers are passed, which take care
- of allocating the needed memory on the heap. Be sure to never build a raw
- object yourself, instead use salt_object_create(...). */
+/**
+ * This represents a single object, which can hold different types of data
+ * depending on the [type] byte. When building a new object, default values are
+ * assigned an the constructor & destructor pointers are passed, which take 
+ * care of allocating the needed memory on the heap. Be sure to never build a 
+ * raw object yourself, instead use salt_object_create(...). 
+ *
+ * @a id            ID of the object
+ * @a readonly      0x01 if the object should be const 
+ * @a type          type of the object, see OBJECT_TYPE_xxx
+ * @a mutex_acquired if this is not 1, it means the object 
+ * @a value         pointer to the value
+ * @a size          amount of bytes allocated
+ * @a vhandler      value handler method
+ * @a destructor    object destructor
+ */
 struct SaltObject {
 
-    /* object information */
-    uint id;
-    byte readonly;
-    byte type;
+    uint  id;
+    byte  readonly;
+    byte  type;
+    byte  mutex_acquired;
 
-    /* threading support */
-    byte mutex_aquired;
+    byte _pad1[1];
 
-    /* object value */
+    uint  size;
     void *value;
-    uint size;
 
-    /* methods */
-    void (* vhandler  ) (struct SaltObject *obj, byte *bytes);
-    void (* destructor) (struct SaltObject *obj);
+    void ( * vhandler  ) 
+    (struct SaltObject *obj, byte *bytes);
+    
+    void ( * destructor ) 
+    (struct SaltObject *obj);
+
+#if ARCHITECTURE == 32
+    byte _pad2[12];
+#endif
+
 };
 
 /* Because the salt object will be used very often, I add a typedef here.
@@ -76,8 +111,8 @@ void salt_object_copy(SaltObject *dest, SaltObject *src);
  * Create a new salt object from the given payload. See doc/scc.html for
  * information about the payload.
  *
- * @param  payload pointer to bytes
- * @return brand new heap allocated SaltObject.
+ * @param   payload  pointer to bytes
+ * @return  brand new heap allocated SaltObject.
  */
 void salt_object_define(SaltObject *obj, byte *payload);
 
@@ -92,7 +127,7 @@ void salt_object_print(SaltObject *obj);
  * This should be assigned to each created salt object in order to free
  * the proper amount of memory.
  *
- * @param obj pointer to the salt object
+ * @param   obj  pointer to the salt object
  */
 void salt_object_destructor(SaltObject* obj);
 

@@ -1,26 +1,34 @@
-//
-// Created by bellrise on 18.03.2021.
-//
+/**
+ * exec.h implementation
+ *
+ * @author bellrise, 2021
+ */
+#include "../include/core.h"
 #include "../include/exec.h"
 #include "../include/exception.h"
 #include "../include/callstack.h"
 #include "../include/utils.h"
+#include "../include/module.h"
+#include "../include/object.h"
+
 #include <string.h>
 
 /* killx is the last instruction if no other is found. */
 static struct SVMCall g_execs[] = {
-        {"KILLX", exec_killx},
-        {"REGMV", exec_regmv},
-        {"REGST", exec_regst},
-        {"EXITE", exec_exite},
-        {"CALLF", exec_callf},
-        {"EXTLD", exec_extld},
-        {"OBJMK", exec_objmk},
-        {"OBJDL", exec_objdl},
-        {"PRINT", exec_print},
-        {"REGDP", exec_regdp},
-        {"RETRN", exec_retrn},
-        {"REGNL", exec_regnl}
+        
+    {"KILLX", exec_killx},
+    {"REGMV", exec_regmv},
+    {"REGST", exec_regst},
+    {"EXITE", exec_exite},
+    {"CALLF", exec_callf},
+    {"EXTLD", exec_extld},
+    {"OBJMK", exec_objmk},
+    {"OBJDL", exec_objdl},
+    {"PRINT", exec_print},
+    {"REGDP", exec_regdp},
+    {"RETRN", exec_retrn},
+    {"REGNL", exec_regnl}
+
 };
 
 static const uint g_exec_amount = 12;
@@ -33,7 +41,8 @@ static SaltObject *g_registers[8] = {
 
 static const uint g_register_amount = 8;
 
-static int exec_find_end(struct SaltModule *module)
+
+static uint exec_find_end(struct SaltModule *module)
 {
     for (uint i = 0; i < module->label_amount; i++) {
         char *content = module->instructions[module->labels[i]].content;
@@ -41,7 +50,7 @@ static int exec_find_end(struct SaltModule *module)
             return module->labels[i];
     }
     exception_throw(EXCEPTION_RUNTIME, "Cannot find end label");
-    return -1;
+    return 0;
 }
 
 
@@ -110,7 +119,8 @@ struct SVMCall *exec_get(char *title)
     return &g_execs[0];
 }
 
-int exec_callf(struct SaltModule *module, byte *payload, int pos)
+uint exec_callf(struct SaltModule *__restrict module, byte *__restrict payload,  
+                uint pos)
 {
     uint strl = * (uint * ) payload;
     char *name = vmalloc(sizeof(char) * strl + 1);
@@ -131,47 +141,56 @@ int exec_callf(struct SaltModule *module, byte *payload, int pos)
     return 0;
 }
 
-int exec_exite(struct SaltModule *module, byte *payload, int pos)
+uint exec_exite(struct SaltModule *__restrict module, byte *__restrict payload,  
+                uint pos)
 {
     return exec_find_end(module);
 }
 
-int exec_extld(struct SaltModule *module, byte *payload, int pos)
+uint exec_extld(struct SaltModule *__restrict module, byte *__restrict payload,  
+                uint pos)
 {
     exception_throw(EXCEPTION_RUNTIME, "EXTLD is not implemented yet");
     return ++pos;
 }
 
-int exec_killx(struct SaltModule *module, byte *payload, int pos)
+uint exec_killx(struct SaltModule *__restrict module, byte *__restrict payload,  
+                uint pos)
 {
     core_exit();
     return ++pos;
 }
 
-int exec_objmk(struct SaltModule *module, byte *payload, int pos)
+uint exec_objmk(struct SaltModule *__restrict module, byte *__restrict payload,  
+                uint pos)
 {
     SaltObject *obj = module_object_acquire(module);
     salt_object_define(obj, payload);
     return ++pos;
 }
 
-int exec_objdl(struct SaltModule *module, byte *payload, int pos)
+uint exec_objdl(struct SaltModule *__restrict module, byte *__restrict payload,  
+                uint pos)
 {
     module_object_delete(module, * (uint *) payload);
     return ++pos;
 }
 
-int exec_print(struct SaltModule *module, byte *payload, int pos)
+uint exec_print(struct SaltModule *__restrict module, byte *__restrict payload,  
+                uint pos)
 {
     SaltObject *obj = module_object_find(module, * (uint *) payload);
-    if (obj == NULL)
-        exception_throw(EXCEPTION_NULLPTR, "Cannot find object %d", * (uint *) payload);
+    if (obj == NULL) {
+        exception_throw(EXCEPTION_NULLPTR, "Cannot find object %d", 
+                        * (uint *) payload);
+    }
 
     salt_object_print(obj);
     return ++pos;
 }
 
-int exec_retrn(struct SaltModule *module, byte *payload, int pos)
+uint exec_retrn(struct SaltModule *__restrict module, byte *__restrict payload,  
+                uint pos)
 {
     struct StackFrame *frame = callstack_peek();
     if (frame == NULL) {
@@ -188,25 +207,29 @@ int exec_retrn(struct SaltModule *module, byte *payload, int pos)
     return ++pos;
 }
 
-int exec_regdp(struct SaltModule *module, byte *payload, int pos)
+uint exec_regdp(struct SaltModule *__restrict module, byte *__restrict payload,  
+                uint pos)
 {
     exception_throw(EXCEPTION_RUNTIME, "REGDP is not implemented yet");
     return ++pos;
 }
 
-int exec_regmv(struct SaltModule *module, byte *payload, int pos)
+uint exec_regmv(struct SaltModule *__restrict module, byte *__restrict payload,  
+                uint pos)
 {
     exception_throw(EXCEPTION_RUNTIME, "REGMV is not implemented yet");
     return ++pos;
 }
 
-int exec_regnl(struct SaltModule *module, byte *payload, int pos)
+uint exec_regnl(struct SaltModule *__restrict module, byte *__restrict payload,  
+                uint pos)
 {
     register_clear();
     return ++pos;
 }
 
-int exec_regst(struct SaltModule *module, byte *payload, int pos)
+uint exec_regst(struct SaltModule *__restrict module, byte *__restrict payload,  
+                uint pos)
 {
     exception_throw(EXCEPTION_RUNTIME, "REGST is not implemented yet");
     return ++pos;

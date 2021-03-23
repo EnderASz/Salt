@@ -1,12 +1,16 @@
-//
-// exception.h implementation
-//
-#include "../include/exception.h"
+/**
+ * exception.h implementation
+ *
+ * @author bellrise, 2021
+ */
 #include "../include/core.h"
+#include "../include/exception.h"
 #include "../include/callstack.h"
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdarg.h>
+
 
 void exception_throw(const char *exception, const char *fmt, ...)
 {

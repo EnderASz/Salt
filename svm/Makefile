@@ -6,10 +6,9 @@ RESULT = svm
 SOURCES = $(shell find src -name \*.c | sed 's/src\///' | tr '\n' ' ') 
 OBJECTS = $(foreach var,$(SOURCES),build/objects/$(var).o) 
 
-CFLAGS := -Wall
+CFLAGS := -Wall -std=c2x
 VERSION := -D SVM_VERSION=\"$(shell python3 build.py build)\"
 debug : FDEBUG := -D DEBUG=1
-
 
 # Execute all the steps
 all: directories $(SOURCES) link

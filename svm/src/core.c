@@ -1,14 +1,19 @@
-//
-// Created by bellrise on 17.03.2021.
-//
+/**
+ * core.h implementation
+ *
+ * @author bellrise, 2021
+ */
 #include "../include/core.h"
 #include "../include/module.h"
 #include "../include/object.h"
 #include "../include/exception.h"
 #include "../include/exec.h"
+
 #include <stdlib.h>
 
+#ifndef DEBUG_ALLOCATIONS
 #define DEBUG_ALLOCATIONS 1
+#endif
 
 static uint64_t g_memory_used = 0;
 static uint64_t g_max_used    = 0;

@@ -1,6 +1,9 @@
-//
-// loader.h implementation
-//
+/**
+ * loader.h implementation
+ *
+ * @author bellrise, 2021
+ */
+#include "../include/core.h"
 #include "../include/loader.h"
 #include "../include/utils.h"
 #include "../include/exception.h"
@@ -13,9 +16,18 @@
 #define SCC_HEADER "\x7fSCC\xff\xee\0\0\0"
 #define SCC_VERSION 3
 
+/**
+ * The loader is a instruction - padding structure for storing instruction
+ * paddings.
+ *
+ * @a instruction  instruction name
+ * @a pad          padding
+ */
 struct LoaderIPad {
+
     char instruction[6];
     int pad;
+
 };
 
 static const struct LoaderIPad ipads[] = {
