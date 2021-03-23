@@ -1,192 +1,171 @@
 /**
- * The core is responsible for the main user interaction, so parsing
- * command line options and returning errors. All the main preprocessor
- * directives are found here because this header is included in every other
- * header & source file in here, which also means all the global variables
- * are found here.
+ * Salt Virtual Machine
+ * 
+ * Copyright (C) 2021  The Salt Programming Language Developers
  *
- * @author bellrise
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <https://www.gnu.org/licenses/>.
+ *
+ * END OF COPYRIGHT NOTICE
+ *
+ * The core module provides a couple of type definitions and core functions
+ * for the whole virtual machine. This defines a couple of important symbols
+ * like Nullable or just the interface SVM_VERSION, which is defined by the
+ * compiler anyway.
+ *
+ * @author bellrise, 2021
  */
-#ifndef CORE_H_
-#define CORE_H_
 
-#include <stdlib.h>
-#include <string.h>
-#include <stdio.h>
+/* The Nullable symbol is placed before function declarations and implemen-
+ -tations to signify that it may return NULL. */
+#ifndef Nullable
+#define Nullable /* may return null */
+#endif
+
+/* The SVM_VERSION defined here is just to not upset the auto complete and 
+ static analasys. The actual value of SVM_VERSION is passed on the command
+ line when compiling it. */
+#ifndef SVM_VERSION
+#define SVM_VERSION "(unspecified by the compiler)"
+#endif
+
+/* Header guard */
+#ifndef SVM_CORE_H
+#define SVM_CORE_H
 
 #include "object.h"
 
-/* Architecture the program is compiled on. On Windows this is usually set to
- 32-bit by default, so to properly align structures you need to add padding
- depending if the pointer size is 8 bytes or 4 bytes. Also, sucks to be a MacOs
- user because SVM doesn't support it. too bad! */
-#ifdef _WIN32
-  #define ARCH 32
-#elif defined(_WIN64) || defined(__linux__)
-  #define ARCH 64
+#include <stdio.h>
+#include <stdint.h>
+#include <string.h>
+
+/* Compilation settings. _ARCH is defined to the bit settings. */
+#if __INTPTR_MAX__ == __INT32_MAX__
+#define ARCHITECTURE 32
+#elif __INTPTR_MAX__ == __INT64_MAX__
+#define ARCHITECTURE 64
+#else
+#define ARCHITECTURE 0
 #endif
 
-/* These header defines are used for validating the SCC header. These contain
- important information such as the magic number & the SCC format version. */
-#define SCC_HEADER_MAGIC   "\x7fSCC\xff\xee\0\0"
-#define SCC_HEADER_VERSION "\x01\x00\x00\x00"
+/* Wrap the given value in quotes. This is needed for svm_grep_string where the
+ const string is created from concatinating several values. */
+#define ISTRINGIFY(X)  #X
+#define STRINGIFY(NUM) ISTRINGIFY(NUM)
 
-/* Core error macro, print the error message and exit. */
-#define CORE_ERROR(...)         \
-    {                           \
-        printf("svm: ");        \
-        printf(__VA_ARGS__);    \
-        exit(1);                \
-    }
+/* dprintf implementations */
+#ifdef DEBUG
 
-// TYPES
+#ifdef _WIN32
+#include <windows.h>
 
-typedef unsigned char byte;
-typedef unsigned int  uint;
+/* Bruh, programming on windows sucks! This looks actually terrible but I was 
+ told this had to be done to support terminal colouring on the original 32bit
+ windows cmd. - bellrise */
+#define dprintf(...)                                                \
+{                                                                   \
+    HANDLE hOut = GetStdHandle(STD_OUTPUT_HANDLE);                  \
+    SetConsoleTextAttribute(hOut, ((0 & 0x0F) << 4) + (3 & 0x0F));  \
+    printf("%s", __FILE__);                                         \
+    SetConsoleTextAttribute(hOut, ((0 & 0x0F) << 4) + (1 & 0x0F));  \
+    printf("::");                                                   \
+    SetConsoleTextAttribute(hOut, ((0 & 0x0F) << 4) + (2 & 0x0F));  \
+    printf("%s: ", __func__);                                       \
+    SetConsoleTextAttribute(hOut, ((0 & 0x0F) << 4) + (15 & 0x0F)); \
+    printf(__VA_ARGS__);                                            \
+}
 
-// FLAGS
+#elif defined(__linux__)
 
-/* help page flag */
-extern char FLAG_HELP;
+/* The simple Linux version which just uses ANSI escape codes. */
+#define dprintf(...)                                  \
+{                                                     \
+    printf("\033[96m%s\033[34m::\033[92m%s: \033[0m", \
+    __FILE__, __func__);                              \
+    printf(__VA_ARGS__);                              \
+}
 
-/* overwrite */
-extern char FLAG_UNSAFE;
+#endif // __linux__
+#else // DEBUG
 
-/* max memory flag */
-extern uint svm_max_mem;
+/* If DEBUG is not defined, define dprintf as an empty function. */
+#define dprintf(...)
 
-/* initial xregister size */
-extern uint svm_xregister_size;
+#endif // DEBUG
 
-// GLOBALS
+typedef __UINT8_TYPE__  byte;
+typedef __UINT32_TYPE__ uint;
 
-/* Amount of bytes the SVM has allocated (outside of its own code). This is 
- tracked by vmalloc. */
-extern unsigned long long svm_allocated;
-
-/* The amount of instructions core_load_bytecode needs to allocate space for.
- This helps to speed up the compiler to not overallocate nor underallocate,
- so it's generally faster and more memory efficient. */
-extern uint svm_instructions;
-
-/* The amount of constant strings the vm needs to allocate space for. Again, 
- this is for optimazation. */
-extern uint svm_const_strings;
-
-/* Maximum width of a single instruction provided by the compiler. */
-extern uint svm_max_width;
-
-/* Array of constant strings */
-extern SaltObject *salt_const_strings;
-
-/* Global variable register. This is possible because the compiler actually
- * takes care of the variable scopes and always (should) provide the proper
- * SaltObject IDs. core_init is responsible for allocating the initial size
- * of the xregister. 
+/**
+ * This stores a single Salt instruction that can be executed. 
  *
- * When creating a new SaltObject, the functions responsible for appending
- * data to the xregister control check if the creator is PERM_USER and the
- * ID is 128 or lower and do not allow that. That means that the first 128
- * objects are SVM objects.
- * 
- * SVM Objects (by index, starting from 0)
- * 
- * 9    (string) error title
- * 10   (string) error message
- *
+ * @a name     name of the instruction, the 5 chars are compared to get the
+ *             correct exec.
+ * @a size     size of the string array (null included)
+ * @a content  the pointer to a heap char array storing the instruction
  */
-extern struct SaltArray xregister;
-extern SaltObject       xnullptr;
+struct SaltInstruction {
 
-/* Parse the command line arguments and set special flags defined here so they
- * can be accessed anywhere.
- * 
- * @argc amount of arguments
- * @argv array of (strings) arguments 
- *
- * returns: filename of the script
+    char  name[6];
+    uint  size;
+    char *content;
+
+};
+
+/**
+ * Always call this instead of the normal exit, because this function
+ * additionally cleans up the heap allocated memory before calling exit
+ * from stdlib.
  */
-char *core_parse_args(int argc, char **argv);
+void core_exit();
 
-/* Show the help page and exit the program. */
-void core_show_help();
-
-/* Initialize some global variables and registers. Be sure to call this before
- * calling exec or preload. 
- */
-void core_init();
-
-/* Read & load the header file contents to the global variables. While reading,
- * validate information in the header and optionally exit the program with a
- * fatal error if something is incorrect.
+/**
+ * Allocate n bytes in the heap, registering the memory usage in the global
+ * MEMORY_USED variable.
  *
- * @_fp: file pointer to the scc file 
+ * @param   size  amount of bytes to allocate
  */
-void core_load_header(FILE *_fp);
+void *vmalloc(uint size);
 
-/* Read & load all constant strings from the top of the file and puts the into 
- * the SaltObject constant string array (salt_cstrings).
+/**
+ * Free n bytes from the heap at the given pointer. Removes [size] bytes from
+ * the MEMORY_USED variable.
  *
- * @_fp: file pointer to the scc file
+ * @param   ptr  pointer to memory
+ * @param   size amount of bytes to deallocate
  */
-void core_load_strings(FILE *_fp);
+void vmfree(void *ptr, uint size);
 
-/* Read n amount of bytes from the file and place them in the string array.
- * This takes the string length for granted.
+/**
+ * Reallocate the given piece of memory to another location.
  *
- * @_fp:  file pointer to read from
- * @_str: memory allocated string
- * @_n:   amount of bytes
+ * @param   ptr     pointer to initial memory
+ * @param   before  amount of memory used before
+ * @param   after   amount of memory used after
+ * @return  pointer to memory
  */
-void core_read_bytes(FILE *_fp, char *_str, uint _n);
+void *vmrealloc(void *ptr, uint before, uint after);
 
-/* Similar to core_read_bytes, it reads the file pushing the characters into 
- * the C string until it finds the _c char. 
- * 
- * @_fp:  file pointer to read from
- * @_str: memory allocated string
- * @_c:   the char to stop at
+/**
+ * Check the current used heap memory.
+ *
+ * @return g_memory_used
  */
-void core_read_until(FILE *_fp, char *_str, char _c);
+uint64_t vmused();
 
-/* Read & load the bytecode from the scc file. This must be executed after
- * core_load_header, because of the global variables it sets and also moves the
- * file cursor 64 bytes forward.
- *
- * @_fp: file pointer to the scc file
- *
- * returns: pointer to allocated area for the bytecode to sit in
+/**
+ * Check the current status of the memory.
  */
-char **core_load_bytecode(FILE *_fp);
+void vibe_check();
 
-/* Deallocate all memory and close any open file pointers. It is very important
- * to call this before exiting the program.
- *
- * @bytecode  bytecode to deallocate
- */
-void core_clean(char **bytecode);
-
-/* Add a object to the register. The blacklisted IDs range from 0000 0000 (0)
- * to 0080 0000 (128).
- *
- * @_obj    object to add
- * @_perm   who is creating the object
- */
-void xregister_add(SaltObject _obj, int _perm);
-
-/* Remove object from register by ID.
- *
- * @_id   id of the object
- */
-void xregister_remove(uint _id);
-
-/* Returns the SaltObject with the given register.
- *
- * @_id  id of the object to look up
- *
-
- * returns: pointer to object in register, NULL if not found
- */
-SaltObject *xregister_find(uint _id);
-
-#endif // CORE_H_
+#endif // SVM_CORE_H

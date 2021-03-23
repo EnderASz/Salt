@@ -14,7 +14,7 @@ cd saltc
 make && make clean
 cd ..
 cd svm
-make && make clean
+make && mv build/svm ./svm && make clean
 cd ..
 
 printf "Creating Salt home\n"

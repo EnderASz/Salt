@@ -6,35 +6,25 @@ RESULT = svm
 SOURCES = $(shell find src -name \*.c | sed 's/src\///' | tr '\n' ' ') 
 OBJECTS = $(foreach var,$(SOURCES),build/objects/$(var).o) 
 
-OPT = -O
+CFLAGS := -Wall -Wextra -Wpedantic -Wno-unused-parameter -std=c2x
+VERSION := -D SVM_VERSION=\"$(shell python3 build.py build)\"
+debug : FDEBUG := -D DEBUG=1
 
 # Execute all the steps
-all: directories $(SOURCES) final
-	# --- Done ---
+all: directories $(SOURCES) link
 .PHONY: all
 
-# Build a debug mode
-debug: directories debug-setup $(SOURCES) final debug-clean
-	# --- Done ---
+# Just a compilation target so you can use -j with make
+compile: $(SOURCES)
+.PHONY: compile
+
+# Compile debug version
+debug: all
 .PHONY: debug
-
-# Setup the debug define in utils  
-debug-setup: 
-	cp include/utils.h build/utils.h.clean
-	printf "#define DEBUG\n" > include/utils.h
-	cat build/utils.h.clean >> include/utils.h
-.PHONY: debug-setup
-
-# Clean after the debug
-debug-clean:
-	mv build/utils.h.clean include/utils.h
-	# Built debug version
-.PHONY: debug-clean
 
 # Clean after compilation, moving the compiled result to
 # the top folder.
 clean:
-	mv build/$(RESULT) ./$(RESULT)
 	rm -r build
 .PHONY: clean
 
@@ -46,11 +36,9 @@ directories:
 
 # Compile all sources to object files
 $(SOURCES):
-	gcc -c -o build/objects/$@.o src/$@
+	gcc $(CFLAGS) $(VERSION) $(FDEBUG) -c -o build/objects/$@.o src/$@
 
 # Compile and link the main file
-final:
-	# Final compilation step
-	gcc $(OPT) -o build/$(RESULT) $(MAIN) $(OBJECTS)
-	# Build production version
-.PHONY: final
+link:
+	gcc $(VERSION) $(FDEBUG) -o build/$(RESULT) $(MAIN) $(OBJECTS)
+.PHONY: link

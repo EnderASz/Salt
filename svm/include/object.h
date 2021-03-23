@@ -1,160 +1,134 @@
 /**
- * The object module provides functionality around the SaltObject, which is
- * a universal data container that stores any type of data coming from Salt.
+ * Salt Virtual Machine
+ * 
+ * Copyright (C) 2021  The Salt Programming Language Developers
  *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
  *
- * @author bellrise
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <https://www.gnu.org/licenses/>.
+ *
+ * END OF COPYRIGHT NOTICE
+ *
+ * This module provides the structure & functionality for the SaltObject
+ *
+ * @author bellrise, 2021
  */
-#ifndef OBJECT_H_
-#define OBJECT_H_
+#ifndef SVM_OBJECT_H
+#define SVM_OBJECT_H
 
-typedef unsigned int  uint;
-typedef unsigned char byte; 
+#define READONLY_FALSE (0x00)
+#define READONLY_TRUE  (0x01)
 
-/* This is a list of built-in Salt object types. */
-#define SALT_NULL   0x00
-#define SALT_INT    0x01
-#define SALT_FLOAT  0x02 
-#define SALT_STRING 0x03
-#define SALT_BOOL   0x04
+// Simple types
 
-#define SALT_ARRAY  0x80
+#define OBJECT_TYPE_NULL   (0x00)
+#define OBJECT_TYPE_INT    (0x01)
+#define OBJECT_TYPE_FLOAT  (0x02)
+#define OBJECT_TYPE_BOOL   (0x03)
+#define OBJECT_TYPE_STRING (0x04)
 
-/* Permission levels */
-#define PERM_USER   0
-#define PERM_SVM    1
+typedef __UINT8_TYPE__  byte;
+typedef __UINT32_TYPE__ uint;
 
-/* The SaltObject structure type is a universal data container used everywhere
- in Salt to hold any type of data. This is achieved by leaving space for a void
- pointer, which you can then dereference to get the data. */
-typedef struct _salt_object_st { // (32)
+/**
+ * This represents a single object, which can hold different types of data
+ * depending on the [type] byte. When building a new object, default values are
+ * assigned an the constructor & destructor pointers are passed, which take 
+ * care of allocating the needed memory on the heap. Be sure to never build a 
+ * raw object yourself, instead use salt_object_create(...). 
+ *
+ * @a id            ID of the object
+ * @a readonly      0x01 if the object should be const 
+ * @a type          type of the object, see OBJECT_TYPE_xxx
+ * @a mutex_acquired if this is not 1, it means the object 
+ * @a value         pointer to the value
+ * @a size          amount of bytes allocated
+ * @a vhandler      value handler method
+ * @a destructor    object destructor
+ */
+struct SaltObject {
 
-    /* unique ID of the object, assigned by salt_id() */
-    uint          id;
+    uint  id;
+    byte  readonly;
+    byte  type;
+    byte  mutex_acquired;
+
+    byte _pad1[1];
+
+    uint  size;
+    void *value;
+
+    void ( * vhandler  ) 
+    (struct SaltObject *obj, byte *bytes);
     
-    /* type information */
-    byte        type;
-    byte  permission;
-    byte    constant;
-    byte       _pad1;
+    void ( * destructor ) 
+    (struct SaltObject *obj);
 
-    byte typeinfo[8];
-
-    /* pointer to the data itself. of course, this needs to allocated when 
-     creating a new object. */
-    void       *data;
-
-#if ARCH == 32
-    /* this 4-byte padding is defined only when the compilation destination of
-     the SVM is for a 32-bit platform, where pointers are only 4 bytes instead
-     of 8 bytes */
-    byte    _pad2[4];
-#endif
-
-    /* for threading */
-    uint    mutex_id;
-
-    /* for scope access */
-    uint    scope_id;
-
-} SaltObject;
-
-/* This stores an dynamic array of SaltObjects. Use the functions that come 
- with this because it supports dynamic allocation. */
-struct SaltArray { // (16)
-
-    /* current size of array */
-    uint         size;
-
-    /* allocated space */
-    uint        space;
-
-    SaltObject *array;
-
-#if ARCH == 32
-    byte     _pad1[4];   
+#if ARCHITECTURE == 32
+    byte _pad2[12];
 #endif
 
 };
 
-/* The full method for creating a brand new Salt Object. Defines all the fields
- * which it can assign to. This method is private because it should be called
- * using other wrapper functions that are much easier to use.
- *
- * @id          unique object id
- * @type        type of the object
- * @permission  permission level, basically who created the object 
- * @constant    if the object is constant or not
- * @typeinfo    additional information about the type. the data is zeroed if 
- *              NULL is passed here
- * @data        pointer to the actual data, needs to be allocated on the heap
- * @mutex_id    id of the mutex, used for locking threads
- * @scope_id    id of the scope the variable was declared in
- * 
- * returns: brand new SaltObject
- */
-SaltObject salt_object_create(uint id, byte type, byte permission, 
-           byte constant, byte *typeinfo, void *data, uint mutex_id,
-           uint scope_id);
+/* Because the salt object will be used very often, I add a typedef here.
+ This does not obstruct the information that a SaltObject is a structure,
+ because this whole project revolves around such a thing. */
+typedef struct SaltObject SaltObject;
 
-/* Create a new constant variable from the passed information.
+/**
+ * Create a raw salt object. Assign all the needed values, settings the object
+ * to a null type & value. This calls salt_object_init under the hood.
  *
- * @type     type of the object
- * @typeinfo additional type information
- * @data     pointer to the allocated data
- *
- * returns: brand new constant SaltObject
+ * @return brand new heap allocated salt object.
  */
-SaltObject salt_object_mkconst(uint id, byte type, byte *typeinfo, void *data);
+SaltObject *salt_object_create();
 
-/* Create a new salt object from the given ID and string with the given length.
+/**
+ * Initializes the passed object with all the default values.
  *
- * @id      ID of new object
- * @perm    permission level
- * @len     length of string
- * @str     pointer to string
- *
- * returns: brand new salt string
+ * @param   obj  pointer to salt object
  */
-SaltObject salt_string_create(uint id, byte perm, int len, char *str);
+void salt_object_init(SaltObject *obj);
 
-/* Assign a new string to the passed SaltObject. If the type of the object is
- * not SALT_STRING it throws a TypeException.
+/**
+ * Deep copy a salt object.
  *
- * @obj     pointer to object
- * @str     null terminated string
+ * @param   dest  destination object
+ * @param   src   source object
  */
-void salt_string_set(SaltObject *obj, char *str);
+void salt_object_copy(SaltObject *dest, SaltObject *src);
 
-/* Cast the typeinfo of the SaltObject into a uint.
+/**
+ * Create a new salt object from the given payload. See doc/scc.html for
+ * information about the payload.
  *
- * @_obj: salt object of string type
- * 
- * returns: length of the string
+ * @param   payload  pointer to bytes
+ * @return  brand new heap allocated SaltObject.
  */
-uint salt_object_strlen(SaltObject *obj);
+void salt_object_define(SaltObject *obj, byte *payload);
 
-/* Create a new Salt array with the specified parameters.
+/**
+ * Print the object without a newline or space after it.
  *
- * @size      initial size of the array
- * @constant  additional information about the type
- *
- * returns: new salt object of type SALT_ARRAY
+ * @param   obj  pointer to the object
  */
-struct SaltArray salt_array_create(byte size, byte constant);
+void salt_object_print(SaltObject *obj);
 
-/* Append a single object to the array. This copies the object data so you
- * can safely use local variables to append.
+/**
+ * This should be assigned to each created salt object in order to free
+ * the proper amount of memory.
  *
- * @array   pointer to array
- * @data    data to add
+ * @param   obj  pointer to the salt object
  */
-void salt_array_append(struct SaltArray *array, SaltObject data);
+void salt_object_destructor(SaltObject* obj);
 
-/* Return the length of the Salt array.
- *
- * @obj  pointer to salt object
- */
-uint salt_array_length(SaltObject *obj);
-
-#endif // OBJECT_H_
+#endif // SVM_OBJECT_H

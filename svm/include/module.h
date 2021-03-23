@@ -1,0 +1,141 @@
+/**
+ * Salt Virtual Machine
+ * 
+ * Copyright (C) 2021  The Salt Programming Language Developers
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <https://www.gnu.org/licenses/>.
+ *
+ * END OF COPYRIGHT NOTICE
+ *
+ * This module provides the SaltModule structure and the related functions
+ * for creating and modifying such salt structure.
+ *
+ * @author  bellrise, 2021
+ */
+#ifndef SVM_MODULE_H
+#define SVM_MODULE_H
+
+#include "object.h"
+#include "core.h"
+
+#define MODULE_OBJECT_SPACE 32
+
+/**
+ * Objects in the SaltModule are stored in a linked list for greater efficiency
+ * when removing objects, which do not require any data movement when stored in
+ * a linked list. 
+ *
+ * @a previous  pointer to previous node
+ * @a next      pointer to next node
+ * @a data      the actual data
+ */
+struct SaltObjectNode {
+
+    struct SaltObjectNode *previous;
+    struct SaltObjectNode *next;
+
+    SaltObject data;
+
+};
+
+/** 
+ * This container stores a single loaded salt module. One module translates
+ * one compiled .scc file. The big difference between SCC format 1 and format 3
+ * is the salt modules. Because there would be namespace clashes for externally
+ * loaded modules, every module loaded with EXTLD is put into its own Salt
+ * module, and then linked live during execution. 
+ *
+ * @a name              name of the module; can only be 63 chars long, this
+ *                      should be controlled by the compiler to raise an 
+ *                      error if the user tries to do so
+ * @a object_first      pointer to the first object
+ * @a object_last       pointer to the last object 
+ * @a import_amount     size of import array
+ * @a imports           array of pointers to other Salt modules; this is done
+ *                      instead of storing all imports in a single, one level
+ *                      array to allow for multiple & multilevel imports so you
+ *                      can access any imported module from another module
+ * @a instruction_amount  size of instruction array
+ * @a instructions      array of instructions; each instruction is represented
+ *                      as a SaltInstruction structure
+ * @a label_amount      size of label array
+ * @a labels            array of labels; each label is just represented with 
+ *                      the line number it's located on; this allows the exec
+ *                      to only look at label lines when looking up a function
+ *                      to jump to instead of all the instructions
+ */
+struct SaltModule {
+
+    char   name[64];
+
+    struct SaltObjectNode *object_first;
+    struct SaltObjectNode *object_last;
+
+    uint   import_amount;
+    struct SaltModule **imports;
+
+    uint   instruction_amount;
+    struct SaltInstruction *instructions;
+
+    uint   label_amount;
+    uint  *labels;
+
+};
+
+/**
+ * Create a new SaltModule and put it on the global list.
+ *
+ * @param   name  name of the object
+ * @return  heap-allocated SaltModule.
+ */
+struct SaltModule *module_create(char *name);
+
+/**
+ * Delete the module from the array.
+ *
+ * @param name
+ */
+void module_delete(char *name);
+
+/**
+ * Acquire a new object pointer. This allocates the needed memory.
+ *
+ * @param   module  the module to acquire the new object in
+ * @return  brand new object
+ */
+SaltObject *module_object_acquire(struct SaltModule *module);
+
+/**
+ * Return the pointer to the given object which matches the ID.
+ *
+ * @param   module  the module to find the object in
+ * @param   id      ID of the object
+ * @return  pointer to object, may return NULL
+ */
+Nullable SaltObject *module_object_find(struct SaltModule *module, uint id);
+
+/**
+ * Delete the given object from the module (by ID)
+ *
+ * @param   module  the module to delete the object in
+ * @param   id      ID of the object that will be unlinked.
+ */
+void module_object_delete(struct SaltModule *module, uint id);
+
+/**
+ * Remove all modules from memory.
+ */
+void module_delete_all();
+
+#endif // SVM_MODULE_H

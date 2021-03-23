@@ -4,7 +4,10 @@
 #ifndef TOKEN_H_
 #define TOKEN_H_
 
+#include "../utils.h"
 #include <string>
+#include <map>
+
 using std::string;
 
 namespace salt::tokenizer
@@ -14,26 +17,32 @@ namespace salt::tokenizer
 enum TokenType
 {
     TOK_0,          // Literally nothing
-    
-    META_INIT,      // Include 'init.salt'
 
-    // Keywords
+    // Access keywords
     KW_PUBLIC,      // public
     KW_PRIVATE,     // private
-    KW_INTERNAL,    // internal
-    KW_CONST,       // const
 
-    // Control keywords
-    KW_IMPORT,      // import
-    KW_DEL,         // del
-    KW_RETURN,      // return
+    // Flow control keywords
     KW_IF,          // if
     KW_ELSE,        // else
+    KW_ELIF,        // elif
     KW_WHILE,       // while
     KW_FOR,         // for
-    KW_THROW,       // throw
     KW_BREAK,       // break
     KW_CONTINUE,    // continue
+
+    // Import keywords
+    KW_IMPORT,      // import
+    KW_AS,          // as
+    KW_DYNAMIC,     // dynamic
+
+    // Variable manipulation keywords
+    KW_CONST,       // const
+    KW_DEL,         // del
+
+    // Keywords
+    KW_RETURN,      // return
+    KW_THROW,       // throw
 
     // Brackets
     BKT_ROUNDL,     // (
@@ -98,7 +107,6 @@ enum TokenType
     MULTOP_NOT,     // !
 
     // Base types
-    TYPE_NULL,       // null
     TYPE_BOOL,       // bool
     TYPE_INT,        // int
     TYPE_FLOAT,      // float
@@ -112,8 +120,10 @@ enum TokenType
     TOKL_BOOL,      // true | false
 
     // Name
-    TOK_NAME,       // names used to call functions, access variables etc.
+    TOK_NAME,       // names used to calls, accesses, imports etc.
 }; // salt::tokenizer::TokenType
+
+extern std::map<string, TokenType> no_value_token_types;
  
 /**
  * The token type stores a single token, which can than be turned
@@ -125,13 +135,26 @@ struct Token
 {
     TokenType type;
     string    value;
+    InStringPosition position;
+
+    /* Return true if an instance of Token has TOK_0 type. */
+    bool isNothing() const;
 };
 
 /**
  * Create a new token from the given parameters. This doesn't really
  * do anything, it's just a shorthand.
  */
-Token token_create(TokenType _tok, string _val = NULL);
+Token token_create(
+    TokenType _tok,
+    InStringPosition position,
+    string _val = NULL);
+
+/**
+ * Token with type TOK_0, NULL value and NULL positions.
+ * It represents null token.
+ */
+const Token null_token = token_create(TOK_0, {0, 0, 0}, 0);
 
 } // salt::tokenizer
 

@@ -10,8 +10,13 @@ test.*
 # Compiled files
 *.scc
 
+# Windows compiled executables
+saltc.exe
+svm.exe
+
 # Swap files
 *.swp
 
 # Programming enviroments
 .vscode/
+.idea/

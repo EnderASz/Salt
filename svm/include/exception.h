@@ -18,21 +18,28 @@
  *
  * END OF COPYRIGHT NOTICE
  *
- * Utility library
+ * This is the exceptions module for throwing SVM exceptions.
  *
- * @author bellrise
+ * @author  bellrise, 2021
  */
-#ifndef SVM_UTILS_H
-#define SVM_UTILS_H
+#ifndef SVM_EXCEPTION_H
+#define SVM_EXCEPTION_H
 
-#include "core.h"
+/* Exception strings. You should use these instead of raw strings. */
+#define EXCEPTION_RUNTIME  "RuntimeException"
+#define EXCEPTION_TYPE     "TypeException"
+#define EXCEPTION_MEMORY   "MemoryException"
+#define EXCEPTION_LABEL    "LabelException"
+#define EXCEPTION_NULLPTR  "NullPointerException"
+#define EXCEPTION_REGISTER "RegisterException"
 
 /**
- * Print n amount of bytes in hex format. Used for debugging.
+ * Throw an exception and exit the virtual machine safely.
  *
- * @param   bytes   pointer to the bytes
- * @param   amount  amount of bytes to print
+ * @param exception title of exception (use EXCEPTION_xxx)
+ * @param fmt       printf format style const string
  */
-void util_hexdump(byte *bytes, uint amount);
+void exception_throw(const char *__restrict exception, 
+                     const char *__restrict fmt, ...);
 
-#endif // SVM_UTILS_H
+#endif // SVM_EXCEPTION_H

@@ -18,21 +18,23 @@
  *
  * END OF COPYRIGHT NOTICE
  *
- * Utility library
+ * This is the argument parser for the Salt Virtual Machine.
  *
  * @author bellrise
  */
-#ifndef SVM_UTILS_H
-#define SVM_UTILS_H
+#ifndef SVM_ARGS_H
+#define SVM_ARGS_H
 
 #include "core.h"
 
 /**
- * Print n amount of bytes in hex format. Used for debugging.
+ * Parse the given arguments of the program and set variables depending on
+ * the parameters.
  *
- * @param   bytes   pointer to the bytes
- * @param   amount  amount of bytes to print
+ * @param   argc  amount of arguments
+ * @param   argv  string array of arguments
+ * @return  returns the filename or NULL if filename not found
  */
-void util_hexdump(byte *bytes, uint amount);
+Nullable char *args_parse(int argc, char **argv);
 
-#endif // SVM_UTILS_H
+#endif // SVM_ARGS_H

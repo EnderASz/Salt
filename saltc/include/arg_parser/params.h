@@ -8,6 +8,7 @@
 #ifndef CORE_PARAMS_H_
 #define CORE_PARAMS_H_
 
+#include "../utils.h"
 #include <queue>
 #include <string>
 
@@ -26,6 +27,7 @@ private:
     string executable_path;
     string input_path;
     string output_path = "a.scc";
+    bool builtins = true;
 
     /**
      * The initObject method is responsible for parse arguments and
@@ -36,13 +38,13 @@ private:
 public:
     
     Params(std::queue<string> args);
-    Params(int argc, char* argv[]);
-    Params(int n, string args[]);
+    Params(uint argc, char* argv[]);
+    Params(uint argc, string args[]);
 
     /* Compares given string with given short and long argument names. */
     static bool arg_comp(
-        string str,
-        string long_arg,
+        const string str,
+        const string long_arg,
         const char short_arg[3]);
 
     /* Gets executable path argument value */
@@ -53,6 +55,10 @@ public:
 
     /* Gets output path argument value */
     string getOutputPath();
+
+    /* Gets import init switch value */
+    bool getBuiltinsSwitch();
+
 }; // salt::core::Params
 
 }; // salt::core

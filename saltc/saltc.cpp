@@ -5,7 +5,10 @@
  * @author bellrise
  * @author EnderASz
  */
+
 #include "include/arg_parser/params.h"
+#include "include/utils.h"
+#include "include/source_file.h"
 
 using namespace salt;
 
@@ -14,7 +17,11 @@ using namespace salt;
  * precompilation, parser, tokenizer, validator and synthesizer.
  */
 int main(int argc, char* argv[]) {
-    arg_parser::Params parameters(argc, argv);
+    arg_parser::Params parameters((uint) argc, argv);
+
+    SourceFile main_source(parameters.getInputPath());
+    if(parameters.getBuiltinsSwitch())
+        main_source.includeBuiltins();
 
     return 0;
 }

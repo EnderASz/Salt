@@ -18,21 +18,28 @@
  *
  * END OF COPYRIGHT NOTICE
  *
- * Utility library
+ * The svm loader is responsible for loading a file and adding it to
+ * the global module list.
  *
- * @author bellrise
+ * @author  bellrise
  */
-#ifndef SVM_UTILS_H
-#define SVM_UTILS_H
+#ifndef SVM_LOADER_H
+#define SVM_LOADER_H
 
 #include "core.h"
+#include "module.h"
 
 /**
- * Print n amount of bytes in hex format. Used for debugging.
+ * Load the given compiled salt code into the global module list. Here is
+ * a shortened version of the steps load() does:
+ *  - read the module
+ *  - validate the header
+ *  - allocate space for a new salt module
+ *  - load symbols from bytecode
  *
- * @param   bytes   pointer to the bytes
- * @param   amount  amount of bytes to print
+ * @param   name name of the module
+ * @returns pointer to acquired SaltModule
  */
-void util_hexdump(byte *bytes, uint amount);
+struct SaltModule *load(char *name);
 
-#endif // SVM_UTILS_H
+#endif // SVM_LOADER_H

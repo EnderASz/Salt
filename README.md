@@ -15,3 +15,25 @@ Directories:
 - `doc` - md, txt & html documentation
 - `saltc` - salt compiler 
 - `svm` - salt virtual machine 
+
+<br>
+
+## Installation
+
+### Linux
+
+Just run this:
+```
+$ ./install.sh
+```
+This script:
+* Builds the compiler & virtual machine
+* Creates a salt home in `~/.local/salt`
+* Adds `$SALT_HOME` to `~/.bashrc`
+* Adds `$SALT_HOME/bin` to `$PATH`
+* Moves compiled programs, `lib` and `doc` to salt home
+* Make clean for both `saltc` and `svm`
+
+### Windows
+
+Good luck
