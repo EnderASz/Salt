@@ -46,7 +46,7 @@ static uint exec_find_end(struct SaltModule *module)
 {
     for (uint i = 0; i < module->label_amount; i++) {
         char *content = module->instructions[module->labels[i]].content;
-        if (strcmp(content, "@$__END__") == 0)
+        if (strncmp(content, "@$__END__", 9) == 0)
             return module->labels[i];
     }
     exception_throw(EXCEPTION_RUNTIME, "Cannot find end label");
@@ -58,7 +58,7 @@ static uint preload(struct SaltModule *main)
 {
     uint i = 0;
     for (uint j = 0; j < main->label_amount; j++) {
-        if (strcmp(main->instructions[main->labels[j]].content, "@main") == 0) {
+        if (strncmp(main->instructions[main->labels[j]].content, "@main", 5) == 0) {
             dprintf("Found main function at [%d]\n", main->labels[j]);
             i = main->labels[j];
         }

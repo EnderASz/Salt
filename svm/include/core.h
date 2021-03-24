@@ -55,6 +55,7 @@
 #elif __INTPTR_MAX__ == __INT64_MAX__
 #define TARGET_ARCH 64
 #else
+#define TARGET_ARCH 0
 #error "Other than 32/64 bit are not supported"
 #endif
 

@@ -7,10 +7,15 @@ SOURCES = $(shell find src -name \*.c | sed 's/src\///' | tr '\n' ' ')
 OBJECTS = $(foreach var,$(SOURCES),build/objects/$(var).o) 
 
 CC := clang
-CFLAGS := -Wall -Wextra -Wpedantic -Wno-unused-parameter -std=c2x
+CFLAGS := -Wall -Wextra -Wpedantic -Wno-unused-parameter -std=c2x 
+
+# Clang options
+
 VERSION := -D SVM_VERSION=\"$(shell python3 build.py build)\"
 
 debug : FDEBUG := -D DEBUG=1
+debug : CLANG_FLAGS := -fsanitize=address -fno-omit-frame-pointer \
+		-fno-optimize-sibling-calls -O1
 win32 : CC := i686-w64-mingw32-gcc
 win64 : CC := x86_64-w64-mingw32-gcc
 
@@ -48,9 +53,9 @@ directories:
 
 # Compile all sources to object files
 $(SOURCES):
-	$(CC) $(CFLAGS) $(VERSION) $(FDEBUG) -c -o build/objects/$@.o src/$@
+	$(CC) $(CFLAGS) $(CLANG_FLAGS) $(VERSION) $(FDEBUG) -c -o build/objects/$@.o src/$@
 
 # Compile and link the main file
 link:
-	$(CC) $(VERSION) $(FDEBUG) -o build/$(RESULT) $(MAIN) $(OBJECTS)
+	$(CC) $(VERSION) $(CLANG_FLAGS) $(FDEBUG) -o build/$(RESULT) $(MAIN) $(OBJECTS)
 .PHONY: link

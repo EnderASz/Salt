@@ -168,7 +168,6 @@ static void load_labels(struct SaltModule *module)
     for (uint i = 0; i < module->instruction_amount; i++) {
         if (module->instructions[i].content[0] == '@') {
             module->labels[curlabel] = i;
-            dprintf("Label '%s'\n", module->instructions[i].content + 1);
             curlabel++;
         }
     }
@@ -180,24 +179,20 @@ struct SaltModule *load(char *name)
     dprintf("Trying to load %s\n", name);
 
     // File
+    int size = sizeof(char) * (strlen(name) + 5);
+    
+    char *filename = vmalloc(size);
+    memset(filename, 0, size);
 
-    char *filename = vmalloc(sizeof(char) * strlen(name));
-    if (strcmp(name + (strlen(name) - 4), ".scc") != 0) {
-        strcpy(filename, name);
-        strcat(filename, ".scc");
-    }
-    else {
-        strcpy(filename, name);
-    }
-
-    dprintf("Loading %s\n", filename);
+    strncpy(filename, name, strlen(name));
 
     FILE *mod = fopen(filename, "rb");
-    vmfree(filename, sizeof(char) * strlen(name));
     if (!mod) {
+        vmfree(filename, size);
         exception_throw(EXCEPTION_RUNTIME, "Cannot find module");
     }
-
+    vmfree(filename, size);
+    
     name[strlen(name) - 4] = 0;
 
     // Module
