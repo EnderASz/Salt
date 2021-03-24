@@ -11,7 +11,7 @@
 static void dump_hexes(byte *bytes, short amount)
 {
     for (short i = 0; i < amount; i++) {
-        printf("%02hhx", bytes[i]);
+        printf("%02hx", bytes[i]);
         if (i % 2 != 0)
             printf(" ");
     }

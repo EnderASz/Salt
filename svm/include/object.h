@@ -73,7 +73,7 @@ struct SaltObject {
     void ( * destructor ) 
     (struct SaltObject *obj);
 
-#if ARCHITECTURE == 32
+#if TARGET_ARCH == 32
     byte _pad2[12];
 #endif
 

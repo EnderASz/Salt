@@ -51,11 +51,20 @@
 
 /* Compilation settings. _ARCH is defined to the bit settings. */
 #if __INTPTR_MAX__ == __INT32_MAX__
-#define ARCHITECTURE 32
+#define TARGET_ARCH 32
 #elif __INTPTR_MAX__ == __INT64_MAX__
-#define ARCHITECTURE 64
+#define TARGET_ARCH 64
 #else
-#define ARCHITECTURE 0
+#error "Other than 32/64 bit are not supported"
+#endif
+
+/* System setting */
+#ifdef _WIN32
+#define TARGET_SYSTEM "Windows"
+#elif defined(__linux__)
+#define TARGET_SYSTEM "Linux"
+#else
+#error "There is no support for the system you're using"
 #endif
 
 /* Wrap the given value in quotes. This is needed for svm_grep_string where the

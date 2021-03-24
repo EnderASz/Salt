@@ -6,13 +6,25 @@ RESULT = svm
 SOURCES = $(shell find src -name \*.c | sed 's/src\///' | tr '\n' ' ') 
 OBJECTS = $(foreach var,$(SOURCES),build/objects/$(var).o) 
 
+CC := clang
 CFLAGS := -Wall -Wextra -Wpedantic -Wno-unused-parameter -std=c2x
 VERSION := -D SVM_VERSION=\"$(shell python3 build.py build)\"
+
 debug : FDEBUG := -D DEBUG=1
+win32 : CC := i686-w64-mingw32-gcc
+win64 : CC := x86_64-w64-mingw32-gcc
 
 # Execute all the steps
 all: directories $(SOURCES) link
 .PHONY: all
+
+# Target for cross-compiling onto 32 bit Windows
+win32: all 
+.PHONY: win32
+
+# Target for cross-compiling onto 64 bit windows
+win64: all
+.PHONY: win64
 
 # Just a compilation target so you can use -j with make
 compile: $(SOURCES)
@@ -36,9 +48,9 @@ directories:
 
 # Compile all sources to object files
 $(SOURCES):
-	gcc $(CFLAGS) $(VERSION) $(FDEBUG) -c -o build/objects/$@.o src/$@
+	$(CC) $(CFLAGS) $(VERSION) $(FDEBUG) -c -o build/objects/$@.o src/$@
 
 # Compile and link the main file
 link:
-	gcc $(VERSION) $(FDEBUG) -o build/$(RESULT) $(MAIN) $(OBJECTS)
+	$(CC) $(VERSION) $(FDEBUG) -o build/$(RESULT) $(MAIN) $(OBJECTS)
 .PHONY: link
