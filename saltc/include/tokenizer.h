@@ -75,6 +75,9 @@ private:
      */
     Token getNumToken();
 
+    size_t getIdx() const;
+    size_t getIdx(string::iterator iterator) const;
+
 public:
     /**
      * Tokenzizer constructor. A new instance is supposed to be created for
