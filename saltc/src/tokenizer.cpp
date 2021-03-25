@@ -75,10 +75,12 @@ string::iterator Tokenizer::sourceEnd() const {return source->code.end();}
 string::iterator Tokenizer::sourceLast() const {return source->code.end()-1;}
 
 string::iterator Tokenizer::findFirst(string value) const {
+    size_t current_idx = getIdx();
     size_t found = source->code.find(
         value.c_str(),
-        distance(sourceBegin(), current),
-        distance(current, sourceEnd()));
+        current_idx,
+        leftToEnd()+1
+    );
     if(found == string::npos) return sourceEnd();
     return sourceBegin()+found;
 }
@@ -99,4 +101,107 @@ bool Tokenizer::isInRange(string::iterator iterator) const {
     return distance(iterator, sourceEnd()-1) >= 0;
 }
 
+bool Tokenizer::nextIsDigit() const {
+    return !isLastChar() && isdigit(*(current+1));
+}
+
+bool Tokenizer::nextIsXDigit() const {
+    return !isLastChar() && isxdigit(*(current+1));
+}
+
+Token Tokenizer::getNumToken() {
+    curr_token.position = InStringPosition(source->code, current);
+    curr_token.str = "";
+    if(!isInRange()) throw "#TODO: Tried get token after source last char.";
+    if(!isdigit(*current)) return null_token;
+
+    size_t non_decimal_digits = 0;
+    enum {
+        DEC,
+        OCT,
+        HEX,
+        DEC_FLOAT
+    } num_literal_type = DEC;
+    if(*current == '0') {
+        curr_token.str.push_back(*current);
+        if(isLastChar())
+            return token_create(TOKL_INT, curr_token.position, curr_token.str);
+        current++;
+        if(*current == 'x' || *current == 'X') {
+            if(!nextIsXDigit()) throw "#TODO: Invalid hexadecimal literal.";
+            num_literal_type = HEX;
+        }
+        else {
+            if(!isodigit(*current)) throw "#TODO: Invalid octal literal.";
+            num_literal_type = OCT;
+        }
+    }
+
+    while(true)
+        curr_token.str.push_back(*current);
+        current++;
+        if(!isInRange()) 
+            return token_create(
+                num_literal_type == DEC_FLOAT ? TOKL_FLOAT : TOKL_INT,
+                curr_token.position,
+                curr_token.str);
+        if(num_literal_type == DEC) {
+            if(*current == '.') {
+                if(!nextIsDigit())
+                    return token_create(
+                        TOKL_INT,
+                        curr_token.position,
+                        curr_token.str);
+                curr_token.str.push_back(*current);
+                current++;
+                num_literal_type == DEC_FLOAT;
+            }
+            if(!isblank(*current))
+                return token_create(
+                        TOKL_INT,
+                        curr_token.position,
+                        curr_token.str);
+            if(!isdigit(*current))
+                throw "#TODO: Invalid decimal literal.";
+            curr_token.str.push_back(*current);
+        }
+        if(num_literal_type == DEC_FLOAT) {
+            if(*current == '.')
+                return token_create(
+                    TOKL_FLOAT,
+                    curr_token.position,
+                    curr_token.str);
+            if(!isblank(*current))
+                return token_create(
+                    TOKL_FLOAT,
+                    curr_token.position,
+                    curr_token.str);
+            if(!isdigit(*current))
+                throw "#TODO: Invalid decimal float literal.";
+            curr_token.str.push_back(*current);
+        }
+        if(num_literal_type == OCT) {
+            if(!isblank(*current))
+                return token_create(
+                        TOKL_INT,
+                        curr_token.position,
+                        curr_token.str);
+            if(!isodigit(*current))
+                throw "#TODO: Invalid octal literal.";
+            if(non_decimal_digits > 8)
+                throw "#TODO: Too long octal literal";
+        }
+        if(num_literal_type == HEX) {
+            if(!isblank(*current))
+                return token_create(
+                        TOKL_INT,
+                        curr_token.position,
+                        curr_token.str);
+            if(!isxdigit(*current))
+                throw "#TODO: Invalid hexadecimal literal.";
+            if(non_decimal_digits > 8)
+                throw "#TODO: Too long hexadecimal literal";
+        }
+    }
+}
 } // salt::tokenizer

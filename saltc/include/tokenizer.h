@@ -57,18 +57,39 @@ private:
     bool isInRange() const;
     bool isInRange(string::iterator iterator) const;
 
+    /**
+     * Returns true if current is not last character and next character is
+     * decimal digit.
+     */
+    bool nextIsDigit() const;
+
+    /**
+     * Returns true if current is not last character and next character is
+     * hexadecimal digit.
+     */
+    bool nextIsXDigit() const;
+
+    /**
+     * Returns numeric literal token (TOKL_INT or TOKL_FLOAT) or null_token
+     * if token on current position is not numeric literal
+     */
+    Token getNumToken();
+
 public:
-    /* Tokenzizer constructor. A new instance is supposed to be created for
+    /**
+     * Tokenzizer constructor. A new instance is supposed to be created for
      * every new string that should be parsed. After initializing the object,
      * you can then call Tokenizer::render().
      */
     Tokenizer(SourceFile& source_file);
     
-    /* Returns the array of tokens in a list object. The list object is just 
+    /**
+     * Returns the array of tokens in a list object. The list object is just 
      * there so the length of the list can be easily returned. Internally it 
      * uses a std::vector<Token> or a Token*, depending on the implementation.
      */
     std::vector<Token> render();
+
 }; //salt::tokenizer::Tokenizer
 
 

@@ -121,6 +121,8 @@ enum TokenType
 
     // Name
     TOK_NAME,       // names used to calls, accesses, imports etc.
+    KW_ALIAS        // alias keyword
+
 }; // salt::tokenizer::TokenType
 
 extern std::map<string, TokenType> no_value_token_types;

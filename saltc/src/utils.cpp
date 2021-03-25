@@ -34,3 +34,4 @@ InStringPosition::InStringPosition(
         idx(idx),
         inline_idx(inline_idx) {}
 
+bool isodigit(char chr) {return chr >= '0' && chr < '8';}

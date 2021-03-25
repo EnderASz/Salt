@@ -40,4 +40,7 @@ struct InStringPosition {
     InStringPosition(size_t line_idx, size_t inline_idx, size_t idx);
 };
 
+/* Return true if chr parameter is octal digit character. */
+bool isodigit(char chr);
+
 #endif // UTILS_H_
