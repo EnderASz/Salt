@@ -60,7 +60,6 @@ struct SaltObjectNode {
  *                      should be controlled by the compiler to raise an 
  *                      error if the user tries to do so
  * @a object_first      pointer to the first object
- * @a object_last       pointer to the last object 
  * @a import_amount     size of import array
  * @a imports           array of pointers to other Salt modules; this is done
  *                      instead of storing all imports in a single, one level
@@ -79,8 +78,7 @@ struct SaltModule {
 
     char   name[64];
 
-    struct SaltObjectNode *object_first;
-    struct SaltObjectNode *object_last;
+    struct SaltObjectNode *head;
 
     uint   import_amount;
     struct SaltModule **imports;

@@ -113,6 +113,18 @@
 
 #endif // DEBUG
 
+/* The notice me macro will print detailed information about the current
+ location where it was called and make you notice the point where it 
+ happened. */
+#ifndef NOTICE_ME
+#define NOTICE_ME(STR)                                                      \
+{                                                                           \
+    printf("\033[91mNOTICE ME!\n");                                         \
+    printf("In %s in '%s' on line %d\n", __FILE__, __func__, __LINE__);     \
+    printf("\n>>> %s\n\n\033[0m", STR);                                     \
+}
+#endif
+
 typedef __UINT8_TYPE__  byte;
 typedef __UINT32_TYPE__ uint;
 

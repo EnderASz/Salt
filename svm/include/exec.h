@@ -67,7 +67,24 @@ int exec(struct SaltModule* main);
  * @param   title  string to the title
  * @return  pointer to the SVMCall struct 
  */
-struct SVMCall *exec_get(char *title);
+const struct SVMCall *exec_get(char *title);
+
+/**
+ * Control the amount of registers currently allocated. This will allocate the
+ * largest given value and will reallocate the g_registers array to fit the max.
+ * This is called on every module load so it prepares the needed amount of 
+ * registers for all modules, because registers are global. 
+ *
+ * @param   size  amount of registers. max 255
+ */
+void register_control(uint8_t size);
+
+/**
+ * Initialize the register with the given amount of objects.
+ *
+ * @param   size  amount of registers. max 255
+ */
+void register_init(uint8_t size);
 
 /**
  * Clear all registers.
@@ -116,6 +133,12 @@ uint exec_killx(struct SaltModule *__restrict module, byte *__restrict payload,
                 uint pos);
 
 /**
+ * Map the whole module list.
+ */
+uint exec_mlmap(struct SaltModule *__restrict module, byte *__restrict payload,  
+                uint pos);
+
+/**
  * Create a new object in the current module. This should be handled by
  * an external function in the compiler, to always get it right because
  * it's a quite complex instruction.
@@ -147,34 +170,19 @@ uint exec_retrn(struct SaltModule *__restrict module, byte *__restrict payload,
                 uint pos);
 
 /**
- * Print the value at the register.
+ * Set the value of the given register to the selected object by ID. 
+ * Important note: this removes the original object from the module object
+ * list, assigning it only to the register.
  */
-uint exec_regdp(struct SaltModule *__restrict module, byte *__restrict payload,  
+uint exec_rpush(struct SaltModule *__restrict module, byte *__restrict payload,  
+                uint pos);
+/**
+ * Move the value from the register onto the module object list, making it an
+ * object with a set ID. Note that this does not remove any previous objects 
+ * with the same IDs from the list, but adds a brand new object at the beginning.
+ */
+uint exec_rgpop(struct SaltModule *__restrict module, byte *__restrict payload,  
                 uint pos);
 
-/**
- * Move the value from the register onto the module object list, making it
- * a constant object with a set ID. Note that this does not remove any previous
- * objects with the same IDs from the list, but adds a brand new object at the
- * end.
- */
-uint exec_regmv(struct SaltModule *__restrict module, byte *__restrict payload,  
-                uint pos);
-
-/**
- * Set all the registers to NULL.
- */
-uint exec_regnl(struct SaltModule *__restrict module, byte *__restrict payload,  
-                uint pos);
-
-/**
- * Set the value of the given register to the selected object by ID. Important
- * note: this removes the original object from the module object list,
- * assigning it only to the register. There are only 8 registers to use, with
- * the 0 register used for return values from a couple of different
- * instructions.
- */
-uint exec_regst(struct SaltModule *__restrict module, byte *__restrict payload,  
-                uint pos);
 
 #endif // SVM_EXEC_H

@@ -11,35 +11,31 @@
 #include "../include/module.h"
 #include "../include/object.h"
 
+#include <stdint.h>
 #include <string.h>
 
 /* killx is the last instruction if no other is found. */
-static struct SVMCall g_execs[] = {
+static const struct SVMCall g_execs[] = {
         
     {"KILLX", exec_killx},
-    {"REGMV", exec_regmv},
-    {"REGST", exec_regst},
+    {"RPUSH", exec_rpush},
+    {"RGPOP", exec_rgpop},
     {"EXITE", exec_exite},
     {"CALLF", exec_callf},
     {"EXTLD", exec_extld},
     {"OBJMK", exec_objmk},
     {"OBJDL", exec_objdl},
     {"PRINT", exec_print},
-    {"REGDP", exec_regdp},
     {"RETRN", exec_retrn},
-    {"REGNL", exec_regnl}
+    {"MLMAP", exec_mlmap}
 
 };
 
-static const uint g_exec_amount = 12;
+static const uint g_exec_amount = 11;
 
-/* global registers */
-static SaltObject *g_registers[8] = {
-        NULL, NULL, NULL, NULL,
-        NULL, NULL, NULL, NULL
-};
-
-static const uint g_register_amount = 8;
+/* registers */
+static SaltObject *g_registers;
+static uint8_t g_register_size = 0;
 
 
 static uint exec_find_end(struct SaltModule *module)
@@ -88,35 +84,43 @@ int exec(struct SaltModule *main)
             continue;
         }
 
-        dprintf("[%d] < \033[95m%s\033[0m >\n", i, main->instructions[i].name);
+        dprintf("[%d] < \033[95m%.5s\033[0m >\n", i, main->instructions[i].name);
 
-        struct SVMCall *exec = exec_get(main->instructions[i].name);
+        const struct SVMCall *exec = exec_get(main->instructions[i].name);
         i = exec->f_exec(main, (byte *) main->instructions[i].content + 5, i);
     }
     return 0;
 }
 
-void register_clear()
-{
-    dprintf("Clearing registers\n");
-    for (uint i = 0; i < g_register_amount; i++) {
-
-        if (g_registers[i] != NULL) {
-            vmfree(g_registers[i]->value, g_registers[i]->size);
-            vmfree(g_registers[i], sizeof(SaltObject));
-            g_registers[i] = NULL;
-        }
-
-    }
-}
-
-struct SVMCall *exec_get(char *title)
+const struct SVMCall *exec_get(char *title)
 {
     for (uint i = 0; i < g_exec_amount; i++) {
         if (strncmp(g_execs[i].instruction, title, 5) == 0)
             return &g_execs[i];
     }
     return &g_execs[0];
+}
+
+void register_control(uint8_t size)
+{
+    if (g_register_size < size) {
+        g_registers = vmrealloc(
+            g_registers, 
+            sizeof(SaltObject) * g_register_size, 
+            sizeof(SaltObject) * size
+        );
+        g_register_size = size;
+        for (uint8_t i = 0; i < g_register_size; i++)
+            salt_object_init(&g_registers[i]);
+    }
+}
+
+void register_clear()
+{
+    for (uint i = 0; i < g_register_size; i++) {
+        vmfree(g_registers[i].value, g_registers[i].size);
+    }
+    vmfree(g_registers, sizeof(SaltObject) * g_register_size);
 }
 
 uint exec_callf(struct SaltModule *__restrict module, byte *__restrict payload,  
@@ -161,6 +165,22 @@ uint exec_killx(struct SaltModule *__restrict module, byte *__restrict payload,
     return ++pos;
 }
 
+uint exec_mlmap(struct SaltModule *__restrict module, byte *__restrict payload,  
+                uint pos)
+{
+    struct SaltObjectNode *node = module->head;
+    while (node != NULL) {
+
+        printf("SaltObjectNode[%d] %p : %p : %p\n", node->data.id, 
+              (void *) node->previous, (void *) node, (void *) node->next);
+
+        node = node->next;
+    }
+
+    return ++pos;
+}
+
+
 uint exec_objmk(struct SaltModule *__restrict module, byte *__restrict payload,  
                 uint pos)
 {
@@ -179,6 +199,7 @@ uint exec_objdl(struct SaltModule *__restrict module, byte *__restrict payload,
 uint exec_print(struct SaltModule *__restrict module, byte *__restrict payload,  
                 uint pos)
 {
+
     SaltObject *obj = module_object_find(module, * (uint *) payload);
     if (obj == NULL) {
         exception_throw(EXCEPTION_NULLPTR, "Cannot find object %d", 
@@ -207,30 +228,75 @@ uint exec_retrn(struct SaltModule *__restrict module, byte *__restrict payload,
     return ++pos;
 }
 
-uint exec_regdp(struct SaltModule *__restrict module, byte *__restrict payload,  
+uint exec_rpush(struct SaltModule *__restrict module, byte *__restrict payload,
                 uint pos)
 {
-    exception_throw(EXCEPTION_RUNTIME, "REGDP is not implemented yet");
+    uint8_t r = * (uint8_t *) payload;
+    uint id = * (uint *) (payload + 1);
+
+    SaltObject *obj = module_object_find(module, id);
+    if (obj == NULL) {
+        exception_throw(EXCEPTION_RUNTIME, "Cannot load object %d into the "
+                "register because it does not exist");
+    }
+
+    if (r >= g_register_size)
+        exception_throw(EXCEPTION_REGISTER, "Register %d out of bounds");
+
+    dprintf("Pushing to register [%d] from {%d}\n", r, id);
+
+    g_registers[r].id = obj->id;
+    g_registers[r].type = obj->type;
+    g_registers[r].readonly = obj->readonly;
+
+    g_registers[r].mutex_acquired = obj->mutex_acquired;
+    g_registers[r].destructor = obj->destructor;
+    g_registers[r].vhandler = obj->vhandler;
+    
+    g_registers[r].size = obj->size;
+    g_registers[r].value = vmalloc(g_registers[r].size);
+
+    // Copy data over
+    for (uint i = 0; i < g_registers[r].size; i++)
+        ((uint8_t *) g_registers[r].value)[i] = ((uint8_t *) obj->value)[i];
+
+    module_object_delete(module, obj->id);
+
     return ++pos;
 }
 
-uint exec_regmv(struct SaltModule *__restrict module, byte *__restrict payload,  
+uint exec_rgpop(struct SaltModule *__restrict module, byte *__restrict payload,
                 uint pos)
 {
-    exception_throw(EXCEPTION_RUNTIME, "REGMV is not implemented yet");
-    return ++pos;
-}
+    uint8_t r = * (uint8_t *) payload;
+    uint id = * (uint *) (payload + 1);
 
-uint exec_regnl(struct SaltModule *__restrict module, byte *__restrict payload,  
-                uint pos)
-{
-    register_clear();
-    return ++pos;
-}
+    SaltObject *obj = module_object_acquire(module);
 
-uint exec_regst(struct SaltModule *__restrict module, byte *__restrict payload,  
-                uint pos)
-{
-    exception_throw(EXCEPTION_RUNTIME, "REGST is not implemented yet");
-    return ++pos;
+    if (r >= g_register_size)
+        exception_throw(EXCEPTION_REGISTER, "Register %d out of bounds");
+
+    dprintf("Pulling from register [%d] to {%d}\n", r, id);
+
+    // todo : copy object
+    obj->id = id;
+    obj->type = g_registers[r].type;
+    obj->readonly = g_registers[r].readonly;
+
+    obj->mutex_acquired = g_registers[r].mutex_acquired;
+    obj->destructor = g_registers[r].destructor;
+    obj->vhandler = g_registers[r].vhandler;
+
+    obj->size = g_registers[r].size;
+    obj->value = vmalloc(obj->size);
+
+    // Copy data over
+    for (uint i = 0; i < g_registers[r].size; i++)
+        ((uint8_t *) obj->value)[i] = ((uint8_t *) g_registers[r].value)[i];
+
+    vmfree(g_registers[r].value, g_registers[r].size);
+    g_registers[r].value = NULL;
+    g_registers[r].size = 0;
+
+    return ++pos;  
 }
