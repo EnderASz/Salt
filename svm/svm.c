@@ -76,7 +76,7 @@
 /* This string will show up in the compiled version of SVM which you can then
  grep to, checking the format. */
 const char *svm_grep_string = "SVM: f3 "SVM_VERSION" on "__TIMESTAMP__" ("
-            STRINGIFY(ARCHITECTURE)" bit)";
+            STRINGIFY(TARGET_ARCH)" bit for "TARGET_SYSTEM")";
 
 static void size_check();
 

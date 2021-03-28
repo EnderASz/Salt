@@ -73,7 +73,7 @@ struct SaltObject {
     void ( * destructor ) 
     (struct SaltObject *obj);
 
-#if ARCHITECTURE == 32
+#if __INTPTR_MAX__ == __INT32_MAX__ 
     byte _pad2[12];
 #endif
 

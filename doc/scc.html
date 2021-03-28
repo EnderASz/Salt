@@ -50,7 +50,7 @@
 </head>
 <body>
     <h1>
-        The SCC3 Standard &nbsp; <a id="svm_version">for SVM 0.9</a>
+        The SCC3 Standard &nbsp; <a id="svm_version">for SVM 0.10</a>
     </h1>
 
     <hr>
@@ -108,7 +108,14 @@
             </tr>
             <tr>
                 <td><code>24</code></td>
-                <td><code>0000 0000 0000 0000<br>0000 0000 0000 0000<br>0000 0000 0000 0000<br>0000 0000 0000 0000</code></td>
+                <td><code>xx00 0000 0000 0000</code></td>
+                <td>
+                    amount of registers allocated for use, can only reach 255 registers
+                </td>
+            </tr>
+            <tr>
+                <td><code>32</code></td>
+                <td><code>0000 0000 0000 0000<br>0000 0000 0000 0000<br>0000 0000 0000 0000</code></td>
                 <td>
                     none
                 </td>
@@ -213,10 +220,19 @@
         said object which can only be located on the tape. Because this list is dynamic and
         a lot of lookups have to be done to access any object, it is a good idea to use
         <b>registers</b> for small, local operations. These are much faster to access and use
-        because of the static length of the register array (8 SaltObjects).
+        because of the static length of the register array, defined in the header. If you're
+        writing a compiler with dynamic object linking avaible, you don't have to worry about
+        the amount of registers. When loading a new module, the amount is read from the header
+        and compared to the current amount. If the amount exceeds the current amount of registers,
+        it allocates more space.
         <br><br>
-        You can access these registers using both <code><a href="#s_regmv">REGMV</a></code>
-        and <code><a href="#s_regst">REGST</a></code> to move and set values.
+        You can access these registers using both <code><a href="#s_rgpop">RGPOP</a></code>
+        and <code><a href="#s_rpush">RPUSH</a></code> to read & write values.
+        <br><br>
+        Note that changes have been made in SVM version 0.10 to speed up the object tape.
+        Now, object lookups start from the newest to the oldest object, which makes adding
+        and removing objects in a single subroutine fast, even if total amount of allocated 
+        memory is high.
         <br><br>
         Because each tape is available globally for the object it's currently in, <b>function
         scopes do not exist.</b> Variable availability has to be handled by the compiler,
@@ -225,9 +241,8 @@
 
     <h4>Good practices for writing your own Salt compiler</h4>
     <ol>
-        <li>Keep the tape length minimal, because a long tape will result in long ID lookup times</li>
         <li>Delete locally declared variables in the same scope</li>
-        <li>Try to move your variables into registers, as then provide faster access</li>
+        <li>Pass function arguments into registers, and then load them back in the function</li>
     </ol>
 
     <br><hr>
@@ -284,14 +299,7 @@
             Call a function and push the current position and call onto the stack pointer.
             Note that this only works for local functions in the same module, and should be
             used when possible because it's a lot faster than the alternative,
-            <code><a href="s_callx">CALLX</a></code>. The only argument is the label name,
-            so if you want to call a function rendered as <code>@function_name</code>, you
-            call: <code>CALLFxxxxxxxxfunction_name\0</code>.
-            <br>
-            <b>Important note: remember that functions cannot have names that are 10 characters
-            long, because of the uint byte representation also being a instruction stop signal.
-            The general rule is to put a <code>%</code> sign before the function name, making
-            it 11 chars long.</b>
+            <code><a href="s_callx">CALLX</a></code>.
         </p>
         <table class="struct">
             <tr>
@@ -358,8 +366,16 @@
         </p>
     </div>
 
+    <div id="s_mlmap">
+        <h2 class="svmcall">MLMAP</h2>
+        <p>
+            Map the object tape in the current module. This will dump the whole list of stored
+            objects. May be used for debugging.
+        </p>
+    </div>
+
     <div id="s_objmk">
-        <h2 class="svmcall">OBJMK id readonly type threaded ...</h2>
+        <h2 class="svmcall">OBJMK id readonly type ...</h2>
         <p>
             Create a new object in the current module. This should be handled by an
             external function in the compiler, to always get it right because it's a
@@ -392,12 +408,6 @@
             </tr>
             <tr>
                 <td>7</td>
-                <td>1</td>
-                <td>byte</td>
-                <td>If the object should be thread-compatible, one of Synthesize::THREADED_</td>
-            </tr>
-            <tr>
-                <td>8</td>
                 <td>-</td>
                 <td><a href="#s_payload">payload</a></td>
                 <td>The value of the new object</td>
@@ -459,38 +469,14 @@
         </p>
     </div>
 
-    <div id="s_regdp">
-        <h2 class="svmcall">REGDP register</h2>
+    <div id="s_rgpop">
+        <h2 class="svmcall">RGPOP register id</h2>
         <p>
-            Print the value at the register. Works the same as <code><a href="#s_print">PRINT</a></code>,
-            but instead of accessing the tape it accesses the register.
-            <br><br>
-            Max value of <code>register</code> is <code>0x07</code>.
-        </p>
-        <table class="struct">
-            <tr>
-                <th>Offset</th>
-                <th>Width</th>
-                <th>Type</th>
-                <th>What</th>
-            </tr>
-            <tr>
-                <td>0</td>
-                <td>1</td>
-                <td>byte</td>
-                <td>Register ID</td>
-            </tr>
-        </table>
-    </div>
-
-    <div id="s_regmv">
-        <h2 class="svmcall">REGMV register id</h2>
-        <p>
-            Move the value from the register onto the module object list, making it a constant object
+            Move the value from the register onto the module object list, making it an object
             with a set ID. Note that this does not remove any previous objects with the same IDs from
-            the list, but adds a brand new object at the end.
+            the list, but adds a brand new object at the beginning.
             <br><br>
-            Max value of <code>register</code> is <code>0x07</code>.
+            The max amount of registers if defined in the SCC header.
         </p>
         <table class="struct">
             <tr>
@@ -514,22 +500,13 @@
         </table>
     </div>
 
-    <div id="s_regnl">
-        <h2 class="svmcall">REGNL</h2>
-        <p>
-            Set all the registers to NULL.
-        </p>
-    </div>
-
-    <div id="s_regst">
-        <h2 class="svmcall">REGST register id</h2>
+    <div id="s_rpush">
+        <h2 class="svmcall">RPUSH register id</h2>
         <p>
             Set the value of the given register to the selected object by ID. Important note: this
             removes the original object from the module object list, assigning it only to the register.
-            There are only 8 registers to use, with the 0 register used for return values from a couple
-            of different instructions.
             <br><br>
-            Max value of <code>register</code> is <code>0x07</code>.
+            The max amount of registers if defined in the SCC header.
         </p>
         <table class="struct">
             <tr>
