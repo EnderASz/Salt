@@ -8,6 +8,7 @@
 #include "../include/object.h"
 #include "../include/exception.h"
 #include "../include/exec.h"
+#include "../include/callstack.h"
 
 #include <stdlib.h>
 
@@ -22,6 +23,10 @@ static uint64_t g_frees       = 0;
 
 void core_exit()
 {
+    // Clear callstack
+    for (uint i = 0; i < callstack_size(); i++)
+        callstack_pop();
+
     register_clear();
     module_delete_all();
     vibe_check();

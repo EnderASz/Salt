@@ -41,6 +41,9 @@ static void nodes_collapse(struct SaltModule *module)
     struct SaltObjectNode *node = module->head;
     struct SaltObjectNode *hook = NULL;
 
+    if (node == NULL)
+        return;
+
     while (1) {
         dprintf("Collapsing : %p : {%d}\n", (void *) node, node->data.id);
 
