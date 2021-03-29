@@ -35,6 +35,7 @@
  *
  * @a instruction   the 5 char opcode to the instruction
  * @a f_exec        pointer to function
+ * @a pad           instruction padding
  */
 struct SVMCall {
 
@@ -44,7 +45,12 @@ struct SVMCall {
     uint ( * f_exec )
     (struct SaltModule *module, byte *payload, uint pos);
 
+    int pad;
 };
+
+/* Exec functions */
+extern const struct SVMCall g_execs[];
+extern const uint g_exec_amount;
 
 /**
  * This is the code execution loop function, which executed the passed module
@@ -110,6 +116,13 @@ uint exec_callf(struct SaltModule *__restrict module, byte *__restrict payload,
                 uint pos);
 
 /**
+ * Compare two objects for an equal value, can compare bools, ints, floats and
+ * strings. If true, sets the jump flag.
+ */
+uint exec_cxxeq(struct SaltModule *__restrict module, byte *__restrict payload,
+                uint pos);
+
+/**
  * Exit the current executed module. This is the safe version of KILLX, because
  * it jumps to the $__END__ label and leaves exec to pop everything from the
  * stack and finish execution. This is different to said kill instruction,
@@ -134,6 +147,26 @@ uint exec_ivadd(struct SaltModule *__restrict module, byte *__restrict payload,
  * Subtract a given value from the object of type int.
  */
 uint exec_ivsub(struct SaltModule *__restrict module, byte *__restrict payload,  
+                uint pos);
+
+/**
+ * Jump to the given symbol only if the jump flag is set.
+ */
+uint exec_jmpfl(struct SaltModule *__restrict module, byte *__restrict payload,  
+                uint pos);
+
+/**
+ * Jump to the given symbol only if the jump flag is NOT set.
+ */
+uint exec_jmpnf(struct SaltModule *__restrict module, byte *__restrict payload,  
+                uint pos);
+
+/**
+ * Jump to the passed label without creating a new entry on the callstack. 
+ * This may be used in loops, because calling a label and putting it on the
+ * callstack costs a lot of memory in the long run.
+ */
+uint exec_jmpto(struct SaltModule *__restrict module, byte *__restrict payload,  
                 uint pos);
 
 /**

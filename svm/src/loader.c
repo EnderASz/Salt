@@ -17,20 +17,6 @@
 #define SCC_VERSION 3
 
 /**
- * The loader is a instruction - padding structure for storing instruction
- * paddings.
- *
- * @a instruction  instruction name
- * @a pad          padding
- */
-struct LoaderIPad {
-
-    char instruction[6];
-    int pad;
-
-};
-
-/**
  * The header data container stores all the meta data read from the SCC
  * header.
  *
@@ -43,24 +29,6 @@ struct LoaderHeaderData {
     uint8_t registers;
 
 };
-
-static const struct LoaderIPad ipads[] = {
-        {"CALLF", 4},
-        {"EXITE", 0},
-        {"EXTLD", 4},
-        {"IVADD", 8},
-        {"IVSUB", 8},
-        {"KILLX", 0},
-        {"OBJMK", 7},
-        {"OBJDL", 4},
-        {"PRINT", 4},
-        {"RETRN", 0},
-        {"RPUSH", 5},
-        {"RGPOP", 5},
-        {"MLMAP", 0}
-};
-
-static const int ipad_amount = 13;
 
 
 static int validate_header(char *header)
@@ -92,7 +60,7 @@ static struct LoaderHeaderData load_header(FILE *fp)
     return data;
 }
 
-static void read_instruction(struct SaltInstruction *ins, FILE *fp)
+static void read_instruction(String *ins, FILE *fp)
 {
     // Check for label
     char label_char = fgetc(fp);
@@ -117,19 +85,19 @@ static void read_instruction(struct SaltInstruction *ins, FILE *fp)
         fread(buf, 1, 5, fp);
 
         int i = 0;
-        for (; i < ipad_amount; i++) {
-            if (strncmp(buf, ipads[i].instruction, 5) == 0)
+        for (; (uint) i < g_exec_amount; i++) {
+            if (strncmp(buf, g_execs[i].instruction, 5) == 0)
                 break;
         }
 
-        if (i >= ipad_amount)
+        if ((uint) i >= g_exec_amount)
             exception_throw(EXCEPTION_RUNTIME,"Cannot load instruction. "
                             "It's either not supported or broken");
 
         width += 5;
 
         // Read [pad] bytes before checking for the newline
-        for (int j = 0; j < ipads[i].pad; j++) {
+        for (int j = 0; j < g_execs[i].pad; j++) {
             fgetc(fp);
             width++;
         }
@@ -142,32 +110,22 @@ static void read_instruction(struct SaltInstruction *ins, FILE *fp)
 
     ins->size = width + 1;
     ins->content = vmalloc(sizeof(char) * (width + 1));
-    ins->content[width - 1] = 0;
+    ins->content[width] = 0;
     fread(ins->content, 1, width, fp);
 
-    dprintf("Read [%d]<%.5s...>\n", width, ins->content);
+    dprintf("Read [%d+1]<%.5s...>\n", width, ins->content);
     fgetc(fp);
-}
-
-static void process_instruction(struct SaltInstruction *ins)
-{
-    const struct SVMCall *exec = exec_get(ins->content);
-    if (exec == NULL)
-        *ins->name = 0;
-    else
-        strncpy(ins->name, exec->instruction, 5);
 }
 
 static void load_instructions(struct SaltModule *module, FILE *fp, int instructions)
 {
     dprintf("Loading instructions for '%s'\n", module->name);
 
-    module->instructions = vmalloc(sizeof(struct SaltInstruction) * instructions);
+    module->instructions = vmalloc(sizeof(String) * instructions);
     module->instruction_amount = instructions;
 
     for (int i = 0; i < instructions; i++) {
         read_instruction(&module->instructions[i], fp);
-        process_instruction(&module->instructions[i]);
     }
 }
 

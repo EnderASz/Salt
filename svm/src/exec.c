@@ -15,40 +15,54 @@
 #include <stdio.h>
 #include <string.h>
 
+// ----------------------------------------------------------------------------
+// Global values
+// ----------------------------------------------------------------------------
+
 /* killx is the last instruction if no other is found. */
-static const struct SVMCall g_execs[] = {
+const struct SVMCall g_execs[] = {
         
-    {"KILLX", exec_killx},
-    {"RPUSH", exec_rpush},
-    {"RGPOP", exec_rgpop},
-    {"EXITE", exec_exite},
-    {"IVADD", exec_ivadd},
-    {"IVSUB", exec_ivsub},
-    {"CALLF", exec_callf},
-    {"EXTLD", exec_extld},
-    {"OBJMK", exec_objmk},
-    {"OBJDL", exec_objdl},
-    {"PRINT", exec_print},
-    {"RETRN", exec_retrn},
-    {"MLMAP", exec_mlmap}
+    {"KILLX", exec_killx, 0},
+    {"RPUSH", exec_rpush, 5},
+    {"RGPOP", exec_rgpop, 5},
+    {"EXITE", exec_exite, 0},
+    {"IVADD", exec_ivadd, 8},
+    {"IVSUB", exec_ivsub, 8},
+    {"JMPTO", exec_jmpto, 4},
+    {"JMPFL", exec_jmpfl, 8},
+    {"JMPNF", exec_jmpnf, 8},
+    {"CALLF", exec_callf, 4},
+    {"EXTLD", exec_extld, 4},
+    {"OBJMK", exec_objmk, 7},
+    {"OBJDL", exec_objdl, 4},
+    {"PRINT", exec_print, 4},
+    {"RETRN", exec_retrn, 0},
+    {"MLMAP", exec_mlmap, 0},
+    {"CXXEQ", exec_cxxeq, 8},
 
 };
 
-static const uint g_exec_amount = 13;
+const uint g_exec_amount = 17;
 
 /* registers */
 static SaltObject *g_registers;
 static uint8_t g_register_size = 0;
 
+/* comparison flag, is set if the comparison returns true */
+static byte gf_compare = 0;
 
-static uint exec_find_end(struct SaltModule *module)
+// ----------------------------------------------------------------------------
+// Utility & loop functions
+// ----------------------------------------------------------------------------
+
+static uint find_label(struct SaltModule *module, char *label)
 {
     for (uint i = 0; i < module->label_amount; i++) {
         char *content = module->instructions[module->labels[i]].content;
-        if (strncmp(content, "@$__END__", 9) == 0)
+        if (strncmp(content + 1, label, strlen(label) - 1) == 0)
             return module->labels[i];
     }
-    exception_throw(EXCEPTION_RUNTIME, "Cannot find end label");
+    exception_throw(EXCEPTION_LABEL, "Cannot find '%s' label", label);
     return 0;
 }
 
@@ -86,7 +100,7 @@ int exec(struct SaltModule *main)
     uint i = preload(main);
 
     // "Call" the main instruction
-    callstack_push(exec_find_end(main), main->name, "main");
+    callstack_push(find_label(main, "$__END__"), main->name, "main");
 
     for (; i < main->instruction_amount;) {
 
@@ -95,9 +109,9 @@ int exec(struct SaltModule *main)
             continue;
         }
 
-        dprintf("[%d] < \033[95m%.5s\033[0m >\n", i, main->instructions[i].name);
+        dprintf("[%d] < \033[95m%.5s\033[0m >\n", i, main->instructions[i].content);
 
-        const struct SVMCall *exec = exec_get(main->instructions[i].name);
+        const struct SVMCall *exec = exec_get(main->instructions[i].content);
         i = exec->f_exec(main, (byte *) main->instructions[i].content + 5, i);
     }
     return 0;
@@ -134,32 +148,80 @@ void register_clear()
     vmfree(g_registers, sizeof(SaltObject) * g_register_size);
 }
 
+// ----------------------------------------------------------------------------
+// Instruction implementations
+// ----------------------------------------------------------------------------
+
 uint exec_callf(struct SaltModule *__restrict module, byte *__restrict payload,  
                 uint pos)
 {
-    uint strl = * (uint * ) payload;
-    char *name = vmalloc(sizeof(char) * strl + 1);
-    strncpy(name, (char *) payload + 4, strl);
-    name[strl - 1] = 0;
+    uint line = find_label(module, (char *) (payload + 4));
+    callstack_push(pos, module->name, (char *) (payload + 4));
+    return line;
+}
 
-    for (uint i = 0; i < module->label_amount; i++) {
-        char *content = module->instructions[module->labels[i]].content;
-        if (strncmp(content + 1, name, strl - 1) == 0) {
-            callstack_push(pos, module->name, name);
-            vmfree(name, strl + 1);
-            return module->labels[i];
+uint exec_cxxeq(struct SaltModule *__restrict module, byte *__restrict payload,
+                uint pos)
+{
+    SaltObject *o1 = module_object_find(module, * (uint *) payload);
+    SaltObject *o2 = module_object_find(module, * (uint *) (payload + 4));
+
+    if (o1 == NULL || o2 == NULL)
+        exception_throw(EXCEPTION_NULLPTR, "Cannot find object");
+
+    if (o1->type != o2->type)
+        exception_throw(EXCEPTION_TYPE, "Cannot compare two different types");
+
+    switch (o1->type) {
+
+        case OBJECT_TYPE_BOOL:
+            if (* (byte *) o1->value == * (byte *) o2->value)
+                gf_compare = 1;
+            break;
+
+        /* the float & int case may look pretty slow, but the alternative is 
+         comparing 4 bytes, while the CPU can compare ints & floats in one 
+         clock cycle. */
+        case OBJECT_TYPE_FLOAT:
+        {
+            if (* (float *) o1->value == * (float *) o2->value)
+                gf_compare = 1;
+            break;
         }
+        case OBJECT_TYPE_INT:
+        {
+            if (* (int *) o1->value == * (int *) o2->value)
+                gf_compare = 1;
+            break;
+        }
+        case OBJECT_TYPE_STRING:
+        {
+            uint size = o1->size;
+            if (o2->size != size) {
+                gf_compare = 0;
+                break;
+            }
+
+            if(strncmp((char *) o1->value, (char *) o2->value, size - 1) == 0)
+                gf_compare = 1;
+            else
+                gf_compare = 0;
+            break;
+        }
+        
+        default:
+            /* if the type is unknown, return false by default */
+            gf_compare = 0;
+    
     }
 
-    vmfree(name, strl + 1);
-    exception_throw(EXCEPTION_LABEL, "Cannot find function");
-    return 0;
+    return ++pos;
 }
 
 uint exec_exite(struct SaltModule *__restrict module, byte *__restrict payload,  
                 uint pos)
 {
-    return exec_find_end(module);
+    return find_label(module, "$__END__");
 }
 
 uint exec_extld(struct SaltModule *__restrict module, byte *__restrict payload,  
@@ -199,6 +261,30 @@ uint exec_ivsub(struct SaltModule *__restrict module, byte *__restrict payload,
     * (int *) obj->value -= * (int *) (payload + 4);
 
     return ++pos;
+}
+
+uint exec_jmpfl(struct SaltModule *__restrict module, byte *__restrict payload,  
+                uint pos)
+{
+    if (gf_compare)
+        return find_label(module, (char *) (payload + 4));
+
+    return ++pos;
+}
+
+uint exec_jmpnf(struct SaltModule *__restrict module, byte *__restrict payload,  
+                uint pos)
+{
+    if (!gf_compare)
+        return find_label(module, (char *) (payload + 4));
+
+    return ++pos;
+}
+
+uint exec_jmpto(struct SaltModule *__restrict module, byte *__restrict payload,  
+                uint pos)
+{
+    return find_label(module, (char *) (payload + 4));
 }
 
 uint exec_killx(struct SaltModule *__restrict module, byte *__restrict payload,  
@@ -258,7 +344,7 @@ uint exec_retrn(struct SaltModule *__restrict module, byte *__restrict payload,
 {
     struct StackFrame *frame = callstack_peek();
     if (frame == NULL) {
-        pos = exec_find_end(module);
+        pos = find_label(module, "$__END__");
     }
     else {
         pos = frame->line + 1;
@@ -268,7 +354,7 @@ uint exec_retrn(struct SaltModule *__restrict module, byte *__restrict payload,
     }
     dprintf("Jumping back to [%d]\n", pos);
     callstack_pop();
-    return ++pos;
+    return pos;
 }
 
 uint exec_rpush(struct SaltModule *__restrict module, byte *__restrict payload,

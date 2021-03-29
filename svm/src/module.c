@@ -184,7 +184,7 @@ static void module_deallocate(struct SaltModule *module)
     for (uint i = 0; i < module->instruction_amount; i++) {
         vmfree(module->instructions[i].content, module->instructions[i].size);
     }
-    vmfree(module->instructions, module->instruction_amount * sizeof(struct SaltInstruction));
+    vmfree(module->instructions, module->instruction_amount * sizeof(String));
 
     nodes_collapse(module);
 }

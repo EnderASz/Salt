@@ -129,20 +129,17 @@ typedef __UINT8_TYPE__  byte;
 typedef __UINT32_TYPE__ uint;
 
 /**
- * This stores a single Salt instruction that can be executed. 
+ * This stores a null terminated string
  *
- * @a name     name of the instruction, the 5 chars are compared to get the
- *             correct exec.
- * @a size     size of the string array (null included)
- * @a content  the pointer to a heap char array storing the instruction
+ * @a size     size of the char array (null included)
+ * @a content  pointer to a heap allocated string array
  */
-struct SaltInstruction {
+typedef struct _string_st {
 
-    char  name[6];
     uint  size;
     char *content;
 
-};
+} String;
 
 /**
  * Always call this instead of the normal exit, because this function

@@ -13,6 +13,7 @@ CFLAGS := -Wall -Wextra -Wpedantic -Wno-unused-parameter -std=c2x
 
 VERSION := -D SVM_VERSION=\"$(shell python3 build.py build)\"
 
+debug : RESULT := svmd
 debug : FDEBUG := -D DEBUG=1
 debug : CLANG_FLAGS := -fsanitize=address -fno-omit-frame-pointer \
 		-fno-optimize-sibling-calls -O1

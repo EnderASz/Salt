@@ -76,18 +76,18 @@ struct SaltObjectNode {
  */
 struct SaltModule {
 
-    char   name[64];
+    char    name[64];
 
-    struct SaltObjectNode *head;
+    struct  SaltObjectNode *head;
 
-    uint   import_amount;
-    struct SaltModule **imports;
+    uint    import_amount;
+    struct  SaltModule **imports;
 
-    uint   instruction_amount;
-    struct SaltInstruction *instructions;
+    uint    instruction_amount;
+    String *instructions;
 
-    uint   label_amount;
-    uint  *labels;
+    uint    label_amount;
+    uint  * labels;
 
 };
 

@@ -323,6 +323,33 @@
         </table>
     </div>
 
+    <div id="s_cxxeq">
+        <h2 class="svmcall">CXXEQ left right</h2>
+        <p>
+            Compare two objects for an equal value, can compare bools, ints, floats 
+            and strings. If true, sets the jump flag.
+        </p>
+        <table class="struct">
+            <tr>
+                <th>Offset</th>
+                <th>Width</th>
+                <th>Type</th>
+                <th>What</th>
+            </tr>
+            <tr>
+                <td>0</td>
+                <td>4</td>
+                <td>uint</td>
+                <td>ID of the left object</td>
+            </tr>
+            <tr>
+                <td>4</td>
+                <td>4</td>
+                <td>uint</td>
+                <td>ID of the right object</td>
+            </tr>
+        </table>
+    </div>
 
     <div id="s_exite">
         <h2 class="svmcall">EXITE</h2>
@@ -410,6 +437,112 @@
             </tr>
         </table>
     </div>
+
+    <div id="s_jmpfl">
+        <h2 class="svmcall">JMPFL strl ...</h2>
+        <p>
+            Jump to the given symbol only if the jump flag is set.
+        </p>
+        <table class="struct">
+            <tr>
+                <th>Offset</th>
+                <th>Width</th>
+                <th>Type</th>
+                <th>What</th>
+            </tr>
+            <tr>
+                <td>0</td>
+                <td>4</td>
+                <td>uint</td>
+                <td>string length</td>
+            </tr>
+            <tr>
+                <td>4</td>
+                <td>...</td>
+                <td>string</td>
+                <td>null terminated string</td>
+            </tr>
+        </table>
+    </div>
+
+    <div id="s_jmpnf">
+        <h2 class="svmcall">JMPNF strl ...</h2>
+        <p>
+            Jump to the given symbol only if the jump flag is <b>NOT</b> set.
+        </p>
+        <table class="struct">
+            <tr>
+                <th>Offset</th>
+                <th>Width</th>
+                <th>Type</th>
+                <th>What</th>
+            </tr>
+            <tr>
+                <td>0</td>
+                <td>4</td>
+                <td>uint</td>
+                <td>string length</td>
+            </tr>
+            <tr>
+                <td>4</td>
+                <td>...</td>
+                <td>string</td>
+                <td>null terminated string</td>
+            </tr>
+        </table>
+    </div>
+
+    <div id="s_jmpto">
+        <h2 class="svmcall">JMPTO strl ...</h2>
+        <p>
+            Jump to the passed label without creating a new entry on the callstack. This may 
+            be used in loops, because calling a label and putting it on the callstack costs
+            a lot of memory in the long run.
+        </p>
+        <table class="struct">
+            <tr>
+                <th>Offset</th>
+                <th>Width</th>
+                <th>Type</th>
+                <th>What</th>
+            </tr>
+            <tr>
+                <td>0</td>
+                <td>4</td>
+                <td>uint</td>
+                <td>string length</td>
+            </tr>
+            <tr>
+                <td>4</td>
+                <td>...</td>
+                <td>string</td>
+                <td>null terminated string</td>
+            </tr>
+        </table>
+    </div>
+
+    <div id="s_extld">
+        <h2 class="svmcall">EXTLD string</h2>
+        <p>
+            Load an external SCC file and add it to the global module register.
+        </p>
+        <table class="struct">
+            <tr>
+                <th>Offset</th>
+                <th>Width</th>
+                <th>Type</th>
+                <th>What</th>
+            </tr>
+            <tr>
+                <td>0</td>
+                <td>n</td>
+                <td><a href="#s_payload">payload</a>[string]</td>
+                <td>Name of the external library. Cannot have the <code>.scc</code> extension
+                because it is added later in the SVM when actually reading the file.</td>
+            </tr>
+        </table>
+    </div>
+
 
     <div id="s_killx">
         <h2 class="svmcall">KILLX</h2>

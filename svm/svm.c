@@ -124,9 +124,9 @@ static void size_check()
 {
     dprintf("sizeof(SaltObject) = %ld\n", sizeof(SaltObject));
     dprintf("sizeof(SaltModule) = %ld\n", sizeof(struct SaltModule));
-    dprintf("sizeof(SaltInstruction) = %ld\n", sizeof(struct SaltInstruction));
     dprintf("sizeof(SaltObjectNode) = %ld\n", sizeof(struct SaltObjectNode));
     dprintf("sizeof(StackFrame) = %ld\n", sizeof(struct StackFrame));
+    dprintf("sizeof(String) = %ld\n", sizeof(String));
 }
 
 static void interrupt_handler(int _sig)
