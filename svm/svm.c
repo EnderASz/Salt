@@ -70,8 +70,15 @@
 #include "include/loader.h"
 #include "include/exec.h"
 
-#include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
+#include <stdio.h>
+
+/* If we're in linux, add support for signalling */
+#ifdef __linux__
+#include <signal.h>
+#include <unistd.h>
+#endif
 
 /* This string will show up in the compiled version of SVM which you can then
  grep to, checking the format. */
@@ -79,6 +86,7 @@ const char *svm_grep_string = "SVM: f3 "SVM_VERSION" on "__TIMESTAMP__" ("
             STRINGIFY(TARGET_ARCH)" bit for "TARGET_SYSTEM")";
 
 static void size_check();
+static void interrupt_handler(int _sig);
 
 int main(int argc, char **argv)
 {
@@ -86,6 +94,12 @@ int main(int argc, char **argv)
     char *filename = args_parse(argc, argv);
 
     size_check();
+
+#ifdef __linux__
+    /* If we're compiling for linux, include some signal support like catching 
+    SIGINT when hitting Ctrl C. Subscribe to the kernel's signal handler. */
+    signal(SIGINT, interrupt_handler);
+#endif
 
     if (filename == NULL) {
         printf("Please provide a filename. See \"--help\" for more\n");
@@ -113,4 +127,18 @@ static void size_check()
     dprintf("sizeof(SaltInstruction) = %ld\n", sizeof(struct SaltInstruction));
     dprintf("sizeof(SaltObjectNode) = %ld\n", sizeof(struct SaltObjectNode));
     dprintf("sizeof(StackFrame) = %ld\n", sizeof(struct StackFrame));
+}
+
+static void interrupt_handler(int _sig)
+{
+#ifdef __linux__
+    if (_sig != SIGINT)
+        return;
+    printf("Recieved interrupt\n");
+
+    if (arg_mem_used())
+        printf("Memory used: %ld kB\n", vmused() / 1024);
+
+    exit(1);
+#endif
 }
