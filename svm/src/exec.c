@@ -12,6 +12,7 @@
 #include "../include/object.h"
 
 #include <stdint.h>
+#include <stdio.h>
 #include <string.h>
 
 /* killx is the last instruction if no other is found. */
@@ -21,6 +22,8 @@ static const struct SVMCall g_execs[] = {
     {"RPUSH", exec_rpush},
     {"RGPOP", exec_rgpop},
     {"EXITE", exec_exite},
+    {"IVADD", exec_ivadd},
+    {"IVSUB", exec_ivsub},
     {"CALLF", exec_callf},
     {"EXTLD", exec_extld},
     {"OBJMK", exec_objmk},
@@ -31,7 +34,7 @@ static const struct SVMCall g_execs[] = {
 
 };
 
-static const uint g_exec_amount = 11;
+static const uint g_exec_amount = 13;
 
 /* registers */
 static SaltObject *g_registers;
@@ -49,6 +52,14 @@ static uint exec_find_end(struct SaltModule *module)
     return 0;
 }
 
+inline static SaltObject *fetch_from_tape(struct SaltModule *module, uint id)
+{
+    SaltObject *obj = module_object_find(module, id);
+    if (!obj) {
+        exception_throw(EXCEPTION_NULLPTR, "Object %d not found", id);
+    }
+    return obj;
+}
 
 static uint preload(struct SaltModule *main)
 {
@@ -133,7 +144,7 @@ uint exec_callf(struct SaltModule *__restrict module, byte *__restrict payload,
 
     for (uint i = 0; i < module->label_amount; i++) {
         char *content = module->instructions[module->labels[i]].content;
-        if (strcmp(content + 1, name) == 0) {
+        if (strncmp(content + 1, name, strl - 1) == 0) {
             callstack_push(pos, module->name, name);
             vmfree(name, strl + 1);
             return module->labels[i];
@@ -155,6 +166,38 @@ uint exec_extld(struct SaltModule *__restrict module, byte *__restrict payload,
                 uint pos)
 {
     exception_throw(EXCEPTION_RUNTIME, "EXTLD is not implemented yet");
+    return ++pos;
+}
+
+uint exec_ivadd(struct SaltModule *__restrict module, byte *__restrict payload,  
+                uint pos)
+{
+    SaltObject *obj = fetch_from_tape(module, * (uint *) payload);
+    if (obj->type != OBJECT_TYPE_INT)
+        exception_throw(EXCEPTION_TYPE, "Cannot add to non-int type");
+
+    if (obj->readonly)
+        exception_throw(EXCEPTION_READONLY, "Cannot mutate read-only object");
+
+    dprintf("Adding %d\n", * (int *) (payload + 4));
+    * (int *) obj->value += * (int *) (payload + 4);
+
+    return ++pos;
+}
+
+uint exec_ivsub(struct SaltModule *__restrict module, byte *__restrict payload,  
+                uint pos)
+{
+    SaltObject *obj = fetch_from_tape(module, * (uint *) payload);
+    if (obj->type != OBJECT_TYPE_INT)
+        exception_throw(EXCEPTION_TYPE, "Cannot subtract from non-int type");
+    
+    if (obj->readonly)
+        exception_throw(EXCEPTION_READONLY, "Cannot mutate read-only object");
+
+    dprintf("Subtracting %d\n", * (int *) (payload + 4));
+    * (int *) obj->value -= * (int *) (payload + 4);
+
     return ++pos;
 }
 

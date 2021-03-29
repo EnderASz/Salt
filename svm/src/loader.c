@@ -48,8 +48,10 @@ static const struct LoaderIPad ipads[] = {
         {"CALLF", 4},
         {"EXITE", 0},
         {"EXTLD", 4},
+        {"IVADD", 8},
+        {"IVSUB", 8},
         {"KILLX", 0},
-        {"OBJMK", 8},
+        {"OBJMK", 7},
         {"OBJDL", 4},
         {"PRINT", 4},
         {"RETRN", 0},
@@ -58,7 +60,7 @@ static const struct LoaderIPad ipads[] = {
         {"MLMAP", 0}
 };
 
-static const int ipad_amount = 11;
+static const int ipad_amount = 13;
 
 
 static int validate_header(char *header)

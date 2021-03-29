@@ -37,4 +37,11 @@
  */
 Nullable char *args_parse(int argc, char **argv);
 
+/**
+ * Return true if --mem-usage is passed.
+ *
+ * @return bool
+ */
+byte arg_mem_used();
+
 #endif // SVM_ARGS_H

@@ -32,6 +32,7 @@
 #define EXCEPTION_LABEL    "LabelException"
 #define EXCEPTION_NULLPTR  "NullPointerException"
 #define EXCEPTION_REGISTER "RegisterException"
+#define EXCEPTION_READONLY "ReadOnlyExeception"
 
 /**
  * Throw an exception and exit the virtual machine safely.

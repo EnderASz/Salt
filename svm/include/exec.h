@@ -125,6 +125,18 @@ uint exec_extld(struct SaltModule *__restrict module, byte *__restrict payload,
                 uint pos);
 
 /**
+ * Add the value to the object of type int.
+ */
+uint exec_ivadd(struct SaltModule *__restrict module, byte *__restrict payload,  
+                uint pos);
+
+/**
+ * Subtract a given value from the object of type int.
+ */
+uint exec_ivsub(struct SaltModule *__restrict module, byte *__restrict payload,  
+                uint pos);
+
+/**
  * Kill the whole program on-the-spot. This tried to free any memory it can as
  * fast as possible, and this kills the whole program. Note that this almost
  * certainly produce unwanted memory leaks, so it's recommended not to use it.

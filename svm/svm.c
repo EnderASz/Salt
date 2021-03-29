@@ -60,7 +60,7 @@
  *
  *
  *
- * @version  Salt Virtual Machine; format 3 version 0.9  
+ * @version  Salt Virtual Machine; format 3 version 0.10  
  */
 #include "include/args.h"
 #include "include/core.h"
@@ -96,6 +96,9 @@ int main(int argc, char **argv)
     strcpy(main->name, "__main__");
 
     exec(main);
+
+    if (arg_mem_used())
+        printf("Memory used: %ld\n", vmused());
 
     core_exit();
 

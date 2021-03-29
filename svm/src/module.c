@@ -120,7 +120,8 @@ void module_object_delete(struct SaltModule *module, uint id)
                 // If it's the first element of this list
                 dprintf("Removing {%d} at the beginning\n", node->data.id);
                 module->head = module->head->next;
-                module->head->previous = NULL;
+                if (module->head != NULL)
+                    module->head->previous = NULL;
             }
             else if (node->next == NULL) {
                 // If it's the last object in the list, set the pointer to the

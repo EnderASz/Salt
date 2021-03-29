@@ -10,6 +10,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 
+static byte F_MEM_USED = 0x00;
 
 static byte arg(char *str, const char *_long, const char *_short)
 {
@@ -24,7 +25,8 @@ static void help_page()
            "svm - Salt Virtual Machine for executing compiled salt code\n\n"
            "  FILE          the compiled salt executable\n"
            "  -h, --help    show this and exit\n"
-           "  -v, --version show the version and exit\n");
+           "  -v, --version show the version and exit\n"
+           "  -m, --mem-used show the amount of memory used at the end\n");
     core_exit();
 }
 
@@ -44,8 +46,15 @@ Nullable char *args_parse(int argc, char **argv)
             help_page();
         else if (arg(argv[i], "--version", "-v"))
             version_page();
+        else if (arg(argv[i], "--mem-used", "-m"))
+            F_MEM_USED = 0x01;
         else
             filename = argv[i];
     }
     return filename;
+}
+
+byte arg_mem_used()
+{
+    return F_MEM_USED;
 }
