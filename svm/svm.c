@@ -66,7 +66,6 @@
 #include "include/core.h"
 #include "include/module.h"
 #include "include/callstack.h"
-#include "include/object.h"
 #include "include/loader.h"
 #include "include/exec.h"
 
@@ -91,13 +90,41 @@ static void interrupt_handler(int _sig);
 int main(int argc, char **argv)
 {
     dprintf("Starting %s\n", SVM_VERSION);
-    char *filename = args_parse(argc, argv);
 
+    /* The runtime variables have to be initalized early, and they are put on
+     the stack in order to keep it memory safe (without heap allocation). */
+    SVMRuntime runtime = {
+        
+        .registers = NULL,
+        .register_size = 0,
+
+        .compare_flag = 0,
+
+        .arg_mem_used = 0,
+
+        .m_used = 0,
+        .m_max_used = 0,
+        .m_allocations = 0,
+        .m_frees = 0,
+
+        .module_size = 0,
+        .module_space = 0,
+        .modules = NULL,
+
+        .callstack_size = 0,
+        .callstack = NULL
+
+    };
+
+    /* Debug function. */
     size_check();
+
+    /* Parse the arguments and set some values in the runtime structure. */
+    char *filename = args_parse(&runtime, argc, argv);
 
 #ifdef __linux__
     /* If we're compiling for linux, include some signal support like catching 
-    SIGINT when hitting Ctrl C. Subscribe to the kernel's signal handler. */
+     SIGINT when hitting Ctrl C. Subscribe to the kernel's signal handler. */
     signal(SIGINT, interrupt_handler);
 #endif
 
@@ -106,15 +133,19 @@ int main(int argc, char **argv)
         goto end;
     }
 
-    struct SaltModule *main = load(filename);
+    /* End of the preparation stage, load the main file and start executing it. 
+     The runtime variables have to be loaded before this, in order to pass it
+     to the program. */
+
+    struct SaltModule *main = load(&runtime, filename);
     strcpy(main->name, "__main__");
 
-    exec(main);
+    exec(&runtime, main);
 
-    if (arg_mem_used())
-        printf("Memory used: %ld\n", vmused());
+    if (runtime.arg_mem_used)
+        printf("Memory used: %ld\n", runtime.m_used);
 
-    core_exit();
+    core_exit(&runtime);
 
 end:
     return 0;
@@ -122,6 +153,7 @@ end:
 
 static void size_check()
 {
+    dprintf("sizeof(SVMRuntime) = %ld\n", sizeof(SVMRuntime));
     dprintf("sizeof(SaltObject) = %ld\n", sizeof(SaltObject));
     dprintf("sizeof(SaltModule) = %ld\n", sizeof(struct SaltModule));
     dprintf("sizeof(SaltObjectNode) = %ld\n", sizeof(struct SaltObjectNode));
@@ -135,10 +167,6 @@ static void interrupt_handler(int _sig)
     if (_sig != SIGINT)
         return;
     printf("Recieved interrupt\n");
-
-    if (arg_mem_used())
-        printf("Memory used: %ld kB\n", vmused() / 1024);
-
     exit(1);
 #endif
 }

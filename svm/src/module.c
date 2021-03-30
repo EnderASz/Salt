@@ -10,31 +10,27 @@
 
 #include <string.h>
 
-static uint g_module_size = 0;
-static uint g_module_space = 0;
-static struct SaltModule* g_modules = NULL;
-
-static struct SaltModule *module_acquire_new()
+static struct SaltModule *module_acquire_new(SVMRuntime *_rt)
 {
-    if (g_module_space == 0) {
-        g_module_space++;
-        g_modules = vmalloc(sizeof(struct SaltModule));
+    if (_rt->module_space == 0) {
+        _rt->module_space++;
+        _rt->modules = vmalloc(_rt, sizeof(struct SaltModule));
     }
 
-    if (g_module_size >= g_module_space) {
-        g_module_space++;
-        g_modules = vmrealloc(g_modules, sizeof(struct SaltModule)
-                * g_module_space - 1, sizeof(struct SaltModule)
-                * g_module_space);
+    if (_rt->module_size >= _rt->module_space) {
+        _rt->module_space++;
+        _rt->modules = vmrealloc(_rt, _rt->modules, sizeof(struct SaltModule)
+                * _rt->module_space - 1, sizeof(struct SaltModule)
+                * _rt->module_space);
     }
 
-    g_module_size++;
-    return &g_modules[g_module_size - 1];
+    _rt->module_size++;
+    return &_rt->modules[_rt->module_size - 1];
 }
 
 // Node operations
 
-static void nodes_collapse(struct SaltModule *module)
+static void nodes_collapse(SVMRuntime *_rt, struct SaltModule *module)
 {
     dprintf("Collapsing nodes from the top\n");
 
@@ -54,8 +50,8 @@ static void nodes_collapse(struct SaltModule *module)
         if (hook == NULL)
             break;
 
-        vmfree(node->data.value, node->data.size);
-        vmfree(node, sizeof(struct SaltObjectNode));
+        vmfree(_rt, node->data.value, node->data.size);
+        vmfree(_rt, node, sizeof(struct SaltObjectNode));
 
         // And set the pointer to the current work node to the hook to the next
         // object.
@@ -63,19 +59,23 @@ static void nodes_collapse(struct SaltModule *module)
     }
 
     // Delete ourself when we reach the last object
-    vmfree(node->data.value, node->data.size);
-    vmfree(node, sizeof(struct SaltObjectNode));
+    vmfree(_rt, node->data.value, node->data.size);
+    vmfree(_rt, node, sizeof(struct SaltObjectNode));
 }
 
-SaltObject *module_object_acquire(struct SaltModule *module)
+SaltObject *module_object_acquire(SVMRuntime *_rt, struct SaltModule *module)
 {
     dprintf("Acquiring new object\n");
-    struct SaltObjectNode *new_node = vmalloc(sizeof(struct SaltObjectNode));
+    struct SaltObjectNode *new_node = vmalloc(_rt, sizeof(struct SaltObjectNode));
 
     // Setup the new node
     new_node->next = module->head;
     new_node->previous = NULL;
-    salt_object_init(&new_node->data);
+    
+    new_node->data.ctor = salt_object_ctor;
+    new_node->data.dtor = salt_object_dtor;
+    
+    new_node->data.ctor(_rt, &new_node->data);
 
     // Make the next node point to us but only if we're not the only ones 
     // in the list.
@@ -88,7 +88,7 @@ SaltObject *module_object_acquire(struct SaltModule *module)
     return &new_node->data;
 }
 
-Nullable SaltObject *module_object_find(struct SaltModule *module, uint id)
+SaltObject *module_object_find(struct SaltModule *module, uint id) Nullable
 {
     struct SaltObjectNode *node = module->head;
     while (node != NULL) {
@@ -100,10 +100,10 @@ Nullable SaltObject *module_object_find(struct SaltModule *module, uint id)
     return NULL;
 }
 
-void module_object_delete(struct SaltModule *module, uint id)
+void module_object_delete(SVMRuntime *_rt, struct SaltModule *module, uint id)
 {
     if (id == 0)
-        exception_throw(EXCEPTION_RUNTIME, "Cannot remove object of ID 0");
+        exception_throw(_rt, EXCEPTION_RUNTIME, "Cannot remove object of ID 0");
 
     struct SaltObjectNode *node = module->head;
     int8_t nf_flag = 1;
@@ -137,8 +137,8 @@ void module_object_delete(struct SaltModule *module, uint id)
             }
 
             nf_flag = 0;
-            vmfree(node->data.value, node->data.size);
-            vmfree(node, sizeof(struct SaltObjectNode));
+            vmfree(_rt, node->data.value, node->data.size);
+            vmfree(_rt, node, sizeof(struct SaltObjectNode));
 
             break;
         }
@@ -147,18 +147,18 @@ void module_object_delete(struct SaltModule *module, uint id)
     }
 
     if (nf_flag)
-        exception_throw(EXCEPTION_RUNTIME, "Cannot find object of ID %d\n", id);
+        exception_throw(_rt, EXCEPTION_RUNTIME, "Cannot find object of ID %d\n", id);
 }
 
 
 // Module operations
 
-struct SaltModule* module_create(char *name)
+struct SaltModule* module_create(SVMRuntime *_rt, char *name)
 {
-    struct SaltModule *mod = module_acquire_new();
+    struct SaltModule *mod = module_acquire_new(_rt);
 
     if (strlen(name) > 62) {
-        exception_throw(EXCEPTION_RUNTIME, "Cannot open module");
+        exception_throw(_rt, EXCEPTION_RUNTIME, "Cannot open module");
     }
 
     strncpy(mod->name, name, strlen(name));
@@ -174,25 +174,25 @@ struct SaltModule* module_create(char *name)
     return mod;
 }
 
-static void module_deallocate(struct SaltModule *module)
+static void module_deallocate(SVMRuntime *_rt, struct SaltModule *module)
 {
     dprintf("Clearing module '%s'\n", module->name);
     dprintf("Deallocating label list\n");
-    vmfree(module->labels, module->label_amount * sizeof(uint));
+    vmfree(_rt, module->labels, module->label_amount * sizeof(uint));
 
     dprintf("Deallocating instructions\n");
     for (uint i = 0; i < module->instruction_amount; i++) {
-        vmfree(module->instructions[i].content, module->instructions[i].size);
+        vmfree(_rt, module->instructions[i].content, module->instructions[i].size);
     }
-    vmfree(module->instructions, module->instruction_amount * sizeof(String));
+    vmfree(_rt, module->instructions, module->instruction_amount * sizeof(String));
 
-    nodes_collapse(module);
+    nodes_collapse(_rt, module);
 }
 
-void module_delete_all()
+void module_delete_all(SVMRuntime *_rt)
 {
-    for (uint i = 0; i < g_module_size; i++)
-        module_deallocate(&g_modules[i]);
+    for (uint i = 0; i < _rt->module_size; i++)
+        module_deallocate(_rt, &_rt->modules[i]);
 
-    vmfree(g_modules, g_module_space * sizeof(struct SaltModule));
+    vmfree(_rt, _rt->modules, _rt->module_space * sizeof(struct SaltModule));
 }

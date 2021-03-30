@@ -42,25 +42,25 @@ static int validate_header(char *header)
     return 1;
 }
 
-static struct LoaderHeaderData load_header(FILE *fp)
+static struct LoaderHeaderData load_header(SVMRuntime *_rt, FILE *fp)
 {
-    char *header = vmalloc(sizeof(char) * 64);
+    char *header = vmalloc(_rt, sizeof(char) * 64);
     fread(header, 1, 64, fp);
 
     if (!validate_header(header)) {
-        vmfree(header, sizeof(char) * 64);
-        exception_throw(EXCEPTION_RUNTIME, "Salt module is either invalid or corrupted");
+        vmfree(_rt, header, sizeof(char) * 64);
+        exception_throw(_rt, EXCEPTION_RUNTIME, "Salt module is either invalid or corrupted");
     }
 
     struct LoaderHeaderData data;
     data.instructions = * (uint *) (header + 16);
     data.registers    = * (uint8_t *) (header + 24); 
 
-    vmfree(header, sizeof(char) * 64);
+    vmfree(_rt, header, sizeof(char) * 64);
     return data;
 }
 
-static void read_instruction(String *ins, FILE *fp)
+static void read_instruction(SVMRuntime *_rt, String *ins, FILE *fp)
 {
     // Check for label
     char label_char = fgetc(fp);
@@ -91,7 +91,7 @@ static void read_instruction(String *ins, FILE *fp)
         }
 
         if ((uint) i >= g_exec_amount)
-            exception_throw(EXCEPTION_RUNTIME,"Cannot load instruction. "
+            exception_throw(_rt, EXCEPTION_RUNTIME,"Cannot load instruction. "
                             "It's either not supported or broken");
 
         width += 5;
@@ -109,7 +109,7 @@ static void read_instruction(String *ins, FILE *fp)
     }
 
     ins->size = width + 1;
-    ins->content = vmalloc(sizeof(char) * (width + 1));
+    ins->content = vmalloc(_rt, sizeof(char) * (width + 1));
     ins->content[width] = 0;
     fread(ins->content, 1, width, fp);
 
@@ -117,26 +117,27 @@ static void read_instruction(String *ins, FILE *fp)
     fgetc(fp);
 }
 
-static void load_instructions(struct SaltModule *module, FILE *fp, int instructions)
+static void load_instructions(SVMRuntime *_rt, struct SaltModule *module, 
+            FILE *fp, int instructions)
 {
     dprintf("Loading instructions for '%s'\n", module->name);
 
-    module->instructions = vmalloc(sizeof(String) * instructions);
+    module->instructions = vmalloc(_rt, sizeof(String) * instructions);
     module->instruction_amount = instructions;
 
     for (int i = 0; i < instructions; i++) {
-        read_instruction(&module->instructions[i], fp);
+        read_instruction(_rt, &module->instructions[i], fp);
     }
 }
 
-static void load_labels(struct SaltModule *module)
+static void load_labels(SVMRuntime *_rt, struct SaltModule *module)
 {
     for (uint i = 0; i < module->instruction_amount; i++) {
         if (module->instructions[i].content[0] == '@')
             module->label_amount++;
     }
 
-    module->labels = vmalloc(sizeof(uint) * module->label_amount);
+    module->labels = vmalloc(_rt, sizeof(uint) * module->label_amount);
     int curlabel = 0;
     for (uint i = 0; i < module->instruction_amount; i++) {
         if (module->instructions[i].content[0] == '@') {
@@ -147,36 +148,36 @@ static void load_labels(struct SaltModule *module)
     dprintf("Found %d labels in '%s'\n", module->label_amount, module->name);
 }
 
-struct SaltModule *load(char *name)
+struct SaltModule *load(SVMRuntime *_rt, char *name)
 {
     dprintf("Trying to load %s\n", name);
 
     // File
     int size = sizeof(char) * (strlen(name) + 5);
     
-    char *filename = vmalloc(size);
+    char *filename = vmalloc(_rt, size);
     memset(filename, 0, size);
 
     strncpy(filename, name, strlen(name));
 
     FILE *mod = fopen(filename, "rb");
     if (!mod) {
-        vmfree(filename, size);
-        exception_throw(EXCEPTION_RUNTIME, "Cannot find module");
+        vmfree(_rt, filename, size);
+        exception_throw(_rt, EXCEPTION_RUNTIME, "Cannot find module");
     }
-    vmfree(filename, size);
+    vmfree(_rt, filename, size);
     
     name[strlen(name) - 4] = 0;
 
     // Module
 
-    struct SaltModule *module = module_create(name);
-    struct LoaderHeaderData instructions = load_header(mod);
+    struct SaltModule *module = module_create(_rt, name);
+    struct LoaderHeaderData instructions = load_header(_rt, mod);
 
-    load_instructions(module, mod, instructions.instructions);
-    load_labels(module);
+    load_instructions(_rt, module, mod, instructions.instructions);
+    load_labels(_rt, module);
 
-    register_control(instructions.registers);
+    register_control(_rt, instructions.registers);
 
     dprintf("Loaded module %s\n", module->name);
 

@@ -55,15 +55,8 @@ struct StackFrame {
  * @param   function title of the function, is checked if it's shorter than 62
  *                   chars.
  */
-void callstack_push(uint32_t line, char *__restrict module, 
+void callstack_push(SVMRuntime *_rt, uint32_t line, char *__restrict module, 
                     char *__restrict function);
-
-/**
- * Size of the current callstack.
- *
- * @return number of elements on the callstack
- */
-uint64_t callstack_size();
 
 /**
  * Peek at the top of the callstack. After using the data inside the frame,
@@ -71,11 +64,11 @@ uint64_t callstack_size();
  *
  * @return  last element of the callstack or NULL if callstack is empty
  */
-Nullable struct StackFrame *callstack_peek();
+struct StackFrame *callstack_peek() Nullable;
 
 /**
  * Remove the last element of the callstack from the frame.
  */
-void callstack_pop();
+void callstack_pop(SVMRuntime *_rt);
 
 #endif // SVM_CALLSTACK_H

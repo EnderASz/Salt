@@ -10,8 +10,6 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-static byte F_MEM_USED = 0x00;
-
 static byte arg(char *str, const char *_long, const char *_short)
 {
     if (strcmp(str, _long) == 0 || strcmp(str, _short) == 0)
@@ -19,7 +17,7 @@ static byte arg(char *str, const char *_long, const char *_short)
     return 0;
 }
 
-static void help_page()
+static void help_page(SVMRuntime *_rt)
 {
     printf("Usage: svm [OPTION]... FILE\n"
            "svm - Salt Virtual Machine for executing compiled salt code\n\n"
@@ -27,34 +25,29 @@ static void help_page()
            "  -h, --help    show this and exit\n"
            "  -v, --version show the version and exit\n"
            "  -m, --mem-used show the amount of memory used at the end\n");
-    core_exit();
+    core_exit(_rt);
 }
 
-static void version_page()
+static void version_page(SVMRuntime *_rt)
 {
     printf("%s\n", SVM_VERSION);
-    core_exit();
+    core_exit(_rt);
 }
 
-Nullable char *args_parse(int argc, char **argv)
+char *args_parse(SVMRuntime *_rt, int argc, char **argv) Nullable
 {
     char *filename = NULL;
     for (int i = 1; i < argc; i++) {
         dprintf("Checking [%d] \"%s\"\n", i, argv[i]);
 
         if (arg(argv[i], "--help", "-h"))
-            help_page();
+            help_page(_rt);
         else if (arg(argv[i], "--version", "-v"))
-            version_page();
+            version_page(_rt);
         else if (arg(argv[i], "--mem-used", "-m"))
-            F_MEM_USED = 0x01;
+            _rt->arg_mem_used = 0x01;
         else
             filename = argv[i];
     }
     return filename;
-}
-
-byte arg_mem_used()
-{
-    return F_MEM_USED;
 }

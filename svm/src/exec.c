@@ -9,14 +9,18 @@
 #include "../include/callstack.h"
 #include "../include/utils.h"
 #include "../include/module.h"
-#include "../include/object.h"
 
 #include <stdint.h>
 #include <stdio.h>
 #include <string.h>
+#include <time.h>
+
+#ifdef __linux__
+#include <unistd.h>
+#endif
 
 // ----------------------------------------------------------------------------
-// Global values
+// Global const values
 // ----------------------------------------------------------------------------
 
 /* killx is the last instruction if no other is found. */
@@ -32,6 +36,7 @@ const struct SVMCall g_execs[] = {
     {"JMPFL", exec_jmpfl, 8},
     {"JMPNF", exec_jmpnf, 8},
     {"CALLF", exec_callf, 4},
+    {"CALLS", exec_callf, 4},
     {"EXTLD", exec_extld, 4},
     {"OBJMK", exec_objmk, 7},
     {"OBJDL", exec_objdl, 4},
@@ -39,43 +44,38 @@ const struct SVMCall g_execs[] = {
     {"RETRN", exec_retrn, 0},
     {"MLMAP", exec_mlmap, 0},
     {"CXXEQ", exec_cxxeq, 8},
-
+    {"CXXNE", exec_cxxne, 8},
+    {"SLEEP", exec_sleep, 4}
 };
 
-const uint g_exec_amount = 17;
-
-/* registers */
-static SaltObject *g_registers;
-static uint8_t g_register_size = 0;
-
-/* comparison flag, is set if the comparison returns true */
-static byte gf_compare = 0;
+const uint g_exec_amount = 20;
 
 // ----------------------------------------------------------------------------
 // Utility & loop functions
 // ----------------------------------------------------------------------------
 
-static uint find_label(struct SaltModule *module, char *label)
+static uint find_label(SVMRuntime *_rt, struct SaltModule *module, char *label)
 {
     for (uint i = 0; i < module->label_amount; i++) {
         char *content = module->instructions[module->labels[i]].content;
         if (strncmp(content + 1, label, strlen(label) - 1) == 0)
             return module->labels[i];
     }
-    exception_throw(EXCEPTION_LABEL, "Cannot find '%s' label", label);
+    exception_throw(_rt, EXCEPTION_LABEL, "Cannot find '%s' label", label);
     return 0;
 }
 
-inline static SaltObject *fetch_from_tape(struct SaltModule *module, uint id)
+inline static SaltObject *fetch_from_tape(SVMRuntime *_rt, struct SaltModule 
+                          *module, uint id)
 {
     SaltObject *obj = module_object_find(module, id);
     if (!obj) {
-        exception_throw(EXCEPTION_NULLPTR, "Object %d not found", id);
+        exception_throw(_rt, EXCEPTION_NULLPTR, "Object %d not found", id);
     }
     return obj;
 }
 
-static uint preload(struct SaltModule *main)
+static uint preload(SVMRuntime *_rt, struct SaltModule *main)
 {
     uint i = 0;
     for (uint j = 0; j < main->label_amount; j++) {
@@ -86,21 +86,21 @@ static uint preload(struct SaltModule *main)
     }
 
     if (i == 0)
-        exception_throw(EXCEPTION_RUNTIME, "main function not found");
+        exception_throw(_rt, EXCEPTION_RUNTIME, "main function not found");
 
     return i;
 }
 
 /* main exec */
 
-int exec(struct SaltModule *main)
+int exec(SVMRuntime *_rt, struct SaltModule *main)
 {
     dprintf("Executing '%s'\n", main->name);
 
-    uint i = preload(main);
+    uint i = preload(_rt, main);
 
     // "Call" the main instruction
-    callstack_push(find_label(main, "$__END__"), main->name, "main");
+    callstack_push(_rt, find_label(_rt, main, "$__END__"), main->name, "main");
 
     for (; i < main->instruction_amount;) {
 
@@ -112,7 +112,7 @@ int exec(struct SaltModule *main)
         dprintf("[%d] < \033[95m%.5s\033[0m >\n", i, main->instructions[i].content);
 
         const struct SVMCall *exec = exec_get(main->instructions[i].content);
-        i = exec->f_exec(main, (byte *) main->instructions[i].content + 5, i);
+        i = exec->f_exec(_rt, main, (byte *) main->instructions[i].content + 5, i);
     }
     return 0;
 }
@@ -126,57 +126,90 @@ const struct SVMCall *exec_get(char *title)
     return &g_execs[0];
 }
 
-void register_control(uint8_t size)
+void register_control(SVMRuntime *_rt, uint8_t size)
 {
-    if (g_register_size < size) {
-        g_registers = vmrealloc(
-            g_registers, 
-            sizeof(SaltObject) * g_register_size, 
+    if (_rt->register_size < size) {
+        _rt->registers = vmrealloc(_rt,
+            _rt->registers, 
+            sizeof(SaltObject) * _rt->register_size, 
             sizeof(SaltObject) * size
         );
-        g_register_size = size;
-        for (uint8_t i = 0; i < g_register_size; i++)
-            salt_object_init(&g_registers[i]);
+        _rt->register_size = size;
+        for (uint8_t i = 0; i < _rt->register_size; i++) {
+            _rt->registers[i].ctor = salt_object_ctor;
+            _rt->registers[i].dtor = salt_object_dtor;
+
+            _rt->registers[i].ctor(_rt, &_rt->registers[i]);
+        }
     }
 }
 
-void register_clear()
+void register_clear(SVMRuntime *_rt)
 {
-    for (uint i = 0; i < g_register_size; i++) {
-        vmfree(g_registers[i].value, g_registers[i].size);
+    for (uint i = 0; i < _rt->register_size; i++) {
+        vmfree(_rt, _rt->registers[i].value, _rt->registers[i].size);
     }
-    vmfree(g_registers, sizeof(SaltObject) * g_register_size);
+    vmfree(_rt, _rt->registers, sizeof(SaltObject) * _rt->register_size);
+}
+
+static void copy_object(SVMRuntime *_rt, SaltObject *dest, SaltObject *src)
+{
+    dest->id = src->id;
+    dest->type = src->type;
+    dest->readonly = src->readonly;
+
+    dest->mutex_acquired = src->mutex_acquired;
+    dest->ctor = src->ctor;
+    dest->dtor = src->dtor;
+    dest->print = src->print;
+
+    // Free previous memory in dest
+    vmfree(_rt, dest->value, dest->size);
+    dest->value = NULL;
+    dest->size = 0;
+
+    dest->size = src->size;
+    dest->value = vmalloc(_rt, dest->size);
+    memcpy(dest->value, src->value, dest->size);
 }
 
 // ----------------------------------------------------------------------------
 // Instruction implementations
 // ----------------------------------------------------------------------------
 
-uint exec_callf(struct SaltModule *__restrict module, byte *__restrict payload,  
-                uint pos)
+uint exec_callf(SVMRuntime *_rt, struct SaltModule *__restrict module, 
+                byte *__restrict payload,  uint pos)
 {
-    uint line = find_label(module, (char *) (payload + 4));
-    callstack_push(pos, module->name, (char *) (payload + 4));
+    uint line = find_label(_rt, module, (char *) (payload + 4));
+    callstack_push(_rt, pos, module->name, (char *) (payload + 4));
     return line;
 }
 
-uint exec_cxxeq(struct SaltModule *__restrict module, byte *__restrict payload,
-                uint pos)
+uint exec_calls(SVMRuntime *_rt, struct SaltModule *__restrict module, 
+                byte *__restrict payload,  uint pos)
+{
+    if (_rt->compare_flag)
+        return exec_callf(_rt, module, payload, pos);
+    return ++pos;
+}
+
+uint exec_cxxeq(SVMRuntime *_rt, struct SaltModule *__restrict module, 
+                byte *__restrict payload,  uint pos)
 {
     SaltObject *o1 = module_object_find(module, * (uint *) payload);
     SaltObject *o2 = module_object_find(module, * (uint *) (payload + 4));
 
     if (o1 == NULL || o2 == NULL)
-        exception_throw(EXCEPTION_NULLPTR, "Cannot find object");
+        exception_throw(_rt, EXCEPTION_NULLPTR, "Cannot find object");
 
     if (o1->type != o2->type)
-        exception_throw(EXCEPTION_TYPE, "Cannot compare two different types");
+        exception_throw(_rt, EXCEPTION_TYPE, "Cannot compare two different types");
 
     switch (o1->type) {
 
         case OBJECT_TYPE_BOOL:
             if (* (byte *) o1->value == * (byte *) o2->value)
-                gf_compare = 1;
+                _rt->compare_flag = 1;
             break;
 
         /* the float & int case may look pretty slow, but the alternative is 
@@ -185,61 +218,69 @@ uint exec_cxxeq(struct SaltModule *__restrict module, byte *__restrict payload,
         case OBJECT_TYPE_FLOAT:
         {
             if (* (float *) o1->value == * (float *) o2->value)
-                gf_compare = 1;
+                _rt->compare_flag = 1;
             break;
         }
         case OBJECT_TYPE_INT:
         {
             if (* (int *) o1->value == * (int *) o2->value)
-                gf_compare = 1;
+                _rt->compare_flag = 1;
             break;
         }
         case OBJECT_TYPE_STRING:
         {
             uint size = o1->size;
             if (o2->size != size) {
-                gf_compare = 0;
+                _rt->compare_flag = 0;
                 break;
             }
 
             if(strncmp((char *) o1->value, (char *) o2->value, size - 1) == 0)
-                gf_compare = 1;
+                _rt->compare_flag = 1;
             else
-                gf_compare = 0;
+                _rt->compare_flag = 0;
             break;
         }
         
         default:
             /* if the type is unknown, return false by default */
-            gf_compare = 0;
+            _rt->compare_flag = 0;
     
     }
 
     return ++pos;
 }
 
-uint exec_exite(struct SaltModule *__restrict module, byte *__restrict payload,  
-                uint pos)
+uint exec_cxxne(SVMRuntime *_rt, struct SaltModule *__restrict module, 
+                byte *__restrict payload,  uint pos)
 {
-    return find_label(module, "$__END__");
+    exec_cxxeq(_rt,module, payload, pos);
+    _rt->compare_flag = !_rt->compare_flag;
+    return pos;
 }
 
-uint exec_extld(struct SaltModule *__restrict module, byte *__restrict payload,  
-                uint pos)
+uint exec_exite(SVMRuntime *_rt, struct SaltModule *__restrict module, 
+                byte *__restrict payload,  uint pos)
 {
-    exception_throw(EXCEPTION_RUNTIME, "EXTLD is not implemented yet");
+    return find_label(_rt, module, "$__END__");
+}
+
+uint exec_extld(SVMRuntime *_rt, struct SaltModule *__restrict module, 
+                byte *__restrict payload,  uint pos)
+{
+    exception_throw(_rt, EXCEPTION_RUNTIME, "EXTLD is not implemented yet");
     return ++pos;
 }
 
-uint exec_ivadd(struct SaltModule *__restrict module, byte *__restrict payload,  
-                uint pos)
+uint exec_ivadd(SVMRuntime *_rt, struct SaltModule *__restrict module, 
+                byte *__restrict payload,  uint pos)
 {
-    SaltObject *obj = fetch_from_tape(module, * (uint *) payload);
+    SaltObject *obj = fetch_from_tape(_rt, module, * (uint *) payload);
     if (obj->type != OBJECT_TYPE_INT)
-        exception_throw(EXCEPTION_TYPE, "Cannot add to non-int type");
+        exception_throw(_rt, EXCEPTION_TYPE, "Cannot add to non-int type");
 
     if (obj->readonly)
-        exception_throw(EXCEPTION_READONLY, "Cannot mutate read-only object");
+        exception_throw(_rt, EXCEPTION_READONLY, "Cannot mutate read-only object");
 
     dprintf("Adding %d\n", * (int *) (payload + 4));
     * (int *) obj->value += * (int *) (payload + 4);
@@ -247,15 +288,15 @@ uint exec_ivadd(struct SaltModule *__restrict module, byte *__restrict payload,
     return ++pos;
 }
 
-uint exec_ivsub(struct SaltModule *__restrict module, byte *__restrict payload,  
-                uint pos)
+uint exec_ivsub(SVMRuntime *_rt, struct SaltModule *__restrict module, 
+                byte *__restrict payload,  uint pos)
 {
-    SaltObject *obj = fetch_from_tape(module, * (uint *) payload);
+    SaltObject *obj = fetch_from_tape(_rt, module, * (uint *) payload);
     if (obj->type != OBJECT_TYPE_INT)
-        exception_throw(EXCEPTION_TYPE, "Cannot subtract from non-int type");
+        exception_throw(_rt, EXCEPTION_TYPE, "Cannot subtract from non-int type");
     
     if (obj->readonly)
-        exception_throw(EXCEPTION_READONLY, "Cannot mutate read-only object");
+        exception_throw(_rt, EXCEPTION_READONLY, "Cannot mutate read-only object");
 
     dprintf("Subtracting %d\n", * (int *) (payload + 4));
     * (int *) obj->value -= * (int *) (payload + 4);
@@ -263,39 +304,39 @@ uint exec_ivsub(struct SaltModule *__restrict module, byte *__restrict payload,
     return ++pos;
 }
 
-uint exec_jmpfl(struct SaltModule *__restrict module, byte *__restrict payload,  
-                uint pos)
+uint exec_jmpfl(SVMRuntime *_rt, struct SaltModule *__restrict module, 
+                byte *__restrict payload,  uint pos)
 {
-    if (gf_compare)
-        return find_label(module, (char *) (payload + 4));
+    if (_rt->compare_flag)
+        return find_label(_rt, module, (char *) (payload + 4));
 
     return ++pos;
 }
 
-uint exec_jmpnf(struct SaltModule *__restrict module, byte *__restrict payload,  
-                uint pos)
+uint exec_jmpnf(SVMRuntime *_rt, struct SaltModule *__restrict module, 
+                byte *__restrict payload,  uint pos)
 {
-    if (!gf_compare)
-        return find_label(module, (char *) (payload + 4));
+    if (!_rt->compare_flag)
+        return find_label(_rt, module, (char *) (payload + 4));
 
     return ++pos;
 }
 
-uint exec_jmpto(struct SaltModule *__restrict module, byte *__restrict payload,  
-                uint pos)
+uint exec_jmpto(SVMRuntime *_rt, struct SaltModule *__restrict module, 
+                byte *__restrict payload,  uint pos)
 {
-    return find_label(module, (char *) (payload + 4));
+    return find_label(_rt, module, (char *) (payload + 4));
 }
 
-uint exec_killx(struct SaltModule *__restrict module, byte *__restrict payload,  
-                uint pos)
+uint exec_killx(SVMRuntime *_rt, struct SaltModule *__restrict module, 
+                byte *__restrict payload,  uint pos)
 {
-    core_exit();
+    core_exit(_rt);
     return ++pos;
 }
 
-uint exec_mlmap(struct SaltModule *__restrict module, byte *__restrict payload,  
-                uint pos)
+uint exec_mlmap(SVMRuntime *_rt, struct SaltModule *__restrict module, 
+                byte *__restrict payload,  uint pos)
 {
     struct SaltObjectNode *node = module->head;
     while (node != NULL) {
@@ -310,41 +351,41 @@ uint exec_mlmap(struct SaltModule *__restrict module, byte *__restrict payload,
 }
 
 
-uint exec_objmk(struct SaltModule *__restrict module, byte *__restrict payload,  
-                uint pos)
+uint exec_objmk(SVMRuntime *_rt, struct SaltModule *__restrict module, 
+                byte *__restrict payload,  uint pos)
 {
-    SaltObject *obj = module_object_acquire(module);
-    salt_object_define(obj, payload);
+    SaltObject *obj = module_object_acquire(_rt, module);
+    salt_object_define(_rt, obj, payload);
     return ++pos;
 }
 
-uint exec_objdl(struct SaltModule *__restrict module, byte *__restrict payload,  
-                uint pos)
+uint exec_objdl(SVMRuntime *_rt, struct SaltModule *__restrict module, 
+                byte *__restrict payload,  uint pos)
 {
-    module_object_delete(module, * (uint *) payload);
+    module_object_delete(_rt, module, * (uint *) payload);
     return ++pos;
 }
 
-uint exec_print(struct SaltModule *__restrict module, byte *__restrict payload,  
-                uint pos)
+uint exec_print(SVMRuntime *_rt, struct SaltModule *__restrict module, 
+                byte *__restrict payload,  uint pos)
 {
 
     SaltObject *obj = module_object_find(module, * (uint *) payload);
     if (obj == NULL) {
-        exception_throw(EXCEPTION_NULLPTR, "Cannot find object %d", 
+        exception_throw(_rt, EXCEPTION_NULLPTR, "Cannot find object %d", 
                         * (uint *) payload);
     }
 
-    salt_object_print(obj);
+    salt_object_print(_rt, obj);
     return ++pos;
 }
 
-uint exec_retrn(struct SaltModule *__restrict module, byte *__restrict payload,  
-                uint pos)
+uint exec_retrn(SVMRuntime *_rt, struct SaltModule *__restrict module, 
+                byte *__restrict payload,  uint pos)
 {
     struct StackFrame *frame = callstack_peek();
     if (frame == NULL) {
-        pos = find_label(module, "$__END__");
+        pos = find_label(_rt, module, "$__END__");
     }
     else {
         pos = frame->line + 1;
@@ -353,79 +394,73 @@ uint exec_retrn(struct SaltModule *__restrict module, byte *__restrict payload,
         }
     }
     dprintf("Jumping back to [%d]\n", pos);
-    callstack_pop();
+    callstack_pop(_rt);
     return pos;
 }
 
-uint exec_rpush(struct SaltModule *__restrict module, byte *__restrict payload,
-                uint pos)
+uint exec_rpush(SVMRuntime *_rt, struct SaltModule *__restrict module, 
+                byte *__restrict payload,  uint pos)
 {
     uint8_t r = * (uint8_t *) payload;
     uint id = * (uint *) (payload + 1);
 
     SaltObject *obj = module_object_find(module, id);
     if (obj == NULL) {
-        exception_throw(EXCEPTION_RUNTIME, "Cannot load object %d into the "
+        exception_throw(_rt, EXCEPTION_RUNTIME, "Cannot load object %d into the "
                 "register because it does not exist");
     }
 
-    if (r >= g_register_size)
-        exception_throw(EXCEPTION_REGISTER, "Register %d out of bounds");
+    if (r >= _rt->register_size)
+        exception_throw(_rt, EXCEPTION_REGISTER, "Register %d out of bounds");
 
     dprintf("Pushing to register [%d] from {%d}\n", r, id);
 
-    g_registers[r].id = obj->id;
-    g_registers[r].type = obj->type;
-    g_registers[r].readonly = obj->readonly;
-
-    g_registers[r].mutex_acquired = obj->mutex_acquired;
-    g_registers[r].destructor = obj->destructor;
-    g_registers[r].vhandler = obj->vhandler;
+    copy_object(_rt, &_rt->registers[r], obj);
     
-    g_registers[r].size = obj->size;
-    g_registers[r].value = vmalloc(g_registers[r].size);
-
-    // Copy data over
-    for (uint i = 0; i < g_registers[r].size; i++)
-        ((uint8_t *) g_registers[r].value)[i] = ((uint8_t *) obj->value)[i];
-
-    module_object_delete(module, obj->id);
+    module_object_delete(_rt, module, obj->id);
 
     return ++pos;
 }
 
-uint exec_rgpop(struct SaltModule *__restrict module, byte *__restrict payload,
-                uint pos)
+uint exec_rgpop(SVMRuntime *_rt, struct SaltModule *__restrict module, 
+                byte *__restrict payload, uint pos)
 {
     uint8_t r = * (uint8_t *) payload;
     uint id = * (uint *) (payload + 1);
 
-    SaltObject *obj = module_object_acquire(module);
+    SaltObject *obj = module_object_acquire(_rt, module);
 
-    if (r >= g_register_size)
-        exception_throw(EXCEPTION_REGISTER, "Register %d out of bounds");
+    if (r >= _rt->register_size)
+        exception_throw(_rt, EXCEPTION_REGISTER, "Register %d out of bounds");
 
     dprintf("Pulling from register [%d] to {%d}\n", r, id);
 
-    // todo : copy object
+    copy_object(_rt, obj, &_rt->registers[r]);
     obj->id = id;
-    obj->type = g_registers[r].type;
-    obj->readonly = g_registers[r].readonly;
 
-    obj->mutex_acquired = g_registers[r].mutex_acquired;
-    obj->destructor = g_registers[r].destructor;
-    obj->vhandler = g_registers[r].vhandler;
-
-    obj->size = g_registers[r].size;
-    obj->value = vmalloc(obj->size);
-
-    // Copy data over
-    for (uint i = 0; i < g_registers[r].size; i++)
-        ((uint8_t *) obj->value)[i] = ((uint8_t *) g_registers[r].value)[i];
-
-    vmfree(g_registers[r].value, g_registers[r].size);
-    g_registers[r].value = NULL;
-    g_registers[r].size = 0;
+    vmfree(_rt, _rt->registers[r].value, _rt->registers[r].size);
+    _rt->registers[r].value = NULL;
+    _rt->registers[r].size = 0;
 
     return ++pos;  
+}
+
+uint exec_sleep(SVMRuntime *_rt, struct SaltModule *__restrict module, 
+                byte *__restrict payload,  uint pos)
+{
+#if defined(_WIN32)
+    /* The windows sleep is a bit easier because it uses miliseconds by 
+     default. */
+    Sleep(* (int *) payload);
+
+#elif defined(__linux__)
+    /* The linux sleep on the other hand takes seconds, so we must use nanosleep
+     here. The bad thing is usleep has been deprecated so we have to use some
+     timespec magic. */
+     
+    exception_throw(_rt, EXCEPTION_RUNTIME, "Sleep does not work on linux yet. "
+                    "Too bad.");
+
+#endif
+    return ++pos;
 }

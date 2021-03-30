@@ -1,34 +1,23 @@
 /**
- * object.h implementation
+ * core.h implementation from the salt object size
  *
  * @author bellrise, 2021
  */
 #include "../include/core.h"
-#include "../include/object.h"
 #include "../include/utils.h"
 #include "../include/exception.h"
 
-SaltObject *salt_object_create()
+SaltObject *salt_object_create(SVMRuntime *_rt)
 {
-    SaltObject *ptr = vmalloc(sizeof(SaltObject));
-    salt_object_init(ptr);
+    SaltObject *ptr = vmalloc(_rt, sizeof(SaltObject));
+    
+    ptr->ctor = salt_object_ctor;
+    ptr->dtor = salt_object_dtor;
+
     return ptr;
 }
 
-void salt_object_init(SaltObject *obj)
-{
-    obj->id = 0;
-    obj->readonly = 0;
-    obj->mutex_acquired = 0;
-
-    obj->value = NULL;
-    obj->size = 0;
-
-    obj->vhandler = NULL;
-    obj->destructor = salt_object_destructor;
-}
-
-void salt_object_copy(SaltObject *dest, SaltObject *src)
+void salt_object_copy(SVMRuntime *_rt, SaltObject *dest, SaltObject *src)
 {
     dprintf("Copying object {%d} to {%d}\n", src->id, dest->id);
     dest->id = src->id;
@@ -36,12 +25,13 @@ void salt_object_copy(SaltObject *dest, SaltObject *src)
     dest->readonly = src->readonly;
     dest->mutex_acquired = src->mutex_acquired;
 
-    dest->vhandler = src->vhandler;
-    dest->destructor = src->destructor;
+    dest->ctor = src->ctor;
+    dest->dtor = src->dtor;
+    dest->print = src->print;
 
     dest->size = src->size;
     if (dest->size != 0) {
-        dest->value = vmalloc(dest->size);
+        dest->value = vmalloc(_rt, dest->size);
         memcpy(dest->value, src->value, dest->size);
     }
     else {
@@ -49,7 +39,7 @@ void salt_object_copy(SaltObject *dest, SaltObject *src)
     }
 }
 
-void salt_object_print(SaltObject *obj)
+void salt_object_print(SVMRuntime *_rt, SaltObject *obj)
 {
     if (obj == NULL) {
         puts("null");
@@ -57,7 +47,7 @@ void salt_object_print(SaltObject *obj)
     }
 
     if (obj->id == 0)
-        exception_throw(EXCEPTION_NULLPTR, "Cannot resolve object");
+        exception_throw(_rt, EXCEPTION_NULLPTR, "Cannot resolve object");
 
     dprintf("Printing {%d} of type 0x%02hhx\n", obj->id, obj->type);
 
@@ -87,26 +77,26 @@ void salt_object_print(SaltObject *obj)
     }
 }
 
-static void render_value(SaltObject *obj, byte *payload)
+static void render_value(SVMRuntime *_rt, SaltObject *obj, byte *payload)
 {
     dprintf("Rendering type 0x%02hhx\n", obj->type);
     switch (obj->type) {
 
         case OBJECT_TYPE_INT:
-            obj->value = vmalloc(sizeof(int));
+            obj->value = vmalloc(_rt, sizeof(int));
             obj->size = sizeof(int);
             memcpy(obj->value, payload, 4);
             return;
 
         case OBJECT_TYPE_FLOAT:
-            obj->value = vmalloc(sizeof(float));
+            obj->value = vmalloc(_rt, sizeof(float));
             obj->size = sizeof(float);
             memcpy(obj->value, payload, 4);
             return;
 
         case OBJECT_TYPE_STRING:
             obj->size = * (uint *) payload;
-            obj->value = vmalloc(sizeof(char) * obj->size);
+            obj->value = vmalloc(_rt, sizeof(char) * obj->size);
             memcpy(obj->value, (payload + sizeof(uint)), obj->size);
 
             for (uint i = 0; i < obj->size; i++) {
@@ -119,7 +109,7 @@ static void render_value(SaltObject *obj, byte *payload)
             return;
 
         case OBJECT_TYPE_BOOL:
-            obj->value = vmalloc(1);
+            obj->value = vmalloc(_rt, 1);
             obj->size = 1;
             memcpy(obj->value, payload, 1);
             return;
@@ -128,20 +118,31 @@ static void render_value(SaltObject *obj, byte *payload)
             return;
 
         default:
-            exception_throw(EXCEPTION_TYPE, "Cannot print object");
+            exception_throw(_rt, EXCEPTION_TYPE, "Cannot print object");
     }
 }
 
-void salt_object_define(SaltObject *obj, byte *payload)
+void salt_object_define(SVMRuntime *_rt, SaltObject *obj, byte *payload)
 {
     obj->id       = * (uint *) payload;
     obj->readonly = * (byte *) (payload + 4);
     obj->type     = * (byte *) (payload + 5);
-    render_value(obj, payload + 6);
+    render_value(_rt, obj, payload + 6);
     dprintf("Created object {%d} of type 0x%02hhx\n", obj->id, obj->type);
 }
 
-void salt_object_destructor(SaltObject *obj)
+void salt_object_ctor(void *_rt, SaltObject *self)
 {
-    vmfree(obj->value, obj->size);
+    self->id = 0;
+    self->readonly = 0;
+    self->mutex_acquired = 0;
+
+    self->value = NULL;
+    self->size = 0;
 }
+
+void salt_object_dtor(void *_rt, SaltObject *self)
+{
+    vmfree((SVMRuntime *) _rt, self->value, self->size);
+}
+

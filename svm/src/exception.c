@@ -12,7 +12,7 @@
 #include <stdarg.h>
 
 
-void exception_throw(const char *exception, const char *fmt, ...)
+void exception_throw(SVMRuntime *_rt, const char *exception, const char *fmt, ...)
 {
     va_list args;
     va_start(args, fmt);
@@ -20,13 +20,13 @@ void exception_throw(const char *exception, const char *fmt, ...)
     dprintf("\033[91mThrowing exception: %s\033[0m\n", exception);
     fprintf(stderr, "An exception occured during execution: %s\n", exception);
 
-    dprintf("Deconstructing %ld elements from the stack\n", callstack_size());
-    uint64_t size = callstack_size();
+    dprintf("Deconstructing %ld elements from the stack\n", _rt->callstack_size);
+    uint64_t size = _rt->callstack_size;
     for (uint64_t i = 0; i < size; i++) {
         struct StackFrame *frame = callstack_peek();
         fprintf(stderr, "  at %s.%s\n", frame->module,
                 frame->function);
-        callstack_pop();
+        callstack_pop(_rt);
     }
 
     fprintf(stderr, "\n ~ ");
@@ -34,5 +34,5 @@ void exception_throw(const char *exception, const char *fmt, ...)
     fprintf(stderr, "\n");
 
     va_end(args);
-    core_exit();
+    core_exit(_rt);
 }

@@ -35,13 +35,6 @@
  * @param   argv  string array of arguments
  * @return  returns the filename or NULL if filename not found
  */
-Nullable char *args_parse(int argc, char **argv);
-
-/**
- * Return true if --mem-usage is passed.
- *
- * @return bool
- */
-byte arg_mem_used();
+char *args_parse(SVMRuntime *_rt, int argc, char **argv) Nullable;
 
 #endif // SVM_ARGS_H

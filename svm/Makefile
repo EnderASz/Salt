@@ -15,6 +15,8 @@ VERSION := -D SVM_VERSION=\"$(shell python3 build.py build)\"
 
 debug : RESULT := svmd
 debug : FDEBUG := -D DEBUG=1
+#debug : CLANG_FLAGS := -fsanitize=memory -fno-omit-frame-pointer \
+#	    -fno-optimize-sibling-calls -O1
 debug : CLANG_FLAGS := -fsanitize=address -fno-omit-frame-pointer \
 		-fno-optimize-sibling-calls -O1
 win32 : CC := i686-w64-mingw32-gcc

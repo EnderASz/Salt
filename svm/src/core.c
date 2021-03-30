@@ -5,7 +5,6 @@
  */
 #include "../include/core.h"
 #include "../include/module.h"
-#include "../include/object.h"
 #include "../include/exception.h"
 #include "../include/exec.h"
 #include "../include/callstack.h"
@@ -16,82 +15,72 @@
 #define DEBUG_ALLOCATIONS 1
 #endif
 
-static uint64_t g_memory_used = 0;
-static uint64_t g_max_used    = 0;
-static uint64_t g_allocations = 0;
-static uint64_t g_frees       = 0;
-
-void core_exit()
+void core_exit(SVMRuntime *_rt)
 {
     // Clear callstack
-    for (uint i = 0; i < callstack_size(); i++)
-        callstack_pop();
+    for (uint i = 0; i < _rt->callstack_size; i++)
+        callstack_pop(_rt);
 
     register_clear();
-    module_delete_all();
-    vibe_check();
+    module_delete_all(_rt);
+    vibe_check(_rt);
     exit(0);
 }
 
-void *vmalloc(uint size)
+void *vmalloc(SVMRuntime *_rt, uint size)
 {
 #ifdef DEBUG_ALLOCATIONS
     dprintf("\033[90mAllocating \033[32m%d\033[90m bytes\033[0m\n", size);
 #endif
-    g_allocations++;
+    _rt->m_allocations++;
 
-    g_memory_used += size;
-    if (g_memory_used > g_max_used)
-        g_max_used = g_memory_used;
+    _rt->m_used += size;
+    if (_rt->m_used > _rt->m_max_used)
+        _rt->m_max_used = _rt->m_max_used;
 
     void *ptr = malloc(size);
     if (!ptr)
-        exception_throw(EXCEPTION_RUNTIME, "Failed to allocate memory");
+        exception_throw(_rt, EXCEPTION_RUNTIME, "Failed to allocate memory");
     return malloc(size);
 }
 
-void vmfree(void *ptr, uint size)
+void vmfree(SVMRuntime *_rt, void *ptr, uint size)
 {
 #ifdef DEBUG_ALLOCATIONS
     dprintf("\033[90mFreeing \033[33m%d\033[90m bytes\033[0m\n", size);
 #endif
-    g_frees++;
+    _rt->m_frees++;
 
-    g_memory_used -= size;
+    _rt->m_used -= size;
     free(ptr);
 }
 
-void *vmrealloc(void *ptr, uint before, uint after)
+void *vmrealloc(SVMRuntime *_rt, void *ptr, uint before, uint after)
 {
 #ifdef DEBUG_ALLOCATIONS
     dprintf("\033[90mReallocating \033[33m%d\033[90m to \033[32m%d\033[90m"
             " bytes\033[0m\n", before, after);
 #endif
-    g_allocations++;
+    _rt->m_allocations++;
 
-    g_memory_used -= before;
-    g_memory_used += after;
-    if (g_memory_used > g_max_used)
-        g_max_used = g_memory_used;
+    _rt->m_used -= before;
+    _rt->m_used += after;
+    if (_rt->m_used > _rt->m_max_used)
+        _rt->m_max_used = _rt->m_used;
 
     void *pointer = realloc(ptr, (unsigned long) after);
     if (!pointer)
-        exception_throw(EXCEPTION_RUNTIME, "Failed to allocate memory");
+        exception_throw(_rt, EXCEPTION_RUNTIME, "Failed to allocate memory");
     return pointer;
 }
 
-uint64_t vmused()
+void vibe_check(SVMRuntime *_rt)
 {
-    return g_memory_used;
-}
-
-void vibe_check()
-{
-    if (g_memory_used == 0) {
-        dprintf("heap memory clean (%ld, %ld, %ld)\n", g_max_used,
-                g_allocations, g_frees);
+    if (_rt->m_used == 0) {
+        dprintf("heap memory clean (%ld, %ld, %ld)\n", _rt->m_max_used,
+                _rt->m_allocations, _rt->m_frees);
         return;
     }
-    dprintf("\033[91m( %ld ) bytes are not free'd yet!\033[0m\n", g_memory_used);
+    dprintf("\033[91m( %ld ) bytes are not free'd yet!\033[0m\n", _rt->m_used);
 }
 

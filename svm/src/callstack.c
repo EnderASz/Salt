@@ -10,58 +10,50 @@
 #include <string.h>
 #include <stdint.h>
 
-
-static struct StackFrame *g_callstack = NULL;
-static uint64_t g_callstack_size = 0;
-
-void callstack_push(uint32_t line, char *__restrict module, 
+void callstack_push(SVMRuntime *_rt, uint32_t line, char *__restrict module, 
                     char *__restrict function)
 {
-    dprintf("Pushing stack frame [%ld](%d, %s, %s)\n", g_callstack_size, 
+    dprintf("Pushing stack frame [%ld](%d, %s, %s)\n", _rt->callstack_size, 
             line, module, function);
 
     if (strlen(module) > 61 || strlen(function) > 61) {
-        exception_throw(EXCEPTION_RUNTIME, "Stack frame name too long");
+        exception_throw(_rt, EXCEPTION_RUNTIME, "Stack frame name too long");
     }
 
-    g_callstack = vmrealloc(
-        g_callstack, 
-        sizeof(struct StackFrame) * g_callstack_size,
-        sizeof(struct StackFrame) * (g_callstack_size + 1)
+    _rt->callstack = vmrealloc(_rt,
+        _rt->callstack, 
+        sizeof(struct StackFrame) * _rt->callstack_size,
+        sizeof(struct StackFrame) * (_rt->callstack_size + 1)
     );
 
-    strcpy(g_callstack[g_callstack_size].module, module);
-    strcpy(g_callstack[g_callstack_size].function, function);
-    g_callstack[g_callstack_size].line = line;
+    strcpy(_rt->callstack[_rt->callstack_size].module, module);
+    strcpy(_rt->callstack[_rt->callstack_size].function, function);
+    _rt->callstack[_rt->callstack_size].line = line;
 
-    g_callstack_size++;
+    _rt->callstack_size++;
 }
 
-uint64_t callstack_size()
+struct StackFrame *callstack_peek(SVMRuntime *_rt) Nullable
 {
-    return g_callstack_size;
-}
-
-Nullable struct StackFrame *callstack_peek()
-{
-    dprintf("Peeking at [%ld]\n", g_callstack_size - 1);
-    if (g_callstack_size == 0)
+    dprintf("Peeking at [%ld]\n", _rt->callstack_size - 1);
+    if (_rt->callstack_size == 0)
         return NULL;
-    return &g_callstack[g_callstack_size - 1];
+    return &_rt->callstack[_rt->callstack_size - 1];
 }
 
-void callstack_pop()
+void callstack_pop(SVMRuntime *_rt)
 {
-    dprintf("Popping [%ld]\n", g_callstack_size - 1);
-    if (g_callstack_size == 1) {
-        vmfree(g_callstack, sizeof(struct StackFrame));
-        g_callstack_size = 0;
+    dprintf("Popping [%ld]\n", _rt->callstack_size - 1);
+    if (_rt->callstack_size == 1) {
+        vmfree(_rt, _rt->callstack, sizeof(struct StackFrame));
+        _rt->callstack_size = 0;
         return;
     }
 
-    struct StackFrame *new_stack = vmalloc(sizeof(struct StackFrame) * (g_callstack_size - 1));
-    memcpy(new_stack, g_callstack, sizeof(struct StackFrame) * (g_callstack_size - 1));
-    vmfree(g_callstack, sizeof(struct StackFrame) * g_callstack_size);
-    g_callstack = new_stack;
-    g_callstack_size--;
+    struct StackFrame *new_stack = vmalloc(_rt, sizeof(struct StackFrame) 
+                                   * (_rt->callstack_size - 1));
+    memcpy(new_stack, _rt->callstack, sizeof(struct StackFrame) * (_rt->callstack_size - 1));
+    vmfree(_rt, _rt->callstack, sizeof(struct StackFrame) * _rt->callstack_size);
+    _rt->callstack = new_stack;
+    _rt->callstack_size--;
 }

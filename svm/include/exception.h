@@ -40,7 +40,7 @@
  * @param exception title of exception (use EXCEPTION_xxx)
  * @param fmt       printf format style const string
  */
-void exception_throw(const char *__restrict exception, 
+void exception_throw(SVMRuntime *_rt, const char *__restrict exception, 
                      const char *__restrict fmt, ...);
 
 #endif // SVM_EXCEPTION_H

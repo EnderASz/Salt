@@ -26,7 +26,6 @@
 #ifndef SVM_MODULE_H
 #define SVM_MODULE_H
 
-#include "object.h"
 #include "core.h"
 
 #define MODULE_OBJECT_SPACE 32
@@ -97,14 +96,14 @@ struct SaltModule {
  * @param   name  name of the object
  * @return  heap-allocated SaltModule.
  */
-struct SaltModule *module_create(char *name);
+struct SaltModule *module_create(SVMRuntime *_rt, char *name);
 
 /**
  * Delete the module from the array.
  *
  * @param name
  */
-void module_delete(char *name);
+void module_delete(SVMRuntime *_rt, char *name);
 
 /**
  * Acquire a new object pointer. This allocates the needed memory.
@@ -112,7 +111,7 @@ void module_delete(char *name);
  * @param   module  the module to acquire the new object in
  * @return  brand new object
  */
-SaltObject *module_object_acquire(struct SaltModule *module);
+SaltObject *module_object_acquire(SVMRuntime *_rt, struct SaltModule *module);
 
 /**
  * Return the pointer to the given object which matches the ID.
@@ -121,7 +120,7 @@ SaltObject *module_object_acquire(struct SaltModule *module);
  * @param   id      ID of the object
  * @return  pointer to object, may return NULL
  */
-Nullable SaltObject *module_object_find(struct SaltModule *module, uint id);
+SaltObject *module_object_find(struct SaltModule *module, uint id) Nullable;
 
 /**
  * Delete the given object from the module (by ID)
@@ -129,11 +128,11 @@ Nullable SaltObject *module_object_find(struct SaltModule *module, uint id);
  * @param   module  the module to delete the object in
  * @param   id      ID of the object that will be unlinked.
  */
-void module_object_delete(struct SaltModule *module, uint id);
+void module_object_delete(SVMRuntime *_rt, struct SaltModule *module, uint id);
 
 /**
  * Remove all modules from memory.
  */
-void module_delete_all();
+void module_delete_all(SVMRuntime *_rt);
 
 #endif // SVM_MODULE_H
