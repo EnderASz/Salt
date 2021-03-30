@@ -33,9 +33,11 @@ const struct SVMCall g_execs[] = {
     {"KILLX", exec_killx, 0},
     {"RPUSH", exec_rpush, 5},
     {"RGPOP", exec_rgpop, 5},
+    {"RDUMP", exec_rdump, 1},
     {"EXITE", exec_exite, 0},
     {"IVADD", exec_ivadd, 8},
     {"IVSUB", exec_ivsub, 8},
+    {"RETRN", exec_retrn, 0},
     {"JMPTO", exec_jmpto, 4},
     {"JMPFL", exec_jmpfl, 8},
     {"JMPNF", exec_jmpnf, 8},
@@ -44,15 +46,15 @@ const struct SVMCall g_execs[] = {
     {"OBJMK", exec_objmk, 7},
     {"OBJDL", exec_objdl, 4},
     {"PRINT", exec_print, 4},
-    {"RETRN", exec_retrn, 0},
     {"MLMAP", exec_mlmap, 0},
     {"CXXEQ", exec_cxxeq, 8},
     {"CXXNE", exec_cxxne, 8},
+    {"RNULL", exec_rnull, 0},
     {"SLEEP", exec_sleep, 4}
 
 };
 
-const uint g_exec_amount = 19;
+const uint g_exec_amount = 21;
 
 // ----------------------------------------------------------------------------
 // Utility & loop functions
@@ -156,6 +158,8 @@ void register_clear(SVMRuntime *_rt)
 {
     for (uint i = 0; i < _rt->register_size; i++) {
         vmfree(_rt->registers[i].value, _rt->registers[i].size);
+        _rt->registers[i].value = NULL;
+        _rt->registers[i].size = 0;
     }
     vmfree(_rt->registers, sizeof(SaltObject) * _rt->register_size);
 }
@@ -373,7 +377,6 @@ uint exec_objdl(SVMRuntime *_rt, struct SaltModule *__restrict module,
 uint exec_print(SVMRuntime *_rt, struct SaltModule *__restrict module, 
                 byte *__restrict payload,  uint pos)
 {
-
     SaltObject *obj = module_object_find(module, * (uint *) payload);
     if (obj == NULL) {
         exception_throw(_rt, EXCEPTION_NULLPTR, "Cannot find object %d", 
@@ -381,6 +384,24 @@ uint exec_print(SVMRuntime *_rt, struct SaltModule *__restrict module,
     }
 
     salt_object_print(_rt, obj);
+    return ++pos;
+}
+
+uint exec_rdump(SVMRuntime *_rt, struct SaltModule *__restrict module, 
+                byte *__restrict payload,  uint pos)
+{
+    uint8_t r = * (uint8_t *) payload;
+    if (r >= _rt->register_size)
+        exception_throw(_rt, EXCEPTION_REGISTER, "Register %d out of bounds", r);
+
+    /* If the value is set to NULL and the type is not null, that means the 
+     object has been removed. */    
+    if (_rt->registers[r].value != NULL 
+     && _rt->registers[r].type != OBJECT_TYPE_NULL)
+        salt_object_print(_rt, &_rt->registers[r]);
+    else
+        exception_throw(_rt, EXCEPTION_REGISTER, "Register %d is empty", r);
+
     return ++pos;
 }
 
@@ -400,6 +421,43 @@ uint exec_retrn(SVMRuntime *_rt, struct SaltModule *__restrict module,
     dprintf("Jumping back to [%d]\n", pos);
     callstack_pop(_rt);
     return pos;
+}
+
+uint exec_rgpop(SVMRuntime *_rt, struct SaltModule *__restrict module, 
+                byte *__restrict payload, uint pos)
+{
+    uint8_t r = * (uint8_t *) payload;
+    uint id = * (uint *) (payload + 1);
+
+    SaltObject *obj = module_object_acquire(_rt, module);
+
+    if (r >= _rt->register_size)
+        exception_throw(_rt, EXCEPTION_REGISTER, "Register %d out of bounds", r);
+
+    dprintf("Pulling from register [%d] to {%d}\n", r, id);
+
+    copy_object(_rt, obj, &_rt->registers[r]);
+    obj->id = id;
+
+    vmfree(_rt->registers[r].value, _rt->registers[r].size);
+    _rt->registers[r].value = NULL;
+    _rt->registers[r].size = 0;
+
+    return ++pos;  
+}
+
+uint exec_rnull(SVMRuntime *_rt, struct SaltModule *__restrict module, 
+                byte *__restrict payload,  uint pos)
+{
+    for (uint8_t i = 0; i < _rt->register_size; i++) {
+        vmfree(_rt->registers[i].value, _rt->registers[i].size);
+        _rt->registers[i].value = NULL;
+        _rt->registers[i].size = 0;
+        
+        /* Set it to a bool type so RDUMP knows this object is unprintable */
+        _rt->registers[i].type = OBJECT_TYPE_BOOL;
+    }
+    return ++pos;
 }
 
 uint exec_rpush(SVMRuntime *_rt, struct SaltModule *__restrict module, 
@@ -424,29 +482,6 @@ uint exec_rpush(SVMRuntime *_rt, struct SaltModule *__restrict module,
     module_object_delete(_rt, module, obj->id);
 
     return ++pos;
-}
-
-uint exec_rgpop(SVMRuntime *_rt, struct SaltModule *__restrict module, 
-                byte *__restrict payload, uint pos)
-{
-    uint8_t r = * (uint8_t *) payload;
-    uint id = * (uint *) (payload + 1);
-
-    SaltObject *obj = module_object_acquire(_rt, module);
-
-    if (r >= _rt->register_size)
-        exception_throw(_rt, EXCEPTION_REGISTER, "Register %d out of bounds");
-
-    dprintf("Pulling from register [%d] to {%d}\n", r, id);
-
-    copy_object(_rt, obj, &_rt->registers[r]);
-    obj->id = id;
-
-    vmfree(_rt->registers[r].value, _rt->registers[r].size);
-    _rt->registers[r].value = NULL;
-    _rt->registers[r].size = 0;
-
-    return ++pos;  
 }
 
 uint exec_sleep(SVMRuntime *_rt, struct SaltModule *__restrict module, 

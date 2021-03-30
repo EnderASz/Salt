@@ -150,10 +150,9 @@ int main(int argc, char **argv)
     exec(&runtime, main);
 
     if (runtime.arg_mem_used)
-        printf("Memory used: %ld\n", runtime.m_used);
+        printf("Memory used: %ld\n", runtime.m_max_used);
 
     core_exit(&runtime);
-
 end:
     return 0;
 }

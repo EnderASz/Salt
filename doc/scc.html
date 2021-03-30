@@ -662,6 +662,29 @@
         </table>
     </div>
 
+    <div id="s_rdump">
+        <h2 class="svmcall">RDUMP register</h2>
+        <p>
+            Print the object at the given register. This can be done in 3 instructions, 
+            <a href="s_rgpop">RGPOP</a> to move it into an object, <a href="s_print">PRINT</a>
+            to print it and then move it back to the register using <a href="r_rpush">RPUSH</a>.
+        </p>
+        <table class="struct">
+            <tr>
+                <th>Offset</th>
+                <th>Width</th>
+                <th>Type</th>
+                <th>What</th>
+            </tr>
+            <tr>
+                <td>0</td>
+                <td>1</td>
+                <td>byte</td>
+                <td>Register ID</td>
+            </tr>
+        </table>
+    </div>
+
     <div id="s_retrn">
         <h2 class="svmcall">RETRN</h2>
         <p>
@@ -699,6 +722,14 @@
             </tr>
         </table>
     </div>
+
+    <div id="s_rnull">
+        <h2 class="svmcall">RNULL</h2>
+        <p>
+            Clear all registers.
+        </p>
+    </div>
+
 
     <div id="s_rpush">
         <h2 class="svmcall">RPUSH register id</h2>

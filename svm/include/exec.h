@@ -207,11 +207,31 @@ uint exec_objdl(SVMRuntime *_rt, struct SaltModule *__restrict module,
  */
 uint exec_print(SVMRuntime *_rt, struct SaltModule *__restrict module, 
                 byte *__restrict payload, uint pos);
+/**
+ * Print the object at the given register. This can be done in 3 instructions,
+ * RGPOP to move it into an object, PRINT to print it and then move it back to
+ * the register using RPUSH.
+ */
+uint exec_rdump(SVMRuntime *_rt, struct SaltModule *__restrict module, 
+                byte *__restrict payload, uint pos);
 
 /**
  * Load an external SCC file and add it to the global module register.
  */
 uint exec_retrn(SVMRuntime *_rt, struct SaltModule *__restrict module, 
+                byte *__restrict payload, uint pos);
+/**
+ * Move the value from the register onto the module object list, making it an
+ * object with a set ID. Note that this does not remove any previous objects 
+ * with the same IDs from the list, but adds a brand new object at the beginning.
+ */
+uint exec_rgpop(SVMRuntime *_rt, struct SaltModule *__restrict module, 
+                byte *__restrict payload, uint pos);
+
+/**
+ * Clear all registers.
+ */
+uint exec_rnull(SVMRuntime *_rt, struct SaltModule *__restrict module, 
                 byte *__restrict payload, uint pos);
 
 /**
@@ -221,13 +241,7 @@ uint exec_retrn(SVMRuntime *_rt, struct SaltModule *__restrict module,
  */
 uint exec_rpush(SVMRuntime *_rt, struct SaltModule *__restrict module, 
                 byte *__restrict payload, uint pos);
-/**
- * Move the value from the register onto the module object list, making it an
- * object with a set ID. Note that this does not remove any previous objects 
- * with the same IDs from the list, but adds a brand new object at the beginning.
- */
-uint exec_rgpop(SVMRuntime *_rt, struct SaltModule *__restrict module, 
-                byte *__restrict payload, uint pos);
+
 
 /**
  * Sleep the given amount of miliseconds.
