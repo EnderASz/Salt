@@ -109,15 +109,6 @@ uint exec_callf(SVMRuntime *_rt, struct SaltModule *__restrict module,
                 byte *__restrict payload, uint pos);
 
 /**
- * Call a function only when the comparison flag is set and push the current 
- * position and call onto the stack pointer. Note that this only works for 
- * local functions in the same module, and should be used when possible because
- * it's a lot faster than the alternative, CALLX.
- */
-uint exec_calls(SVMRuntime *_rt, struct SaltModule *__restrict module, 
-                byte *__restrict payload, uint pos);
-
-/**
  * Compare two objects for an equal value, can compare bools, ints, floats and
  * strings. If true, sets the jump flag.
  */

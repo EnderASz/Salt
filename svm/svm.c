@@ -60,7 +60,7 @@
  *
  *
  *
- * @version  Salt Virtual Machine; format 3 version 0.10  
+ * @version  Salt Virtual Machine; format 3 version 0.11  
  */
 #include "include/args.h"
 #include "include/core.h"
@@ -79,10 +79,17 @@
 #include <unistd.h>
 #endif
 
+#ifdef DEBUG
+#define SVM_GREP_STRING_DEBUG_FLAG " [DEBUG]"
+#else
+#define SVM_GREP_STRING_DEBUG_FLAG ""
+#endif
+
 /* This string will show up in the compiled version of SVM which you can then
  grep to, checking the format. */
 const char *svm_grep_string = "SVM: f3 "SVM_VERSION" on "__TIMESTAMP__" ("
-            STRINGIFY(TARGET_ARCH)" bit for "TARGET_SYSTEM")";
+            STRINGIFY(TARGET_ARCH)" bit for "TARGET_SYSTEM")"
+            SVM_GREP_STRING_DEBUG_FLAG;
 
 static void size_check();
 static void interrupt_handler(int _sig);

@@ -15,6 +15,10 @@
 #include <string.h>
 #include <time.h>
 
+#ifdef _WIN32
+#include <windows.h>
+#endif
+
 #ifdef __linux__
 #include <unistd.h>
 #endif
@@ -36,7 +40,6 @@ const struct SVMCall g_execs[] = {
     {"JMPFL", exec_jmpfl, 8},
     {"JMPNF", exec_jmpnf, 8},
     {"CALLF", exec_callf, 4},
-    {"CALLS", exec_callf, 4},
     {"EXTLD", exec_extld, 4},
     {"OBJMK", exec_objmk, 7},
     {"OBJDL", exec_objdl, 4},
@@ -46,9 +49,10 @@ const struct SVMCall g_execs[] = {
     {"CXXEQ", exec_cxxeq, 8},
     {"CXXNE", exec_cxxne, 8},
     {"SLEEP", exec_sleep, 4}
+
 };
 
-const uint g_exec_amount = 20;
+const uint g_exec_amount = 19;
 
 // ----------------------------------------------------------------------------
 // Utility & loop functions
@@ -186,14 +190,6 @@ uint exec_callf(SVMRuntime *_rt, struct SaltModule *__restrict module,
     uint line = find_label(_rt, module, (char *) (payload + 4));
     callstack_push(_rt, pos, module->name, (char *) (payload + 4));
     return line;
-}
-
-uint exec_calls(SVMRuntime *_rt, struct SaltModule *__restrict module, 
-                byte *__restrict payload,  uint pos)
-{
-    if (_rt->compare_flag)
-        return exec_callf(_rt, module, payload, pos);
-    return ++pos;
 }
 
 uint exec_cxxeq(SVMRuntime *_rt, struct SaltModule *__restrict module, 

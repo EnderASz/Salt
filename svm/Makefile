@@ -20,7 +20,9 @@ debug : FDEBUG := -D DEBUG=1
 debug : CLANG_FLAGS := -fsanitize=address -fno-omit-frame-pointer \
 		-fno-optimize-sibling-calls -O1
 win32 : CC := i686-w64-mingw32-gcc
+win32 : RESULT := svm32
 win64 : CC := x86_64-w64-mingw32-gcc
+win64 : RESULT := svm64
 
 # Execute all the steps
 all: directories $(SOURCES) link
