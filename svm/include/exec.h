@@ -88,7 +88,7 @@ void register_control(SVMRuntime *_rt, uint8_t size);
 /**
  * Clear all registers.
  */
-void register_clear();
+void register_clear(SVMRuntime *_rt);
 
 /**
  * This comment is for all function below.
@@ -133,7 +133,7 @@ uint exec_cxxne(SVMRuntime *_rt, struct SaltModule *__restrict module,
 
 /**
  * Exit the current executed module. This is the safe version of KILLX, because
- * it jumps to the $__END__ label and leaves exec to pop everything from the
+ * it jumps to the last instruction and leaves exec to pop everything from the
  * stack and finish execution. This is different to said kill instruction,
  * which immediately collapses the module tapes and exits the program.
  */

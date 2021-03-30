@@ -9,7 +9,7 @@
 
 SaltObject *salt_object_create(SVMRuntime *_rt)
 {
-    SaltObject *ptr = vmalloc(_rt, sizeof(SaltObject));
+    SaltObject *ptr = vmalloc(sizeof(SaltObject));
     
     ptr->ctor = salt_object_ctor;
     ptr->dtor = salt_object_dtor;
@@ -31,7 +31,7 @@ void salt_object_copy(SVMRuntime *_rt, SaltObject *dest, SaltObject *src)
 
     dest->size = src->size;
     if (dest->size != 0) {
-        dest->value = vmalloc(_rt, dest->size);
+        dest->value = vmalloc(dest->size);
         memcpy(dest->value, src->value, dest->size);
     }
     else {
@@ -83,20 +83,20 @@ static void render_value(SVMRuntime *_rt, SaltObject *obj, byte *payload)
     switch (obj->type) {
 
         case OBJECT_TYPE_INT:
-            obj->value = vmalloc(_rt, sizeof(int));
+            obj->value = vmalloc(sizeof(int));
             obj->size = sizeof(int);
             memcpy(obj->value, payload, 4);
             return;
 
         case OBJECT_TYPE_FLOAT:
-            obj->value = vmalloc(_rt, sizeof(float));
+            obj->value = vmalloc(sizeof(float));
             obj->size = sizeof(float);
             memcpy(obj->value, payload, 4);
             return;
 
         case OBJECT_TYPE_STRING:
             obj->size = * (uint *) payload;
-            obj->value = vmalloc(_rt, sizeof(char) * obj->size);
+            obj->value = vmalloc(sizeof(char) * obj->size);
             memcpy(obj->value, (payload + sizeof(uint)), obj->size);
 
             for (uint i = 0; i < obj->size; i++) {
@@ -109,7 +109,7 @@ static void render_value(SVMRuntime *_rt, SaltObject *obj, byte *payload)
             return;
 
         case OBJECT_TYPE_BOOL:
-            obj->value = vmalloc(_rt, 1);
+            obj->value = vmalloc(1);
             obj->size = 1;
             memcpy(obj->value, payload, 1);
             return;
@@ -143,6 +143,6 @@ void salt_object_ctor(void *_rt, SaltObject *self)
 
 void salt_object_dtor(void *_rt, SaltObject *self)
 {
-    vmfree((SVMRuntime *) _rt, self->value, self->size);
+    vmfree(self->value, self->size);
 }
 

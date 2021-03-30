@@ -79,7 +79,7 @@ class Assembler:
 
         header = SCC_MAGIC
         header += struct.pack('ixxxx', SCC_VERSION)
-        header += struct.pack('ixxxx', len(self.__instructions) + 2)
+        header += struct.pack('ixxxx', len(self.__instructions))
         header += struct.pack('ixxxx', self.__registers)
         header += b'\x00' * 24
         header += self.__signature
@@ -87,11 +87,9 @@ class Assembler:
         if len(header) != 64:
             fatal('size of header is not 64 bytes')
         
-        header += b'@$__INIT__\n'
         header += b'\n'.join(self.__instructions)
         if len(self.__instructions) != 0:
             header += b'\n'
-        header += b'@$__END__\n'
 
         return header
 

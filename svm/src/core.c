@@ -21,16 +21,17 @@ void core_exit(SVMRuntime *_rt)
     for (uint i = 0; i < _rt->callstack_size; i++)
         callstack_pop(_rt);
 
-    register_clear();
+    register_clear(_rt);
     module_delete_all(_rt);
     vibe_check(_rt);
     exit(0);
 }
 
-void *vmalloc(SVMRuntime *_rt, uint size)
+void *_vmalloc(SVMRuntime *_rt, uint size, const char *func)
 {
 #ifdef DEBUG_ALLOCATIONS
-    dprintf("\033[90mAllocating \033[32m%d\033[90m bytes\033[0m\n", size);
+    dprintf("\033[90mAllocating \033[32m%d\033[90m bytes in %s\033[0m\n", 
+            size, func);
 #endif
     _rt->m_allocations++;
 
@@ -44,10 +45,11 @@ void *vmalloc(SVMRuntime *_rt, uint size)
     return malloc(size);
 }
 
-void vmfree(SVMRuntime *_rt, void *ptr, uint size)
+void _vmfree(SVMRuntime *_rt, void *ptr, uint size, const char *func)
 {
 #ifdef DEBUG_ALLOCATIONS
-    dprintf("\033[90mFreeing \033[33m%d\033[90m bytes\033[0m\n", size);
+    dprintf("\033[90mFreeing \033[33m%d\033[90m bytes in %s\033[0m\n", 
+            size, func);
 #endif
     _rt->m_frees++;
 
@@ -55,11 +57,12 @@ void vmfree(SVMRuntime *_rt, void *ptr, uint size)
     free(ptr);
 }
 
-void *vmrealloc(SVMRuntime *_rt, void *ptr, uint before, uint after)
+void *_vmrealloc(SVMRuntime *_rt, void *ptr, uint before, uint after, 
+                 const char *func)
 {
 #ifdef DEBUG_ALLOCATIONS
     dprintf("\033[90mReallocating \033[33m%d\033[90m to \033[32m%d\033[90m"
-            " bytes\033[0m\n", before, after);
+            " bytes in %s\033[0m\n", before, after, func);
 #endif
     _rt->m_allocations++;
 

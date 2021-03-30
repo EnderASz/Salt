@@ -20,7 +20,7 @@ void callstack_push(SVMRuntime *_rt, uint32_t line, char *__restrict module,
         exception_throw(_rt, EXCEPTION_RUNTIME, "Stack frame name too long");
     }
 
-    _rt->callstack = vmrealloc(_rt,
+    _rt->callstack = vmrealloc(
         _rt->callstack, 
         sizeof(struct StackFrame) * _rt->callstack_size,
         sizeof(struct StackFrame) * (_rt->callstack_size + 1)
@@ -45,15 +45,15 @@ void callstack_pop(SVMRuntime *_rt)
 {
     dprintf("Popping [%ld]\n", _rt->callstack_size - 1);
     if (_rt->callstack_size == 1) {
-        vmfree(_rt, _rt->callstack, sizeof(struct StackFrame));
+        vmfree(_rt->callstack, sizeof(struct StackFrame));
         _rt->callstack_size = 0;
         return;
     }
 
-    struct StackFrame *new_stack = vmalloc(_rt, sizeof(struct StackFrame) 
+    struct StackFrame *new_stack = vmalloc(sizeof(struct StackFrame) 
                                    * (_rt->callstack_size - 1));
     memcpy(new_stack, _rt->callstack, sizeof(struct StackFrame) * (_rt->callstack_size - 1));
-    vmfree(_rt, _rt->callstack, sizeof(struct StackFrame) * _rt->callstack_size);
+    vmfree(_rt->callstack, sizeof(struct StackFrame) * _rt->callstack_size);
     _rt->callstack = new_stack;
     _rt->callstack_size--;
 }

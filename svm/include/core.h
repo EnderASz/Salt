@@ -247,7 +247,7 @@ void core_exit(SVMRuntime *_rt);
  *
  * @param   size  amount of bytes to allocate
  */
-void *vmalloc(SVMRuntime *_rt, uint size);
+void *_vmalloc(SVMRuntime *_rt, uint size, const char *func);
 
 /**
  * Free n bytes from the heap at the given pointer. Removes [size] bytes from
@@ -256,7 +256,7 @@ void *vmalloc(SVMRuntime *_rt, uint size);
  * @param   ptr  pointer to memory
  * @param   size amount of bytes to deallocate
  */
-void vmfree(SVMRuntime *_rt, void *ptr, uint size);
+void _vmfree(SVMRuntime *_rt, void *ptr, uint size, const char *func);
 
 /**
  * Reallocate the given piece of memory to another location.
@@ -266,7 +266,14 @@ void vmfree(SVMRuntime *_rt, void *ptr, uint size);
  * @param   after   amount of memory used after
  * @return  pointer to memory
  */
-void *vmrealloc(SVMRuntime *_rt, void *ptr, uint before, uint after);
+void *_vmrealloc(SVMRuntime *_rt, void *ptr, uint before, uint after, 
+                 const char *func);
+
+/* These macros wrap around the allocation functions passing the runtime and 
+ function name automatically. */
+#define vmalloc(N) _vmalloc(_rt, N, __func__)
+#define vmfree(PTR, N) _vmfree(_rt, PTR, N, __func__)
+#define vmrealloc(PTR, N, M) _vmrealloc(_rt, PTR, N, M, __func__)
 
 /**
  * Check the current status of the memory.

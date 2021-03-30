@@ -253,21 +253,6 @@
         to add the line to the module label map.
     </p>
 
-    <div id="s_$__init__">
-        <h2 class="label">@$__INIT__</h2>
-        <p>
-            Starting point of the program. This is called a label, which the Virtual
-            Machine can jump to.
-        </p>
-    </div>
-    
-    <div id="s_$__end__">
-        <h2 class="label">@$__END__</h2>
-        <p>
-            End label. When the SVM hits this line, it calls <code>core_clean()</code> and exits the program.
-        </p>
-    </div>
-
     <div id="s_else">
         <h2 class="label">@#</h2>
         <p>
@@ -323,11 +308,69 @@
         </table>
     </div>
 
+    <div id="s_calls">
+        <h2 class="svmcall">CALLS strl ...</h2>
+        <p>
+            Call a function <b>only when the comparison flag is set</b> and push the current position
+            and call onto the stack pointer. Note that this only works for local functions in the same
+            module, and should be used when possible because it's a lot faster than the alternative,
+            <code><a href="s_callx">CALLX</a></code>.
+        </p>
+        <table class="struct">
+            <tr>
+                <th>Offset</th>
+                <th>Width</th>
+                <th>Type</th>
+                <th>What</th>
+            </tr>
+            <tr>
+                <td>0</td>
+                <td>4</td>
+                <td>uint</td>
+                <td>string length</td>
+            </tr>
+            <tr>
+                <td>4</td>
+                <td>...</td>
+                <td>string</td>
+                <td>null terminated string</td>
+            </tr>
+        </table>
+    </div>
+
     <div id="s_cxxeq">
         <h2 class="svmcall">CXXEQ left right</h2>
         <p>
             Compare two objects for an equal value, can compare bools, ints, floats 
             and strings. If true, sets the jump flag.
+        </p>
+        <table class="struct">
+            <tr>
+                <th>Offset</th>
+                <th>Width</th>
+                <th>Type</th>
+                <th>What</th>
+            </tr>
+            <tr>
+                <td>0</td>
+                <td>4</td>
+                <td>uint</td>
+                <td>ID of the left object</td>
+            </tr>
+            <tr>
+                <td>4</td>
+                <td>4</td>
+                <td>uint</td>
+                <td>ID of the right object</td>
+            </tr>
+        </table>
+    </div>
+
+    <div id="s_cxxne">
+        <h2 class="svmcall">CXXNE left right</h2>
+        <p>
+            Compare two object for an equal value, an compare bools, ints, floats 
+            and strings. If <b>false</b> sets the jump flag.
         </p>
         <table class="struct">
             <tr>

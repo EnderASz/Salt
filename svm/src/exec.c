@@ -100,11 +100,11 @@ int exec(SVMRuntime *_rt, struct SaltModule *main)
     uint i = preload(_rt, main);
 
     // "Call" the main instruction
-    callstack_push(_rt, find_label(_rt, main, "$__END__"), main->name, "main");
+    callstack_push(_rt, main->instruction_amount - 1, main->name, "main");
 
     for (; i < main->instruction_amount;) {
 
-        if (*main->instructions[i].content == '@') {
+        if (main->instructions[i].content[0] == '@') {
             i++;
             continue;
         }
@@ -114,6 +114,8 @@ int exec(SVMRuntime *_rt, struct SaltModule *main)
         const struct SVMCall *exec = exec_get(main->instructions[i].content);
         i = exec->f_exec(_rt, main, (byte *) main->instructions[i].content + 5, i);
     }
+
+    dprintf("Finished exec\n");
     return 0;
 }
 
@@ -128,8 +130,9 @@ const struct SVMCall *exec_get(char *title)
 
 void register_control(SVMRuntime *_rt, uint8_t size)
 {
+    dprintf("Changing %d to %d\n", _rt->register_size, size);
     if (_rt->register_size < size) {
-        _rt->registers = vmrealloc(_rt,
+        _rt->registers = vmrealloc(
             _rt->registers, 
             sizeof(SaltObject) * _rt->register_size, 
             sizeof(SaltObject) * size
@@ -147,9 +150,9 @@ void register_control(SVMRuntime *_rt, uint8_t size)
 void register_clear(SVMRuntime *_rt)
 {
     for (uint i = 0; i < _rt->register_size; i++) {
-        vmfree(_rt, _rt->registers[i].value, _rt->registers[i].size);
+        vmfree(_rt->registers[i].value, _rt->registers[i].size);
     }
-    vmfree(_rt, _rt->registers, sizeof(SaltObject) * _rt->register_size);
+    vmfree(_rt->registers, sizeof(SaltObject) * _rt->register_size);
 }
 
 static void copy_object(SVMRuntime *_rt, SaltObject *dest, SaltObject *src)
@@ -164,12 +167,12 @@ static void copy_object(SVMRuntime *_rt, SaltObject *dest, SaltObject *src)
     dest->print = src->print;
 
     // Free previous memory in dest
-    vmfree(_rt, dest->value, dest->size);
+    vmfree(dest->value, dest->size);
     dest->value = NULL;
     dest->size = 0;
 
     dest->size = src->size;
-    dest->value = vmalloc(_rt, dest->size);
+    dest->value = vmalloc(dest->size);
     memcpy(dest->value, src->value, dest->size);
 }
 
@@ -262,7 +265,7 @@ uint exec_cxxne(SVMRuntime *_rt, struct SaltModule *__restrict module,
 uint exec_exite(SVMRuntime *_rt, struct SaltModule *__restrict module, 
                 byte *__restrict payload,  uint pos)
 {
-    return find_label(_rt, module, "$__END__");
+    return module->instruction_amount - 1;
 }
 
 uint exec_extld(SVMRuntime *_rt, struct SaltModule *__restrict module, 
@@ -385,7 +388,7 @@ uint exec_retrn(SVMRuntime *_rt, struct SaltModule *__restrict module,
 {
     struct StackFrame *frame = callstack_peek();
     if (frame == NULL) {
-        pos = find_label(_rt, module, "$__END__");
+        pos = module->instruction_amount - 1;
     }
     else {
         pos = frame->line + 1;
@@ -438,7 +441,7 @@ uint exec_rgpop(SVMRuntime *_rt, struct SaltModule *__restrict module,
     copy_object(_rt, obj, &_rt->registers[r]);
     obj->id = id;
 
-    vmfree(_rt, _rt->registers[r].value, _rt->registers[r].size);
+    vmfree(_rt->registers[r].value, _rt->registers[r].size);
     _rt->registers[r].value = NULL;
     _rt->registers[r].size = 0;
 
