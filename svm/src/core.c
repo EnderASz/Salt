@@ -17,8 +17,15 @@
 
 void core_exit(SVMRuntime *_rt)
 {
+    dprintf("Calling cleanup\n");
+    
     // Clear callstack
-    for (uint i = 0; i < _rt->callstack_size; i++)
+    for (uint64_t i = 0; i < _rt->callstack_size; i++)
+        callstack_pop(_rt);
+
+    /* For some reason this *reallY* likes to break, so just check if the
+     whole callstack has been cleared. */
+    if (_rt->callstack_size == 1)
         callstack_pop(_rt);
 
     register_clear(_rt);
@@ -40,8 +47,13 @@ void *_vmalloc(SVMRuntime *_rt, uint size, const char *func)
         _rt->m_max_used = _rt->m_max_used;
 
     void *ptr = malloc(size);
-    if (!ptr)
-        exception_throw(_rt, EXCEPTION_RUNTIME, "Failed to allocate memory");
+    if (!ptr) {
+        /* Unforunately I can't call the cleanup functions from here because
+         this has to be SVM runtime independent, i'm putting my memory in the
+         hands of the OS. */
+        printf("Failed to allocate memory\n");
+        exit(1);
+    }    
     return malloc(size);
 }
 
@@ -72,8 +84,10 @@ void *_vmrealloc(SVMRuntime *_rt, void *ptr, uint before, uint after,
         _rt->m_max_used = _rt->m_used;
 
     void *pointer = realloc(ptr, (unsigned long) after);
-    if (!pointer)
-        exception_throw(_rt, EXCEPTION_RUNTIME, "Failed to allocate memory");
+    if (!pointer) {
+        printf("Failed to reallocate memory\n");
+        exit(1);
+    }
     return pointer;
 }
 

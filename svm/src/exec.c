@@ -72,6 +72,7 @@ static uint find_label(SVMRuntime *_rt, struct SaltModule *module, char *label)
 inline static SaltObject *fetch_from_tape(SVMRuntime *_rt, struct SaltModule 
                           *module, uint id)
 {
+    dprintf("Looking up object {%d} in '%s'\n", id, module->name);
     SaltObject *obj = module_object_find(module, id);
     if (!obj) {
         exception_throw(_rt, EXCEPTION_NULLPTR, "Object %d not found", id);
@@ -83,7 +84,7 @@ static uint preload(SVMRuntime *_rt, struct SaltModule *main)
 {
     uint i = 0;
     for (uint j = 0; j < main->label_amount; j++) {
-        if (strncmp(main->instructions[main->labels[j]].content, "@main", 5) == 0) {
+        if (strncmp(main->instructions[main->labels[j]].content, "@main", 6) == 0) {
             dprintf("Found main function at [%d]\n", main->labels[j]);
             i = main->labels[j];
         }
@@ -198,6 +199,8 @@ uint exec_cxxeq(SVMRuntime *_rt, struct SaltModule *__restrict module,
     SaltObject *o1 = module_object_find(module, * (uint *) payload);
     SaltObject *o2 = module_object_find(module, * (uint *) (payload + 4));
 
+    dprintf("Comparing {%d} and {%d}\n", o1->id, o2->id);
+
     if (o1 == NULL || o2 == NULL)
         exception_throw(_rt, EXCEPTION_NULLPTR, "Cannot find object");
 
@@ -306,6 +309,7 @@ uint exec_ivsub(SVMRuntime *_rt, struct SaltModule *__restrict module,
 uint exec_jmpfl(SVMRuntime *_rt, struct SaltModule *__restrict module, 
                 byte *__restrict payload,  uint pos)
 {
+    dprintf("Compare flag on %02hx\n", _rt->compare_flag); 
     if (_rt->compare_flag)
         return find_label(_rt, module, (char *) (payload + 4));
 
@@ -315,6 +319,7 @@ uint exec_jmpfl(SVMRuntime *_rt, struct SaltModule *__restrict module,
 uint exec_jmpnf(SVMRuntime *_rt, struct SaltModule *__restrict module, 
                 byte *__restrict payload,  uint pos)
 {
+    dprintf("Compare flag on %02hx\n", _rt->compare_flag); 
     if (!_rt->compare_flag)
         return find_label(_rt, module, (char *) (payload + 4));
 
@@ -382,7 +387,7 @@ uint exec_print(SVMRuntime *_rt, struct SaltModule *__restrict module,
 uint exec_retrn(SVMRuntime *_rt, struct SaltModule *__restrict module, 
                 byte *__restrict payload,  uint pos)
 {
-    struct StackFrame *frame = callstack_peek();
+    struct StackFrame *frame = callstack_peek(_rt);
     if (frame == NULL) {
         pos = module->instruction_amount - 1;
     }

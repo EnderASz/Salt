@@ -43,17 +43,20 @@ struct StackFrame *callstack_peek(SVMRuntime *_rt) Nullable
 
 void callstack_pop(SVMRuntime *_rt)
 {
-    dprintf("Popping [%ld]\n", _rt->callstack_size - 1);
+    dprintf("Popping %ld -> %ld\n", _rt->callstack_size, 
+            _rt->callstack_size - 1);
+
     if (_rt->callstack_size == 1) {
         vmfree(_rt->callstack, sizeof(struct StackFrame));
+        _rt->callstack = NULL;
         _rt->callstack_size = 0;
         return;
     }
 
-    struct StackFrame *new_stack = vmalloc(sizeof(struct StackFrame) 
-                                   * (_rt->callstack_size - 1));
-    memcpy(new_stack, _rt->callstack, sizeof(struct StackFrame) * (_rt->callstack_size - 1));
-    vmfree(_rt->callstack, sizeof(struct StackFrame) * _rt->callstack_size);
-    _rt->callstack = new_stack;
+    _rt->callstack = vmrealloc(
+        _rt->callstack, 
+        sizeof(struct StackFrame) * _rt->callstack_size,
+        sizeof(struct StackFrame) * (_rt->callstack_size - 1)
+    );
     _rt->callstack_size--;
 }

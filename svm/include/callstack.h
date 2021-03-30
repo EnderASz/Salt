@@ -64,7 +64,7 @@ void callstack_push(SVMRuntime *_rt, uint32_t line, char *__restrict module,
  *
  * @return  last element of the callstack or NULL if callstack is empty
  */
-struct StackFrame *callstack_peek() Nullable;
+struct StackFrame *callstack_peek(SVMRuntime *_rt) Nullable;
 
 /**
  * Remove the last element of the callstack from the frame.
