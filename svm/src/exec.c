@@ -256,9 +256,9 @@ uint exec_cxxeq(SVMRuntime *_rt, struct SaltModule *__restrict module,
 uint exec_cxxne(SVMRuntime *_rt, struct SaltModule *__restrict module, 
                 byte *__restrict payload,  uint pos)
 {
-    exec_cxxeq(_rt,module, payload, pos);
+    exec_cxxeq(_rt, module, payload, pos);
     _rt->compare_flag = !_rt->compare_flag;
-    return pos;
+    return ++pos;
 }
 
 uint exec_exite(SVMRuntime *_rt, struct SaltModule *__restrict module, 
