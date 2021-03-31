@@ -1,0 +1,5 @@
+2
+2.500000
+false
+something
+null
