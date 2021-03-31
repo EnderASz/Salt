@@ -12,7 +12,7 @@ import struct
 import re
 
 __author__  = 'bellrise'
-__version__ = '0.1'
+__version__ = '0.3'
 
 # This SCC magic value is placed right at the beginning of the header,
 # which lets SVM know that this indeed a Salt compiled code file.
@@ -183,6 +183,11 @@ class Assembler:
                 if value < -2147483647 or value > 2147483647:
                     fatal(f'int out of bounds on line {index}')
                 buffer += struct.pack('i', value)
+
+            # Add a float value
+            elif re.match(r'[0-9]+\.[0-9]+', elm):
+                value = float(elm)
+                buffer += struct.pack('f', value)
 
             # Add a single byte
             elif re.match(r'\^[0-9]+', elm):

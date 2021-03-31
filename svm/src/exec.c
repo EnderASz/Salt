@@ -84,7 +84,7 @@ inline static SaltObject *fetch_from_tape(SVMRuntime *_rt, struct SaltModule
 
 static uint preload(SVMRuntime *_rt, struct SaltModule *main)
 {
-    uint i = 0;
+    int i = -1;
     for (uint j = 0; j < main->label_amount; j++) {
         if (strncmp(main->instructions[main->labels[j]].content, "@main", 6) == 0) {
             dprintf("Found main function at [%d]\n", main->labels[j]);
@@ -92,10 +92,10 @@ static uint preload(SVMRuntime *_rt, struct SaltModule *main)
         }
     }
 
-    if (i == 0)
+    if (i == -1)
         exception_throw(_rt, EXCEPTION_RUNTIME, "main function not found");
 
-    return i;
+    return (uint) i;
 }
 
 /* main exec */
