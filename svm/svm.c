@@ -60,54 +60,119 @@
  *
  *
  *
- * @version  Salt Virtual Machine; format 3 version 0.9  
+ * @version  Salt Virtual Machine; format 3 version 0.11  
  */
 #include "include/args.h"
 #include "include/core.h"
 #include "include/module.h"
 #include "include/callstack.h"
-#include "include/object.h"
 #include "include/loader.h"
 #include "include/exec.h"
 
-#include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
+#include <stdio.h>
+
+/* If we're in linux, add support for signalling */
+#ifdef __linux__
+#include <signal.h>
+#include <unistd.h>
+#endif
+
+#ifdef DEBUG
+#define SVM_GREP_STRING_DEBUG_FLAG " [DEBUG]"
+#else
+#define SVM_GREP_STRING_DEBUG_FLAG ""
+#endif
 
 /* This string will show up in the compiled version of SVM which you can then
  grep to, checking the format. */
 const char *svm_grep_string = "SVM: f3 "SVM_VERSION" on "__TIMESTAMP__" ("
-            STRINGIFY(TARGET_ARCH)" bit for "TARGET_SYSTEM")";
+            STRINGIFY(TARGET_ARCH)" bit for "TARGET_SYSTEM")"
+            SVM_GREP_STRING_DEBUG_FLAG;
 
 static void size_check();
+static void interrupt_handler(int _sig);
 
 int main(int argc, char **argv)
 {
     dprintf("Starting %s\n", SVM_VERSION);
-    char *filename = args_parse(argc, argv);
 
+    /* The runtime variables have to be initalized early, and they are put on
+     the stack in order to keep it memory safe (without heap allocation). */
+    SVMRuntime runtime = {
+        
+        .registers = NULL,
+        .register_size = 0,
+
+        .compare_flag = 0,
+
+        .arg_mem_used = 0,
+
+        .m_used = 0,
+        .m_max_used = 0,
+        .m_allocations = 0,
+        .m_frees = 0,
+
+        .module_size = 0,
+        .module_space = 0,
+        .modules = NULL,
+
+        .callstack_size = 0,
+        .callstack = NULL
+
+    };
+
+    /* Debug function. */
     size_check();
+
+    /* Parse the arguments and set some values in the runtime structure. */
+    char *filename = args_parse(&runtime, argc, argv);
+
+#ifdef __linux__
+    /* If we're compiling for linux, include some signal support like catching 
+     SIGINT when hitting Ctrl C. Subscribe to the kernel's signal handler. */
+    signal(SIGINT, interrupt_handler);
+#endif
 
     if (filename == NULL) {
         printf("Please provide a filename. See \"--help\" for more\n");
         goto end;
     }
 
-    struct SaltModule *main = load(filename);
+    /* End of the preparation stage, load the main file and start executing it. 
+     The runtime variables have to be loaded before this, in order to pass it
+     to the program. */
+
+    struct SaltModule *main = load(&runtime, filename);
     strcpy(main->name, "__main__");
 
-    exec(main);
+    exec(&runtime, main);
 
-    core_exit();
+    if (runtime.arg_mem_used)
+        printf("Memory used: %ld\n", runtime.m_max_used);
 
+    core_exit(&runtime);
 end:
     return 0;
 }
 
 static void size_check()
 {
+    dprintf("sizeof(SVMRuntime) = %ld\n", sizeof(SVMRuntime));
     dprintf("sizeof(SaltObject) = %ld\n", sizeof(SaltObject));
     dprintf("sizeof(SaltModule) = %ld\n", sizeof(struct SaltModule));
-    dprintf("sizeof(SaltInstruction) = %ld\n", sizeof(struct SaltInstruction));
     dprintf("sizeof(SaltObjectNode) = %ld\n", sizeof(struct SaltObjectNode));
     dprintf("sizeof(StackFrame) = %ld\n", sizeof(struct StackFrame));
+    dprintf("sizeof(String) = %ld\n", sizeof(String));
+}
+
+static void interrupt_handler(int _sig)
+{
+#ifdef __linux__
+    if (_sig != SIGINT)
+        return;
+    printf("Recieved interrupt\n");
+    exit(1);
+#endif
 }

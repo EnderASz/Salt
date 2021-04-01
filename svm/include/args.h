@@ -35,6 +35,6 @@
  * @param   argv  string array of arguments
  * @return  returns the filename or NULL if filename not found
  */
-Nullable char *args_parse(int argc, char **argv);
+char *args_parse(SVMRuntime *_rt, int argc, char **argv) Nullable;
 
 #endif // SVM_ARGS_H

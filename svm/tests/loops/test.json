@@ -1,0 +1,9 @@
+{
+    "@version": 1,
+
+    "title": "Loops",
+    "about": "Creating loops, jumping to labels",
+    "source": "loop.scc",
+    "result": "result.txt"
+}
+
