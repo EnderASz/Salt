@@ -14,7 +14,7 @@ if($AllWarnings) {
     $wall_flag = ""
 }
 if($SDebug) {
-    $debug_flag = "-D DEBUG"
+    $debug_flag = "-D SALT_DEBUG"
 } else {
     $debug_flag = ""
 }

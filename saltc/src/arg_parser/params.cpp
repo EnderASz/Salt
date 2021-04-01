@@ -7,6 +7,7 @@
 
 #include "../../include/arg_parser/prints.h"
 #include "../../include/utils.h"
+#include "../../include/logging.h"
 #include <queue>
 #include <cstring>
 #include <string>
@@ -21,27 +22,48 @@ namespace salt::arg_parser
  * initiate member variables of Params class object.
  */
 void Params::initObject(std::queue<string> args) {
-    this->executable_path = pop<string>(args);
+    dprint("Setting up compiler executable path");
+    executable_path = pop<string>(args);
+    dprint(
+        "Compiler executable path setted up at: %s",
+        executable_path.c_str());
     while(!args.empty()) {
         string arg = pop<string>(args);
-        if (Params::arg_comp(arg, "--help", "-h"))
+        dprint("Parsing parameter: %s", arg.c_str());
+        if (Params::arg_comp(arg, "--help", "-h")) {
+            dprint("Displaying help page");
             prints::help();
-        else if (Params::arg_comp(arg, "--no-builtins", ""))
-            this->builtins = false;
-        else if (Params::arg_comp(arg, "--output", "-o"))
-            this->output_path = pop<string>(args);
+            dprint("Help page displayed");
+        }
+        else if (Params::arg_comp(arg, "--no-builtins", "")) {
+            dprint("Switching include builtins off");
+            builtins = false;
+            dprint("Include builtins switched off");
+        }
+        else if (Params::arg_comp(arg, "--output", "-o")) {
+            dprint("Setting up output file path");
+            output_path = pop<string>(args);
+            dprint(
+                "Output file path setted up at: %s",
+                output_path.c_str());
+        }
         else if (arg[0] == '-')
             prints::unrecognized_option_error(arg);
         else { // Nameless arguments
-            if (this->input_path.empty())
-                this->input_path = arg;
+            if (input_path.empty()) {
+                dprint("Setting up input file path");
+                input_path = arg;
+                dprint(
+                    "Output file path setted up at: %s",
+                    input_path.c_str());
+            }
             else {
                 prints::too_many_nameless_error();
             }
         }
     }
 
-    if (this->input_path.empty()) {
+    if (input_path.empty()) {
         prints::specify_filename_error();
     }
 }
