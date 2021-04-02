@@ -54,7 +54,7 @@ void salt_object_print(SVMRuntime *_rt, SaltObject *obj)
     switch (obj->type) {
 
         case OBJECT_TYPE_INT:
-            printf("%d", * (int *) obj->value);
+            printf("%d", * (i32 *) obj->value);
             break;
 
         case OBJECT_TYPE_FLOAT:
@@ -83,8 +83,8 @@ static void render_value(SVMRuntime *_rt, SaltObject *obj, u8 *payload)
     switch (obj->type) {
 
         case OBJECT_TYPE_INT:
-            obj->value = vmalloc(sizeof(int));
-            obj->size = sizeof(int);
+            obj->value = vmalloc(sizeof(i32));
+            obj->size = sizeof(i32);
             memcpy(obj->value, payload, 4);
             return;
 

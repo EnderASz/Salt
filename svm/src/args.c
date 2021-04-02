@@ -34,10 +34,10 @@ static void version_page(SVMRuntime *_rt)
     core_exit(_rt);
 }
 
-char *args_parse(SVMRuntime *_rt, int argc, char **argv) Nullable
+char *args_parse(SVMRuntime *_rt, i32 argc, char **argv) Nullable
 {
     char *filename = NULL;
-    for (int i = 1; i < argc; i++) {
+    for (i32 i = 1; i < argc; i++) {
         dprintf("Checking [%d] \"%s\"\n", i, argv[i]);
 
         if (arg(argv[i], "--help", "-h"))

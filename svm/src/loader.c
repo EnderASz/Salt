@@ -31,7 +31,7 @@ struct LoaderHeaderData {
 };
 
 
-static int validate_header(char *header)
+static i32 validate_header(char *header)
 {
     if (strncmp(header, SCC_HEADER, 8) != 0)
         return 0;
@@ -64,7 +64,7 @@ static void read_instruction(SVMRuntime *_rt, String *ins, FILE *fp)
 {
     // Check for label
     char label_char = fgetc(fp);
-    int width = 0;
+    i32 width = 0;
 
     // If it's a label, do a normal read
     if (label_char == '@') {
@@ -84,7 +84,7 @@ static void read_instruction(SVMRuntime *_rt, String *ins, FILE *fp)
         char buf[6] = {0};
         fread(buf, 1, 5, fp);
 
-        int i = 0;
+        i32 i = 0;
         for (; (u32) i < g_exec_amount; i++) {
             if (strncmp(buf, g_execs[i].instruction, 5) == 0)
                 break;
@@ -97,7 +97,7 @@ static void read_instruction(SVMRuntime *_rt, String *ins, FILE *fp)
         width += 5;
 
         // Read [pad] bytes before checking for the newline
-        for (int j = 0; j < g_execs[i].pad; j++) {
+        for (i32 j = 0; j < g_execs[i].pad; j++) {
             fgetc(fp);
             width++;
         }
@@ -118,14 +118,14 @@ static void read_instruction(SVMRuntime *_rt, String *ins, FILE *fp)
 }
 
 static void load_instructions(SVMRuntime *_rt, struct SaltModule *module, 
-            FILE *fp, int instructions)
+            FILE *fp, i32 instructions)
 {
     dprintf("Loading instructions for '%s'\n", module->name);
 
     module->instructions = vmalloc(sizeof(String) * instructions);
     module->instruction_amount = instructions;
 
-    for (int i = 0; i < instructions; i++) {
+    for (i32 i = 0; i < instructions; i++) {
         read_instruction(_rt, &module->instructions[i], fp);
     }
 }
@@ -138,7 +138,7 @@ static void load_labels(SVMRuntime *_rt, struct SaltModule *module)
     }
 
     module->labels = vmalloc(sizeof(u32) * module->label_amount);
-    int curlabel = 0;
+    i32 curlabel = 0;
     for (u32 i = 0; i < module->instruction_amount; i++) {
         if (module->instructions[i].content[0] == '@') {
             module->labels[curlabel] = i;
@@ -153,7 +153,7 @@ struct SaltModule *load(SVMRuntime *_rt, char *name)
     dprintf("Trying to load %s\n", name);
 
     // File
-    int size = sizeof(char) * (strlen(name) + 5);
+    i32 size = sizeof(char) * (strlen(name) + 5);
     
     char *filename = vmalloc(size);
     memset(filename, 0, size);

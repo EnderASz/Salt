@@ -92,9 +92,9 @@ const char *svm_grep_string = "SVM: f3 "SVM_VERSION" on "__TIMESTAMP__" ("
             SVM_GREP_STRING_DEBUG_FLAG;
 
 static void size_check();
-static void interrupt_handler(int _sig);
+static void interrupt_handler(i32 _sig);
 
-int main(int argc, char **argv)
+i32 main(i32 argc, char **argv)
 {
     dprintf("Starting %s\n", SVM_VERSION);
 
@@ -131,7 +131,7 @@ int main(int argc, char **argv)
 
 #ifdef __linux__
     /* If we're compiling for linux, include some signal support like catching 
-     SIGINT when hitting Ctrl C. Subscribe to the kernel's signal handler. */
+     SIGi32 when hitting Ctrl C. Subscribe to the kernel's signal handler. */
     signal(SIGINT, interrupt_handler);
 #endif
 
@@ -167,7 +167,7 @@ static void size_check()
     dprintf("sizeof(String) = %ld\n", sizeof(String));
 }
 
-static void interrupt_handler(int _sig)
+static void interrupt_handler(i32 _sig)
 {
 #ifdef __linux__
     if (_sig != SIGINT)

@@ -45,7 +45,7 @@ struct SVMCall {
     u32 ( * f_exec )
     (SVMRuntime *_rt, struct SaltModule *module, u8 *payload, u32 pos);
 
-    int pad;
+    i32 pad;
 };
 
 /* Exec functions */
@@ -65,7 +65,7 @@ extern const u32 g_exec_amount;
  * @param   main  main module, the first loaded module should be named __main__
  * @return  status of exec_ instructions.
  */
-int exec(SVMRuntime *_rt, struct SaltModule* main);
+i32 exec(SVMRuntime *_rt, struct SaltModule* main);
 
 /**
  * Return the pointer to the svm call. This will return

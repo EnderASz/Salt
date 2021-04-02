@@ -83,7 +83,7 @@ inline static SaltObject *fetch_from_tape(SVMRuntime *_rt, struct SaltModule
 
 static u32 preload(SVMRuntime *_rt, struct SaltModule *main)
 {
-    int i = -1;
+    i32 i = -1;
     for (u32 j = 0; j < main->label_amount; j++) {
         if (strncmp(main->instructions[main->labels[j]].content, "@main", 6) == 0) {
             dprintf("Found main function at [%d]\n", main->labels[j]);
@@ -99,7 +99,7 @@ static u32 preload(SVMRuntime *_rt, struct SaltModule *main)
 
 /* main exec */
 
-int exec(SVMRuntime *_rt, struct SaltModule *main)
+i32 exec(SVMRuntime *_rt, struct SaltModule *main)
 {
     dprintf("Executing '%s'\n", main->name);
 
@@ -144,7 +144,7 @@ const struct SVMCall *lookup_exec(char *title)
             continue;
         }
 
-        if (g_execs[i].instruction[4] == title[4])
+        if (title[4] == g_execs[i].instruction[4])
            return &g_execs[i]; 
 
     }
@@ -234,7 +234,7 @@ u32 exec_cxxeq(SVMRuntime *_rt, struct SaltModule *__restrict module,
                 _rt->compare_flag = 1;
             break;
 
-        /* the float & int case may look pretty slow, but the alternative is 
+        /* the float & i32 case may look pretty slow, but the alternative is 
          comparing 4 u8, while the CPU can compare ints & floats in one 
          clock cycle. */
         case OBJECT_TYPE_FLOAT:
@@ -245,7 +245,7 @@ u32 exec_cxxeq(SVMRuntime *_rt, struct SaltModule *__restrict module,
         }
         case OBJECT_TYPE_INT:
         {
-            if (* (int *) o1->value == * (int *) o2->value)
+            if (* (i32 *) o1->value == * (i32 *) o2->value)
                 _rt->compare_flag = 1;
             break;
         }
@@ -299,13 +299,13 @@ u32 exec_ivadd(SVMRuntime *_rt, struct SaltModule *__restrict module,
 {
     SaltObject *obj = fetch_from_tape(_rt, module, * (u32 *) payload);
     if (obj->type != OBJECT_TYPE_INT)
-        exception_throw(_rt, EXCEPTION_TYPE, "Cannot add to non-int type");
+        exception_throw(_rt, EXCEPTION_TYPE, "Cannot add to non-i32 type");
 
     if (obj->readonly)
         exception_throw(_rt, EXCEPTION_READONLY, "Cannot mutate read-only object");
 
-    dprintf("Adding %d\n", * (int *) (payload + 4));
-    * (int *) obj->value += * (int *) (payload + 4);
+    dprintf("Adding %d\n", * (i32 *) (payload + 4));
+    * (i32 *) obj->value += * (i32 *) (payload + 4);
 
     return ++pos;
 }
@@ -315,13 +315,13 @@ u32 exec_ivsub(SVMRuntime *_rt, struct SaltModule *__restrict module,
 {
     SaltObject *obj = fetch_from_tape(_rt, module, * (u32 *) payload);
     if (obj->type != OBJECT_TYPE_INT)
-        exception_throw(_rt, EXCEPTION_TYPE, "Cannot subtract from non-int type");
+        exception_throw(_rt, EXCEPTION_TYPE, "Cannot subtract from non-i32 type");
     
     if (obj->readonly)
         exception_throw(_rt, EXCEPTION_READONLY, "Cannot mutate read-only object");
 
-    dprintf("Subtracting %d\n", * (int *) (payload + 4));
-    * (int *) obj->value -= * (int *) (payload + 4);
+    dprintf("Subtracting %d\n", * (i32 *) (payload + 4));
+    * (i32 *) obj->value -= * (i32 *) (payload + 4);
 
     return ++pos;
 }
@@ -506,7 +506,7 @@ u32 exec_sleep(SVMRuntime *_rt, struct SaltModule *__restrict module,
 #if defined(_WIN32)
     /* The windows sleep is a bit easier because it uses miliseconds by 
      default. */
-    Sleep(* (int *) payload);
+    Sleep(* (i32 *) payload);
 
 #elif defined(__linux__)
     /* The linux sleep on the other hand takes seconds, so we must use nanosleep
