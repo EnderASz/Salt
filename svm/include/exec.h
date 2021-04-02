@@ -73,7 +73,7 @@ int exec(SVMRuntime *_rt, struct SaltModule* main);
  * @param   title  string to the title
  * @return  pointer to the SVMCall struct 
  */
-const struct SVMCall *exec_get(char *title);
+const struct SVMCall *lookup_exec(char *title);
 
 /**
  * Control the amount of registers currently allocated. This will allocate the

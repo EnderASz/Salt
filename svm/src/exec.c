@@ -118,7 +118,7 @@ int exec(SVMRuntime *_rt, struct SaltModule *main)
 
         dprintf("[%d] < \033[95m%.5s\033[0m >\n", i, main->instructions[i].content);
 
-        const struct SVMCall *exec = exec_get(main->instructions[i].content);
+        const struct SVMCall *exec = lookup_exec(main->instructions[i].content);
         i = exec->f_exec(_rt, main, (byte *) main->instructions[i].content + 5, i);
     }
 
@@ -126,11 +126,28 @@ int exec(SVMRuntime *_rt, struct SaltModule *main)
     return 0;
 }
 
-const struct SVMCall *exec_get(char *title)
+const struct SVMCall *lookup_exec(char *title)
 {
     for (uint i = 0; i < g_exec_amount; i++) {
-        if (strncmp(g_execs[i].instruction, title, 5) == 0)
-            return &g_execs[i];
+
+        /* This magic comparison without using strncmp is done by casting 
+         * the first 4 chars into a 32 bit (4 byte) integer, and then comparing
+         * it to the 4 chars of the instruction. This is a lot faster than
+         * using the strncmp loop. The last char is also just compared using a
+         * simple == operator. 
+         *
+         * Note that this had to be done because this might be the most called 
+         * function in the whole SVM, so it should be optimized.
+         *
+         *                                                      - jd, bellrise
+         */
+        if (* (int32_t *) title != * (int32_t *) g_execs[i].instruction) {
+            continue;
+        }
+
+        if (g_execs[i].instruction[4] == title[4])
+           return &g_execs[i]; 
+
     }
     return &g_execs[0];
 }
