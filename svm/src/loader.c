@@ -25,8 +25,8 @@
  */
 struct LoaderHeaderData {
 
-    uint instructions;
-    uint8_t registers;
+    u32 instructions;
+    u8 registers;
 
 };
 
@@ -36,7 +36,7 @@ static int validate_header(char *header)
     if (strncmp(header, SCC_HEADER, 8) != 0)
         return 0;
 
-    if (* (uint *) (header + 8) != SCC_VERSION)
+    if (* (u32 *) (header + 8) != SCC_VERSION)
         return 0;
 
     return 1;
@@ -53,8 +53,8 @@ static struct LoaderHeaderData load_header(SVMRuntime *_rt, FILE *fp)
     }
 
     struct LoaderHeaderData data;
-    data.instructions = * (uint *) (header + 16);
-    data.registers    = * (uint8_t *) (header + 24); 
+    data.instructions = * (u32 *) (header + 16);
+    data.registers    = * (u8  *) (header + 24); 
 
     vmfree(header, sizeof(char) * 64);
     return data;
@@ -85,12 +85,12 @@ static void read_instruction(SVMRuntime *_rt, String *ins, FILE *fp)
         fread(buf, 1, 5, fp);
 
         int i = 0;
-        for (; (uint) i < g_exec_amount; i++) {
+        for (; (u32) i < g_exec_amount; i++) {
             if (strncmp(buf, g_execs[i].instruction, 5) == 0)
                 break;
         }
 
-        if ((uint) i >= g_exec_amount)
+        if ((u32) i >= g_exec_amount)
             exception_throw(_rt, EXCEPTION_RUNTIME,"Cannot load instruction. "
                             "It's either not supported or broken");
 
@@ -132,14 +132,14 @@ static void load_instructions(SVMRuntime *_rt, struct SaltModule *module,
 
 static void load_labels(SVMRuntime *_rt, struct SaltModule *module)
 {
-    for (uint i = 0; i < module->instruction_amount; i++) {
+    for (u32 i = 0; i < module->instruction_amount; i++) {
         if (module->instructions[i].content[0] == '@')
             module->label_amount++;
     }
 
-    module->labels = vmalloc(sizeof(uint) * module->label_amount);
+    module->labels = vmalloc(sizeof(u32) * module->label_amount);
     int curlabel = 0;
-    for (uint i = 0; i < module->instruction_amount; i++) {
+    for (u32 i = 0; i < module->instruction_amount; i++) {
         if (module->instructions[i].content[0] == '@') {
             module->labels[curlabel] = i;
             curlabel++;

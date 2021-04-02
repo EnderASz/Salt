@@ -8,9 +8,8 @@
 #include "../include/core.h"
 
 #include <string.h>
-#include <stdint.h>
 
-void callstack_push(SVMRuntime *_rt, uint32_t line, char *__restrict module, 
+void callstack_push(SVMRuntime *_rt, u32 line, char *__restrict module, 
                     char *__restrict function)
 {
     dprintf("Pushing stack frame [%ld](%d, %s, %s)\n", _rt->callstack_size, 

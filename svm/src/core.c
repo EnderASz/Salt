@@ -20,7 +20,7 @@ void core_exit(SVMRuntime *_rt)
     dprintf("Calling cleanup\n");
     
     // Clear callstack
-    for (uint64_t i = 0; i < _rt->callstack_size; i++)
+    for (u64 i = 0; i < _rt->callstack_size; i++)
         callstack_pop(_rt);
 
     /* For some reason this *reallY* likes to break, so just check if the
@@ -34,7 +34,7 @@ void core_exit(SVMRuntime *_rt)
     exit(0);
 }
 
-void *_vmalloc(SVMRuntime *_rt, uint size, const char *func)
+void *_vmalloc(SVMRuntime *_rt, u32 size, const char *func)
 {
 #ifdef DEBUG_ALLOCATIONS
     dprintf("\033[90mAllocating \033[32m%d\033[90m bytes in %s\033[0m\n", 
@@ -57,7 +57,7 @@ void *_vmalloc(SVMRuntime *_rt, uint size, const char *func)
     return malloc(size);
 }
 
-void _vmfree(SVMRuntime *_rt, void *ptr, uint size, const char *func)
+void _vmfree(SVMRuntime *_rt, void *ptr, u32 size, const char *func)
 {
 #ifdef DEBUG_ALLOCATIONS
     dprintf("\033[90mFreeing \033[33m%d\033[90m bytes in %s\033[0m\n", 
@@ -69,7 +69,7 @@ void _vmfree(SVMRuntime *_rt, void *ptr, uint size, const char *func)
     free(ptr);
 }
 
-void *_vmrealloc(SVMRuntime *_rt, void *ptr, uint before, uint after, 
+void *_vmrealloc(SVMRuntime *_rt, void *ptr, u32 before, u32 after, 
                  const char *func)
 {
 #ifdef DEBUG_ALLOCATIONS

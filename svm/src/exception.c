@@ -21,8 +21,8 @@ void exception_throw(SVMRuntime *_rt, const char *exception, const char *fmt, ..
     fprintf(stderr, "An exception occured during execution: %s\n", exception);
 
     dprintf("Deconstructing %ld elements from the stack\n", _rt->callstack_size);
-    uint64_t size = _rt->callstack_size;
-    for (uint64_t i = 0; i < size; i++) {
+    u64 size = _rt->callstack_size;
+    for (u64 i = 0; i < size; i++) {
         struct StackFrame *frame = callstack_peek(_rt);
         fprintf(stderr, "  at %s.%s\n", frame->module,
                 frame->function);

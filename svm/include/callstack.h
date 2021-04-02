@@ -28,8 +28,6 @@
 
 #include "core.h"
 
-#include <stdint.h>
-
 /**
  * The callstack is built out of single StackFrames. Because objects are stored
  * in the module scope, and there are no local variables, so the stack frame 
@@ -41,9 +39,9 @@
  */
 struct StackFrame {
 
-    char     module[62];
-    char     function[62];
-    uint32_t line;
+    char module[62];
+    char function[62];
+    u32  line;
 
 };
 
@@ -55,7 +53,7 @@ struct StackFrame {
  * @param   function title of the function, is checked if it's shorter than 62
  *                   chars.
  */
-void callstack_push(SVMRuntime *_rt, uint32_t line, char *__restrict module, 
+void callstack_push(SVMRuntime *_rt, u32 line, char *__restrict module, 
                     char *__restrict function);
 
 /**

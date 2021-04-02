@@ -88,7 +88,7 @@ SaltObject *module_object_acquire(SVMRuntime *_rt, struct SaltModule *module)
     return &new_node->data;
 }
 
-SaltObject *module_object_find(struct SaltModule *module, uint id) Nullable
+SaltObject *module_object_find(struct SaltModule *module, u32 id) Nullable
 {
     struct SaltObjectNode *node = module->head;
     while (node != NULL) {
@@ -100,13 +100,13 @@ SaltObject *module_object_find(struct SaltModule *module, uint id) Nullable
     return NULL;
 }
 
-void module_object_delete(SVMRuntime *_rt, struct SaltModule *module, uint id)
+void module_object_delete(SVMRuntime *_rt, struct SaltModule *module, u32 id)
 {
     if (id == 0)
         exception_throw(_rt, EXCEPTION_RUNTIME, "Cannot remove object of ID 0");
 
     struct SaltObjectNode *node = module->head;
-    int8_t nf_flag = 1;
+    i8 nf_flag = 1;
 
     while (1) {
 
@@ -178,10 +178,10 @@ static void module_deallocate(SVMRuntime *_rt, struct SaltModule *module)
 {
     dprintf("Clearing module '%s'\n", module->name);
     dprintf("Deallocating label list\n");
-    vmfree(module->labels, module->label_amount * sizeof(uint));
+    vmfree(module->labels, module->label_amount * sizeof(u32));
 
     dprintf("Deallocating instructions\n");
-    for (uint i = 0; i < module->instruction_amount; i++) {
+    for (u32 i = 0; i < module->instruction_amount; i++) {
         vmfree(module->instructions[i].content, module->instructions[i].size);
     }
     vmfree(module->instructions, module->instruction_amount * sizeof(String));
@@ -191,7 +191,7 @@ static void module_deallocate(SVMRuntime *_rt, struct SaltModule *module)
 
 void module_delete_all(SVMRuntime *_rt)
 {
-    for (uint i = 0; i < _rt->module_size; i++)
+    for (u32 i = 0; i < _rt->module_size; i++)
         module_deallocate(_rt, &_rt->modules[i]);
 
     vmfree(_rt->modules, _rt->module_space * sizeof(struct SaltModule));

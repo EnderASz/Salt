@@ -10,7 +10,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-static byte arg(char *str, const char *_long, const char *_short)
+static u8 arg(char *str, const char *_long, const char *_short)
 {
     if (strcmp(str, _long) == 0 || strcmp(str, _short) == 0)
         return 1;

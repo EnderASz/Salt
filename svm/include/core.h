@@ -59,7 +59,6 @@
 #define SVM_CORE_H
 
 #include <stdio.h>
-#include <stdint.h>
 #include <string.h>
 
 /* Compilation settings. TARGET_ARCH is defined to the target bits. */
@@ -140,8 +139,15 @@
 #define OBJECT_TYPE_BOOL   (0x03)
 #define OBJECT_TYPE_STRING (0x04)
 
-typedef __UINT8_TYPE__  byte;
-typedef __UINT32_TYPE__ uint;
+typedef __INT8_TYPE__       i8;
+typedef __INT16_TYPE__      i16;
+typedef __INT32_TYPE__      i32;
+typedef __INT64_TYPE__      i64;
+
+typedef __UINT8_TYPE__      u8;
+typedef __UINT16_TYPE__     u16;
+typedef __UINT32_TYPE__     u32;
+typedef __UINT64_TYPE__     u64;
 
 /**
  * This represents a single object, which can hold different types of data
@@ -161,14 +167,14 @@ typedef __UINT32_TYPE__ uint;
  */
 typedef struct _salt_object_st {
 
-    uint  id;
-    byte  readonly;
-    byte  type;
-    byte  mutex_acquired;
+     u32 id;
+      u8 readonly;
+      u8 type;
+      u8 mutex_acquired;
 
-    byte _pad1[1];
-
-    uint  size;
+      u8 _pad1[1];
+ 
+     u32 size;
     void *value;
 
     /* the runtime pointers have to be set to a void * because the actual
@@ -178,7 +184,7 @@ typedef struct _salt_object_st {
     void (*print) (void *_rt, struct _salt_object_st *self);
 
 #if TARGET_ARCH == 32 
-    byte _pad2[12];
+    u8 _pad2[12];
 #endif
 
 } SaltObject;
@@ -194,29 +200,29 @@ typedef struct _svm_runtime_st {
     /* Global register array. The amount of registers is defined in SCC 
      headers, and is handled upon loading every module. */
     SaltObject *registers;
-    uint8_t register_size;
+    u8 register_size;
 
     /* The comparison flag is set after checks, and jumps are executed based
      on this flag. */
-    byte compare_flag;
+    u8 compare_flag;
 
     /* Argument flags. */
-    byte arg_mem_used;
+    u8 arg_mem_used;
 
     /* Memory status variables. This keeps track of every allocation and the 
      amount of memory used. Used for checking for memory leaks. */
-    uint64_t m_used;
-    uint64_t m_max_used;
-    uint64_t m_allocations;
-    uint64_t m_frees;
+    u64 m_used;
+    u64 m_max_used;
+    u64 m_allocations;
+    u64 m_frees;
 
     /* Global table of loaded modules. (module.h) */
-    uint32_t module_size;
-    uint32_t module_space;
+    u32 module_size;
+    u32 module_space;
     struct SaltModule *modules;
 
     /* The callstack. (callstack.h) */
-    uint64_t callstack_size;
+    u64 callstack_size;
     struct StackFrame *callstack;
 
 } SVMRuntime;
@@ -229,7 +235,7 @@ typedef struct _svm_runtime_st {
  */
 typedef struct _string_st {
 
-    uint64_t size;
+    u64 size;
     char *content;
 
 } String;
@@ -247,7 +253,7 @@ void core_exit(SVMRuntime *_rt);
  *
  * @param   size  amount of bytes to allocate
  */
-void *_vmalloc(SVMRuntime *_rt, uint size, const char *func);
+void *_vmalloc(SVMRuntime *_rt, u32 size, const char *func);
 
 /**
  * Free n bytes from the heap at the given pointer. Removes [size] bytes from
@@ -256,7 +262,7 @@ void *_vmalloc(SVMRuntime *_rt, uint size, const char *func);
  * @param   ptr  pointer to memory
  * @param   size amount of bytes to deallocate
  */
-void _vmfree(SVMRuntime *_rt, void *ptr, uint size, const char *func);
+void _vmfree(SVMRuntime *_rt, void *ptr, u32 size, const char *func);
 
 /**
  * Reallocate the given piece of memory to another location.
@@ -266,7 +272,7 @@ void _vmfree(SVMRuntime *_rt, void *ptr, uint size, const char *func);
  * @param   after   amount of memory used after
  * @return  pointer to memory
  */
-void *_vmrealloc(SVMRuntime *_rt, void *ptr, uint before, uint after, 
+void *_vmrealloc(SVMRuntime *_rt, void *ptr, u32 before, u32 after, 
                  const char *func);
 
 /* These macros wrap around the allocation functions passing the runtime and 
@@ -303,7 +309,7 @@ void salt_object_copy(SVMRuntime *_rt, SaltObject *dest, SaltObject *src);
  * @param   payload  pointer to bytes
  * @return  brand new heap allocated SaltObject.
  */
-void salt_object_define(SVMRuntime *_rt, SaltObject *obj, byte *payload);
+void salt_object_define(SVMRuntime *_rt, SaltObject *obj, u8 *payload);
 
 /**
  * Print the object without a newline or space after it.

@@ -79,14 +79,14 @@ struct SaltModule {
 
     struct  SaltObjectNode *head;
 
-    uint    import_amount;
+    u32     import_amount;
     struct  SaltModule **imports;
 
-    uint    instruction_amount;
+    u32     instruction_amount;
     String *instructions;
 
-    uint    label_amount;
-    uint  * labels;
+    u32     label_amount;
+    u32    *labels;
 
 };
 
@@ -120,7 +120,7 @@ SaltObject *module_object_acquire(SVMRuntime *_rt, struct SaltModule *module);
  * @param   id      ID of the object
  * @return  pointer to object, may return NULL
  */
-SaltObject *module_object_find(struct SaltModule *module, uint id) Nullable;
+SaltObject *module_object_find(struct SaltModule *module, u32 id) Nullable;
 
 /**
  * Delete the given object from the module (by ID)
@@ -128,7 +128,7 @@ SaltObject *module_object_find(struct SaltModule *module, uint id) Nullable;
  * @param   module  the module to delete the object in
  * @param   id      ID of the object that will be unlinked.
  */
-void module_object_delete(SVMRuntime *_rt, struct SaltModule *module, uint id);
+void module_object_delete(SVMRuntime *_rt, struct SaltModule *module, u32 id);
 
 /**
  * Remove all modules from memory.

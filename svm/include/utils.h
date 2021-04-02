@@ -33,6 +33,6 @@
  * @param   bytes   pointer to the bytes
  * @param   amount  amount of bytes to print
  */
-void util_hexdump(byte *bytes, uint amount);
+void util_hexdump(u8 *bytes, u32 amount);
 
 #endif // SVM_UTILS_H
