@@ -8,6 +8,9 @@
 #include <sstream>
 #include <string>
 #include <algorithm>
+#include <cctype>
+#include <cmath>
+#include <vector>
 
 using std::string;
 
@@ -34,3 +37,57 @@ InStringPosition::InStringPosition(
         idx(idx),
         inline_idx(inline_idx) {}
 
+uint parse_oct(string str) {
+    std::vector<uint> oct;
+    for(uint i = 0; i < (str.size() < 8 ? str.size() : 8); i++) {
+        if(!isodigit(str[i])) break;
+        oct.push_back(str[i] - 48);
+    }
+    uint result = 0;
+    for(uint i = 0; i < oct.size(); i++)
+        result += oct[oct.size() - 1 - i] * pow(8, i);
+    return result;
+}
+
+uint parse_hex(string str) {
+    std::vector<uint> hex;
+    for(uint i = 0; i < (str.size() < 8 ? str.size() : 8); i++) {
+        if(!isxdigit(str[i])) break;
+        if(isdigit(str[i])) hex.push_back(str[i] - 48);
+        else hex.push_back((str[i] - 55) % 32);
+    }
+    uint result = 0;
+    for(uint i = 0; i < hex.size(); i++)
+        result += hex[hex.size() - 1 - i] * pow(16, i);
+    return result;
+}
+
+bool isodigit(char chr) {return chr >= '0' && chr < '8';}
+
+bool isalpha(const string str) {
+    for(size_t i = 0; i < str.size(); i++) if(!isalpha(str[i])) return false;
+    return true;
+}
+
+bool islower(string str) {
+    for(size_t i = 0; i < str.size(); i++) if(islower(str[i])) return false;
+    return true;
+}
+
+bool isnum(const string str) {
+    for(size_t i = 0; i < str.size(); i++) if(!(isdigit(str[i]))) return false;
+    return true;
+}
+bool isfnum(const string str) {
+    for(size_t i = 0; i < str.size(); i++)
+        if(!(isdigit(str[i]) || (str[i] == '.' && i && i != str.size()-1)))
+            return false;
+    return true;
+}
+bool isalnum(const string str) {
+    for(size_t i = 0; i < str.size(); i++) if(!isalnum(str[i])) return false;
+    return true;
+}
+bool isstropen(char chr) {
+    return chr == '\'' || chr == '"';
+}

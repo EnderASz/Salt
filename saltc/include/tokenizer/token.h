@@ -10,19 +10,20 @@
 
 using std::string;
 
-namespace salt::tokenizer
+namespace salt
 {
 
 /* TokenType enumerator contains token types. */
 enum TokenType
 {
     TOK_0,          // Literally nothing
+    TOK_UNKNOWN,    // Unknown token
 
     // Access keywords
     KW_PUBLIC,      // public
     KW_PRIVATE,     // private
 
-    // Flow control keywords
+    // Control keywords
     KW_IF,          // if
     KW_ELSE,        // else
     KW_ELIF,        // elif
@@ -30,19 +31,20 @@ enum TokenType
     KW_FOR,         // for
     KW_BREAK,       // break
     KW_CONTINUE,    // continue
+    KW_RETURN,      // return
+    KW_THROW,       // throw
 
     // Import keywords
     KW_IMPORT,      // import
     KW_AS,          // as
     KW_DYNAMIC,     // dynamic
 
+    // Alias keyword
+    KW_ALIAS,        // alias
+
     // Variable manipulation keywords
     KW_CONST,       // const
     KW_DEL,         // del
-
-    // Keywords
-    KW_RETURN,      // return
-    KW_THROW,       // throw
 
     // Brackets
     BKT_ROUNDL,     // (
@@ -52,18 +54,9 @@ enum TokenType
     BKT_SQUAREL,    // [
     BKT_SQUARER,    // ]
 
-    // Symbols
-    SYM_ANY,        // Anything, really, it can be... anything symbol you want
-    SYM_COLON,      // :
-    SYM_SEMIC,      // ;
-    SYM_COMMA,      // ,
-    SYM_ARROW,      // ->
-    SYM_DOT,        // .
-
     // Arithmetic operators
     AOP_ADD,        // +
     AOP_SUB,        // -
-    AOP_MULT,       // *
     AOP_DIV,        // /
     AOP_MOD,        // %
     AOP_POW,        // ^
@@ -77,8 +70,8 @@ enum TokenType
 
     // Assigment operators
     ASOP_ASSIGN,    // =
-    ASOP_PINCR,     // ++
-    ASOP_PDECR,     // --
+    ASOP_INCR,      // ++
+    ASOP_DECR,      // --
     ASOP_ASSSUM,    // +=
     ASOP_ASSDIFF,   // -=
     ASOP_ASSPROD,   // *=
@@ -103,8 +96,16 @@ enum TokenType
     LOP_OR,         // ||
     LOP_AND,        // &&
 
-    // Multifunctional operators - Yep, only 'not' is here. It is special.
+    // Multifunctional operators
     MULTOP_NOT,     // !
+    MULTOP_STAR,    // *
+
+    // Other operators and symbols
+    OP_COLON,      // :
+    OP_SEMIC,      // ;
+    OP_COMMA,      // ,
+    OP_ARROW,      // ->
+    OP_DOT,        // .
 
     // Base types
     TYPE_BOOL,       // bool
@@ -120,10 +121,15 @@ enum TokenType
     TOKL_BOOL,      // true | false
 
     // Name
-    TOK_NAME,       // names used to calls, accesses, imports etc.
+    TOK_NAME       // names used to calls, accesses, imports etc.
+
 }; // salt::tokenizer::TokenType
 
-extern std::map<string, TokenType> no_value_token_types;
+extern std::map<string, TokenType> static_word_token_types;
+extern std::map<char, TokenType> bracket_token_types;
+extern std::map<char, TokenType> single_symbol_token_types;
+
+extern std::map<TokenType, string> token_names;
  
 /**
  * The token type stores a single token, which can than be turned
@@ -139,6 +145,7 @@ struct Token
 
     /* Return true if an instance of Token has TOK_0 type. */
     bool isNothing() const;
+    bool isUnknown() const;
 };
 
 /**
@@ -148,13 +155,13 @@ struct Token
 Token token_create(
     TokenType _tok,
     InStringPosition position,
-    string _val = NULL);
+    string _val = "");
 
 /**
  * Token with type TOK_0, NULL value and NULL positions.
  * It represents null token.
  */
-const Token null_token = token_create(TOK_0, {0, 0, 0}, 0);
+const Token null_token = token_create(TOK_0, {0, 0, 0}, "");
 
 } // salt::tokenizer
 

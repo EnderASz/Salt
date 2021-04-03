@@ -6,9 +6,11 @@
  * @author EnderASz
  */
 
-#include "include/arg_parser/params.h"
+#include "include/params.h"
 #include "include/utils.h"
 #include "include/source_file.h"
+#include "include/logging.h"
+#include "include/tokenizer.h"
 
 using namespace salt;
 
@@ -17,11 +19,19 @@ using namespace salt;
  * precompilation, parser, tokenizer, validator and synthesizer.
  */
 int main(int argc, char* argv[]) {
-    arg_parser::Params parameters((uint) argc, argv);
+    dprint("Parsing parameters");
+    Params parameters((uint) argc, argv);
+    dprint("Parameters parsed");
+    reset_print_padding();
 
+    iprint(
+        "Initializing main source file from: %s",
+        parameters.getInputPath().c_str());
     SourceFile main_source(parameters.getInputPath());
     if(parameters.getBuiltinsSwitch())
         main_source.includeBuiltins();
+    Tokenizer main_tokenizer(main_source);
+    
 
     return 0;
 }
