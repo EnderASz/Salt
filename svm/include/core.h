@@ -39,24 +39,39 @@
 #define SVM_VERSION "(unspecified by the compiler)"
 #endif
 
+/* System settings, includes the core os headers for functionality. */
+#ifndef TARGET_SYSTEM
+#ifdef _WIN32
+#define TARGET_SYSTEM "Windows"
+#elif defined(__linux__)
+#define TARGET_SYSTEM "Linux"
+#else
+/* Add your system here if you're porting to something else & have fun
+ fixing all the system dependencies! There shouldn't be a lot of them,
+ because I'm just using the standard C lib.  */
+
+#error "There is no support for the system you're using"
+#endif
+#endif
+
 /* Header guard */
 #ifndef SVM_CORE_H
 #define SVM_CORE_H
-
-#include "object.h"
 
 #include <stdio.h>
 #include <stdint.h>
 #include <string.h>
 
-/* Compilation settings. _ARCH is defined to the bit settings. */
+/* Compilation settings. TARGET_ARCH is defined to the target bits. */
 #if __INTPTR_MAX__ == __INT32_MAX__
-#define ARCHITECTURE 32
+#define TARGET_ARCH 32
 #elif __INTPTR_MAX__ == __INT64_MAX__
-#define ARCHITECTURE 64
+#define TARGET_ARCH 64
 #else
-#define ARCHITECTURE 0
+#define TARGET_ARCH 0
+#error "Other than 32/64 bit are not supported"
 #endif
+
 
 /* Wrap the given value in quotes. This is needed for svm_grep_string where the
  const string is created from concatinating several values. */
@@ -67,7 +82,6 @@
 #ifdef DEBUG
 
 #ifdef _WIN32
-#include <windows.h>
 
 /* Bruh, programming on windows sucks! This looks actually terrible but I was 
  told this had to be done to support terminal colouring on the original 32bit
@@ -103,31 +117,129 @@
 
 #endif // DEBUG
 
+/* The notice me macro will print detailed information about the current
+ location where it was called and make you notice the point where it 
+ happened. */
+#ifndef NOTICE_ME
+#define NOTICE_ME(STR)                                                      \
+{                                                                           \
+    printf("\033[91mNOTICE ME!\n");                                         \
+    printf("In %s in '%s' on line %d\n", __FILE__, __func__, __LINE__);     \
+    printf("\n>>> %s\n\n\033[0m", STR);                                     \
+}
+#endif
+
+#define READONLY_FALSE (0x00)
+#define READONLY_TRUE  (0x01)
+
+// Simple types
+
+#define OBJECT_TYPE_NULL   (0x00)
+#define OBJECT_TYPE_INT    (0x01)
+#define OBJECT_TYPE_FLOAT  (0x02)
+#define OBJECT_TYPE_BOOL   (0x03)
+#define OBJECT_TYPE_STRING (0x04)
+
 typedef __UINT8_TYPE__  byte;
 typedef __UINT32_TYPE__ uint;
 
 /**
- * This stores a single Salt instruction that can be executed. 
+ * This represents a single object, which can hold different types of data
+ * depending on the [type] byte. When building a new object, default values are
+ * assigned an the constructor & destructor pointers are passed, which take 
+ * care of allocating the needed memory on the heap. Be sure to never build a 
+ * raw object yourself, instead use salt_object_create(...). 
  *
- * @a name     name of the instruction, the 5 chars are compared to get the
- *             correct exec.
- * @a size     size of the string array (null included)
- * @a content  the pointer to a heap char array storing the instruction
+ * @a id            ID of the object
+ * @a readonly      0x01 if the object should be const 
+ * @a type          type of the object, see OBJECT_TYPE_xxx
+ * @a mutex_acquired if this is not 1, it means the object 
+ * @a value         pointer to the value
+ * @a size          amount of bytes allocated
+ * @a vhandler      value handler method
+ * @a destructor    object destructor
  */
-struct SaltInstruction {
+typedef struct _salt_object_st {
 
-    char  name[6];
+    uint  id;
+    byte  readonly;
+    byte  type;
+    byte  mutex_acquired;
+
+    byte _pad1[1];
+
     uint  size;
+    void *value;
+
+    /* the runtime pointers have to be set to a void * because the actual
+     type is defined later on, being struct _svm_runtime_st. */
+    void (* ctor) (void *_rt, struct _salt_object_st *self);
+    void (* dtor) (void *_rt, struct _salt_object_st *self);
+    void (*print) (void *_rt, struct _salt_object_st *self);
+
+#if TARGET_ARCH == 32 
+    byte _pad2[12];
+#endif
+
+} SaltObject;
+
+
+/**
+ * The SVM Runtime container stores all the global runtime variables used
+ * in the virtual machine. Only a single struct will most likely be created
+ * in the main function.
+ */
+typedef struct _svm_runtime_st {
+
+    /* Global register array. The amount of registers is defined in SCC 
+     headers, and is handled upon loading every module. */
+    SaltObject *registers;
+    uint8_t register_size;
+
+    /* The comparison flag is set after checks, and jumps are executed based
+     on this flag. */
+    byte compare_flag;
+
+    /* Argument flags. */
+    byte arg_mem_used;
+
+    /* Memory status variables. This keeps track of every allocation and the 
+     amount of memory used. Used for checking for memory leaks. */
+    uint64_t m_used;
+    uint64_t m_max_used;
+    uint64_t m_allocations;
+    uint64_t m_frees;
+
+    /* Global table of loaded modules. (module.h) */
+    uint32_t module_size;
+    uint32_t module_space;
+    struct SaltModule *modules;
+
+    /* The callstack. (callstack.h) */
+    uint64_t callstack_size;
+    struct StackFrame *callstack;
+
+} SVMRuntime;
+
+/**
+ * This stores a null terminated string
+ *
+ * @a size     size of the char array (null included)
+ * @a content  pointer to a heap allocated string array
+ */
+typedef struct _string_st {
+
+    uint64_t size;
     char *content;
 
-};
+} String;
 
 /**
  * Always call this instead of the normal exit, because this function
  * additionally cleans up the heap allocated memory before calling exit
  * from stdlib.
  */
-void core_exit();
+void core_exit(SVMRuntime *_rt);
 
 /**
  * Allocate n bytes in the heap, registering the memory usage in the global
@@ -135,7 +247,7 @@ void core_exit();
  *
  * @param   size  amount of bytes to allocate
  */
-void *vmalloc(uint size);
+void *_vmalloc(SVMRuntime *_rt, uint size, const char *func);
 
 /**
  * Free n bytes from the heap at the given pointer. Removes [size] bytes from
@@ -144,7 +256,7 @@ void *vmalloc(uint size);
  * @param   ptr  pointer to memory
  * @param   size amount of bytes to deallocate
  */
-void vmfree(void *ptr, uint size);
+void _vmfree(SVMRuntime *_rt, void *ptr, uint size, const char *func);
 
 /**
  * Reallocate the given piece of memory to another location.
@@ -154,18 +266,59 @@ void vmfree(void *ptr, uint size);
  * @param   after   amount of memory used after
  * @return  pointer to memory
  */
-void *vmrealloc(void *ptr, uint before, uint after);
+void *_vmrealloc(SVMRuntime *_rt, void *ptr, uint before, uint after, 
+                 const char *func);
 
-/**
- * Check the current used heap memory.
- *
- * @return g_memory_used
- */
-uint64_t vmused();
+/* These macros wrap around the allocation functions passing the runtime and 
+ function name automatically. */
+#define vmalloc(N) _vmalloc(_rt, N, __func__)
+#define vmfree(PTR, N) _vmfree(_rt, PTR, N, __func__)
+#define vmrealloc(PTR, N, M) _vmrealloc(_rt, PTR, N, M, __func__)
 
 /**
  * Check the current status of the memory.
  */
-void vibe_check();
+void vibe_check(SVMRuntime *_rt);
+
+/**
+ * Create a raw salt object. Assign all the needed values, settings the object
+ * to a null type & value.
+ *
+ * @return brand new heap allocated salt object.
+ */
+SaltObject *salt_object_create(SVMRuntime *_rt);
+
+/**
+ * Deep copy a salt object.
+ *
+ * @param   dest  destination object
+ * @param   src   source object
+ */
+void salt_object_copy(SVMRuntime *_rt, SaltObject *dest, SaltObject *src);
+
+/**
+ * Create a new salt object from the given payload. See doc/scc.html for
+ * information about the payload.
+ *
+ * @param   payload  pointer to bytes
+ * @return  brand new heap allocated SaltObject.
+ */
+void salt_object_define(SVMRuntime *_rt, SaltObject *obj, byte *payload);
+
+/**
+ * Print the object without a newline or space after it.
+ *
+ * @param   obj  pointer to the object
+ */
+void salt_object_print(SVMRuntime *_rt, SaltObject *obj);
+
+/**
+ * Salt object constructor and destructor. These should be called when creating
+ * or removing an object from memory.
+ *
+ * @param   self  the object instance
+ */
+void salt_object_ctor(void *_rt, SaltObject *self);
+void salt_object_dtor(void *_rt, SaltObject *self);
 
 #endif // SVM_CORE_H

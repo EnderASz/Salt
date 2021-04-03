@@ -8,13 +8,13 @@
 #ifndef CORE_PARAMS_H_
 #define CORE_PARAMS_H_
 
-#include "../utils.h"
+#include "utils.h"
 #include <queue>
 #include <string>
 
 using std::string;
 
-namespace salt::arg_parser
+namespace salt
 {
 
 /**
@@ -58,6 +58,8 @@ public:
 
     /* Gets import init switch value */
     bool getBuiltinsSwitch();
+
+    static void print_help_page();
 
 }; // salt::core::Params
 
