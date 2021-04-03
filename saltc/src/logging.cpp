@@ -7,6 +7,11 @@
 
 #if defined(_WIN32) || defined(__linux__)
 
+
+size_t print_max_right = 0;
+
+void set_print_padding(size_t padding) {print_max_right = padding;}
+
 void _eprint(salt::BaseError* error, const char* file, const char* location) {
     print_log_location(file, location);
     print_log_prefix(ERROR);
@@ -28,6 +33,10 @@ void _eprint(salt::BaseError* error, const char* file, const char* location) {
         SetConsoleTextAttribute(
             hOut,
             bg_color::BLACK + font_color::LIGHT_GRAY);
+
+        size_t location_len = (string(file) + function).size();
+        for(; location_len < print_max_right; location_len++) printf(" ");
+        print_max_right = location_len;
     }
 
     void print_log_prefix(LogLevel log_level) {

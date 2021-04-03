@@ -6,7 +6,7 @@
  * @author EnderASz
  */
 
-#include "include/arg_parser/params.h"
+#include "include/params.h"
 #include "include/utils.h"
 #include "include/source_file.h"
 #include "include/logging.h"
@@ -19,10 +19,11 @@ using namespace salt;
  */
 int main(int argc, char* argv[]) {
     dprint("Parsing parameters");
-    arg_parser::Params parameters((uint) argc, argv);
+    Params parameters((uint) argc, argv);
     dprint("Parameters parsed");
+    reset_print_padding();
 
-    dprint(
+    iprint(
         "Initializing main source file from: %s",
         parameters.getInputPath().c_str());
     SourceFile main_source(parameters.getInputPath());

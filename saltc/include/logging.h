@@ -118,10 +118,15 @@
 
     void print_log_prefix(LogLevel log_level);
 
+    extern size_t print_max_right;
+
+    void set_print_padding(size_t padding = 0);
+    #define reset_print_padding() set_print_padding()
+
     #if defined(SALT_DEBUG)
         #define dprint(...)                                                   \
         {                                                                     \
-            print_log_location(__FILE__, __FUNCTION__);                       \
+            print_log_location(__FILENAME__, __FUNCTION__);                   \
             print_log_prefix(DEBUG);                                          \
             printf(__VA_ARGS__);                                              \
             printf("\n");                                                     \
@@ -131,20 +136,20 @@
     #endif
     #define iprint(...)                                                       \
     {                                                                         \
-        print_log_location(__FILE__, __FUNCTION__);                           \
+        print_log_location(__FILENAME__, __FUNCTION__);                       \
         print_log_prefix(INFO);                                               \
         printf(__VA_ARGS__);                                                  \
         printf("\n");                                                         \
     }
     #define wprint(...)                                                       \
     {                                                                         \
-        print_log_location(__FILE__, __FUNCTION__);                           \
+        print_log_location(__FILENAME__, __FUNCTION__);                       \
         print_log_prefix(WARNING);                                            \
         printf(__VA_ARGS__);                                                  \
         printf("\n");                                                         \
     }
     void _eprint(salt::BaseError* error, const char* file, const char* location);
-    #define eprint(ERR) _eprint(ERR, __FILE__, __FUNCTION__)
+    #define eprint(ERR) _eprint(ERR, __FILENAME__, __FUNCTION__)
 #else
     #define dprint(...)
     #define iprint(...)

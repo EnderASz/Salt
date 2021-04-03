@@ -8,15 +8,13 @@ param (
     [switch]$SDebug = $false
 )
 
+$static_flags = "-std=c++1z -Wno-unknown-pragmas"
+
 if($AllWarnings) {
-    $wall_flag = "-Wall"
-} else {
-    $wall_flag = ""
+    $static_flags += " -Wall"
 }
 if($SDebug) {
-    $debug_flag = "-D SALT_DEBUG"
-} else {
-    $debug_flag = ""
+    $static_flags += " -D SALT_DEBUG"
 }
 
 # region - Setup before compilation
@@ -46,13 +44,15 @@ if($SDebug) {
 # region - Compilation
     # Compile all sources to object files
     For($i = 0; $i -lt $CPPObjectsPaths.count; $i++) {
-        $CPPObjectPath = $CPPObjectsPaths[$i]
-        $CPPSourcePath = $CPPSourcesPaths[$i]
-        g++ -std="c++1z" $debug_flag $wall_flag -c -o $CPPObjectPath $CPPSourcePath
+        $CPPObject = $CPPObjectsPaths[$i]
+        $CPPSource = $CPPSourcesPaths[$i]
+        $__FILENAME__ = ($CPPSource | Resolve-Path -Relative).substring(2).replace("\", "/")
+        iex "g++ $static_flags -c -o $CPPObject $CPPSource -D __FILENAME__=`'\`"$__FILENAME__\`"`'"
     }
 
     # Compile the main file and link with object files
-    g++ -std="c++1z" $debug_flag $wall_flag -o $BuildedMainPath $MAIN_SOURCE_PATH $CPPObjectsPaths
+    $__FILENAME__ = ($MAIN_SOURCE_PATH | Resolve-Path -Relative).substring(2).replace("\", "/")
+    iex "g++ $static_flags -o $BuildedMainPath $MAIN_SOURCE_PATH $CPPObjectsPaths -D __FILENAME__=`'\`"$__FILENAME__\`"`'"
 # endregion
 
 # region - Cleaning after compilation

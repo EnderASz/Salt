@@ -3,18 +3,18 @@
  *
  * @author EnderASz
  */
-#include "../../include/arg_parser/params.h"
+#include "../include/params.h"
 
-#include "../../include/arg_parser/prints.h"
-#include "../../include/utils.h"
-#include "../../include/logging.h"
+#include "../include/utils.h"
+#include "../include/logging.h"
+#include "../include/error.h"
 #include <queue>
 #include <cstring>
 #include <string>
 
 using std::string;
 
-namespace salt::arg_parser
+namespace salt
 {
 
 /**
@@ -32,8 +32,9 @@ void Params::initObject(std::queue<string> args) {
         dprint("Parsing parameter: %s", arg.c_str());
         if (Params::arg_comp(arg, "--help", "-h")) {
             dprint("Displaying help page");
-            prints::help();
+            print_help_page();
             dprint("Help page displayed");
+            exit(0);
         }
         else if (Params::arg_comp(arg, "--no-builtins", "")) {
             dprint("Switching include builtins off");
@@ -48,7 +49,7 @@ void Params::initObject(std::queue<string> args) {
                 output_path.c_str());
         }
         else if (arg[0] == '-')
-            prints::unrecognized_option_error(arg);
+            eprint(new UnrecognizedOptionError(arg));
         else { // Nameless arguments
             if (input_path.empty()) {
                 dprint("Setting up input file path");
@@ -58,13 +59,16 @@ void Params::initObject(std::queue<string> args) {
                     input_path.c_str());
             }
             else {
-                prints::too_many_nameless_error();
+                wprint(
+                    "Argument '%s' can not be parsed now. "
+                    "This will be implemented in a future",
+                    arg.c_str());
             }
         }
     }
 
     if (input_path.empty()) {
-        prints::specify_filename_error();
+        eprint(new UnspecifiedMainError());
     }
 }
 
@@ -121,5 +125,19 @@ string Params::getOutputPath() {return this->output_path;}
 
 /* Gets builtins include switch value */
 bool Params::getBuiltinsSwitch() {return this->builtins;}
+
+void Params::print_help_page() {
+    printf(
+        "Usage: saltc [OPTIONS]... FILE\n\n"
+        "\tFILE                 "
+            "name of the file to be compiled\n"
+        "\t-h, --help           "
+            "show this page\n"
+        "\t-o, --output <path>  "
+            "path of the compilation output file\n"
+        "\t--no-builtins        "
+            "don't link builtin functionality when compiling\n"
+        "\n");
+}
 
 };
