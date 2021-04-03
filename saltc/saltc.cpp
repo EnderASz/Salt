@@ -10,6 +10,7 @@
 #include "include/utils.h"
 #include "include/source_file.h"
 #include "include/logging.h"
+#include "include/tokenizer.h"
 
 using namespace salt;
 
@@ -29,6 +30,8 @@ int main(int argc, char* argv[]) {
     SourceFile main_source(parameters.getInputPath());
     if(parameters.getBuiltinsSwitch())
         main_source.includeBuiltins();
+    Tokenizer main_tokenizer(main_source);
+    
 
     return 0;
 }
