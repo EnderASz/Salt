@@ -62,44 +62,44 @@
 
         #include <string>
 
-        const char* RESET_ALL = "\e[0m";
+        extern const char* RESET_ALL;           // [0m
         namespace font_styles {
-            const char* BOLD = "\e[1m";
-            const char* BLACK = "\e[30m";
-            const char* RED = "\e[31m";
-            const char* GREEN = "\e[32m";
-            const char* YELLOW = "\e[33m";
-            const char* BLUE = "\e[34m";
-            const char* MAGENTA = "\e[35m";
-            const char* CYAN = "\e[36m";
-            const char* WHITE = "\e[37m";
-            const char* GREY = "\e[39m";
-            const char* LIGHT_BLACK = "\e[90m";
-            const char* LIGHT_RED = "\e[91m";
-            const char* LIGHT_GREEN = "\e[92m";
-            const char* LIGHT_YELLOW = "\e[93m";
-            const char* LIGHT_BLUE = "\e[94m";
-            const char* LIGHT_MAGENTA = "\e[95m";
-            const char* LIGHT_CYAN = "\e[96m";
-            const char* LIGHT_WHITE = "\e[97m";
+            extern const char* BOLD;            // [1m
+            extern const char* BLACK;           // [30m
+            extern const char* RED;             // [31m
+            extern const char* GREEN;           // [32m
+            extern const char* YELLOW;          // [33m
+            extern const char* BLUE;            // [34m
+            extern const char* MAGENTA;         // [35m
+            extern const char* CYAN;            // [36m
+            extern const char* WHITE;           // [37m
+            extern const char* GREY;            // [39m
+            extern const char* LIGHT_BLACK;     // [90m
+            extern const char* LIGHT_RED;       // [91m
+            extern const char* LIGHT_GREEN;     // [92m
+            extern const char* LIGHT_YELLOW;    // [93m
+            extern const char* LIGHT_BLUE;      // [94m
+            extern const char* LIGHT_MAGENTA;   // [95m
+            extern const char* LIGHT_CYAN;      // [96m
+            extern const char* LIGHT_WHITE;     // [97m
         };
         namespace bg_colors {
-            const char* BLACK = "\e[40m";
-            const char* RED = "\e[41m";
-            const char* GREEN = "\e[42m";
-            const char* YELLOW = "\e[43m";
-            const char* BLUE = "\e[44m";
-            const char* MAGENTA = "\e[45m";
-            const char* CYAN = "\e[46m";
-            const char* WHITE = "\e[47m";
-            const char* LIGHT_BLACK = "\e[100m";
-            const char* LIGHT_RED = "\e[101m";
-            const char* LIGHT_GREEN = "\e[102m";
-            const char* LIGHT_YELLOW = "\e[103m";
-            const char* LIGHT_BLUE = "\e[104m";
-            const char* LIGHT_MAGENTA = "\e[105m";
-            const char* LIGHT_CYAN = "\e[106m";
-            const char* LIGHT_WHITE = "\e[107m";
+            extern const char* BLACK;           // [40m
+            extern const char* RED;             // [41m
+            extern const char* GREEN;           // [42m
+            extern const char* YELLOW;          // [43m
+            extern const char* BLUE;            // [44m
+            extern const char* MAGENTA;         // [45m
+            extern const char* CYAN;            // [46m
+            extern const char* WHITE;           // [47m
+            extern const char* LIGHT_BLACK;     // [100m
+            extern const char* LIGHT_RED;       // [101m
+            extern const char* LIGHT_GREEN;     // [102m
+            extern const char* LIGHT_YELLOW;    // [103m
+            extern const char* LIGHT_BLUE;      // [104m
+            extern const char* LIGHT_MAGENTA;   // [105m
+            extern const char* LIGHT_CYAN;      // [106m
+            extern const char* LIGHT_WHITE;     // [107m
         };
 
         typedef std::pair<std::string, const char*> LogLevelPrefix;
