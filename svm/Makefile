@@ -56,13 +56,15 @@ win64 : CC := x86_64-w64-mingw32-gcc
 
 # DEBUG is defined it the debug target is selected. Additionally, if the 
 # compiler is clang, the sanitizer parameters are strapped onto the executable.
- 
+# The -pg flag is also added for additional profiliing functionality.
+
 debug : DFLAGS := -D DEBUG
 debug : RESULT := svmd
 
 ifeq ($(CC), clang)
 debug : DFLAGS += -fsanitize=address -fno-omit-frame-pointer \
 		  -fno-optimize-sibling-calls -O1
+debug : DFLAGS += -pg
 endif
 
 
@@ -113,6 +115,7 @@ install:
 	fi
 
 .PHONY : install
+
 
 # The setup target is called before every compilation target. It is 
 # responsible for creating directories and cleaning unwated old files.

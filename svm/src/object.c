@@ -54,7 +54,7 @@ void salt_object_print(SVMRuntime *_rt, SaltObject *obj)
     switch (obj->type) {
 
         case OBJECT_TYPE_INT:
-            printf("%d", * (int *) obj->value);
+            printf("%d", * (i32 *) obj->value);
             break;
 
         case OBJECT_TYPE_FLOAT:
@@ -66,7 +66,7 @@ void salt_object_print(SVMRuntime *_rt, SaltObject *obj)
             break;
 
         case OBJECT_TYPE_BOOL:
-            if (* (byte *) obj->value)
+            if (* (u8 *) obj->value)
                 printf("true");
             else
                 printf("false");
@@ -77,14 +77,14 @@ void salt_object_print(SVMRuntime *_rt, SaltObject *obj)
     }
 }
 
-static void render_value(SVMRuntime *_rt, SaltObject *obj, byte *payload)
+static void render_value(SVMRuntime *_rt, SaltObject *obj, u8 *payload)
 {
     dprintf("Rendering type 0x%02hhx\n", obj->type);
     switch (obj->type) {
 
         case OBJECT_TYPE_INT:
-            obj->value = vmalloc(sizeof(int));
-            obj->size = sizeof(int);
+            obj->value = vmalloc(sizeof(i32));
+            obj->size = sizeof(i32);
             memcpy(obj->value, payload, 4);
             return;
 
@@ -95,11 +95,11 @@ static void render_value(SVMRuntime *_rt, SaltObject *obj, byte *payload)
             return;
 
         case OBJECT_TYPE_STRING:
-            obj->size = * (uint *) payload;
+            obj->size = * (u32 *) payload;
             obj->value = vmalloc(sizeof(char) * obj->size);
-            memcpy(obj->value, (payload + sizeof(uint)), obj->size);
+            memcpy(obj->value, (payload + sizeof(u32)), obj->size);
 
-            for (uint i = 0; i < obj->size; i++) {
+            for (u32 i = 0; i < obj->size; i++) {
                 if (((char *) obj->value)[i] == '\x11')
                     ((char *) obj->value)[i] = '\n';
             }
@@ -122,11 +122,11 @@ static void render_value(SVMRuntime *_rt, SaltObject *obj, byte *payload)
     }
 }
 
-void salt_object_define(SVMRuntime *_rt, SaltObject *obj, byte *payload)
+void salt_object_define(SVMRuntime *_rt, SaltObject *obj, u8 *payload)
 {
-    obj->id       = * (uint *) payload;
-    obj->readonly = * (byte *) (payload + 4);
-    obj->type     = * (byte *) (payload + 5);
+    obj->id       = * (u32 *) payload;
+    obj->readonly = * (u8  *) (payload + 4);
+    obj->type     = * (u8  *) (payload + 5);
     render_value(_rt, obj, payload + 6);
     dprintf("Created object {%d} of type 0x%02hhx\n", obj->id, obj->type);
 }

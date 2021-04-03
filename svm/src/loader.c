@@ -25,18 +25,18 @@
  */
 struct LoaderHeaderData {
 
-    uint instructions;
-    uint8_t registers;
+    u32 instructions;
+    u8 registers;
 
 };
 
 
-static int validate_header(char *header)
+static i32 validate_header(char *header)
 {
     if (strncmp(header, SCC_HEADER, 8) != 0)
         return 0;
 
-    if (* (uint *) (header + 8) != SCC_VERSION)
+    if (* (u32 *) (header + 8) != SCC_VERSION)
         return 0;
 
     return 1;
@@ -53,8 +53,8 @@ static struct LoaderHeaderData load_header(SVMRuntime *_rt, FILE *fp)
     }
 
     struct LoaderHeaderData data;
-    data.instructions = * (uint *) (header + 16);
-    data.registers    = * (uint8_t *) (header + 24); 
+    data.instructions = * (u32 *) (header + 16);
+    data.registers    = * (u8  *) (header + 24); 
 
     vmfree(header, sizeof(char) * 64);
     return data;
@@ -64,7 +64,7 @@ static void read_instruction(SVMRuntime *_rt, String *ins, FILE *fp)
 {
     // Check for label
     char label_char = fgetc(fp);
-    int width = 0;
+    i32 width = 0;
 
     // If it's a label, do a normal read
     if (label_char == '@') {
@@ -84,20 +84,20 @@ static void read_instruction(SVMRuntime *_rt, String *ins, FILE *fp)
         char buf[6] = {0};
         fread(buf, 1, 5, fp);
 
-        int i = 0;
-        for (; (uint) i < g_exec_amount; i++) {
+        i32 i = 0;
+        for (; (u32) i < g_exec_amount; i++) {
             if (strncmp(buf, g_execs[i].instruction, 5) == 0)
                 break;
         }
 
-        if ((uint) i >= g_exec_amount)
+        if ((u32) i >= g_exec_amount)
             exception_throw(_rt, EXCEPTION_RUNTIME,"Cannot load instruction. "
                             "It's either not supported or broken");
 
         width += 5;
 
         // Read [pad] bytes before checking for the newline
-        for (int j = 0; j < g_execs[i].pad; j++) {
+        for (i32 j = 0; j < g_execs[i].pad; j++) {
             fgetc(fp);
             width++;
         }
@@ -118,28 +118,28 @@ static void read_instruction(SVMRuntime *_rt, String *ins, FILE *fp)
 }
 
 static void load_instructions(SVMRuntime *_rt, struct SaltModule *module, 
-            FILE *fp, int instructions)
+            FILE *fp, i32 instructions)
 {
     dprintf("Loading instructions for '%s'\n", module->name);
 
     module->instructions = vmalloc(sizeof(String) * instructions);
     module->instruction_amount = instructions;
 
-    for (int i = 0; i < instructions; i++) {
+    for (i32 i = 0; i < instructions; i++) {
         read_instruction(_rt, &module->instructions[i], fp);
     }
 }
 
 static void load_labels(SVMRuntime *_rt, struct SaltModule *module)
 {
-    for (uint i = 0; i < module->instruction_amount; i++) {
+    for (u32 i = 0; i < module->instruction_amount; i++) {
         if (module->instructions[i].content[0] == '@')
             module->label_amount++;
     }
 
-    module->labels = vmalloc(sizeof(uint) * module->label_amount);
-    int curlabel = 0;
-    for (uint i = 0; i < module->instruction_amount; i++) {
+    module->labels = vmalloc(sizeof(u32) * module->label_amount);
+    i32 curlabel = 0;
+    for (u32 i = 0; i < module->instruction_amount; i++) {
         if (module->instructions[i].content[0] == '@') {
             module->labels[curlabel] = i;
             curlabel++;
@@ -153,7 +153,7 @@ struct SaltModule *load(SVMRuntime *_rt, char *name)
     dprintf("Trying to load %s\n", name);
 
     // File
-    int size = sizeof(char) * (strlen(name) + 5);
+    i32 size = sizeof(char) * (strlen(name) + 5);
     
     char *filename = vmalloc(size);
     memset(filename, 0, size);
