@@ -40,6 +40,6 @@
  * @param   name name of the module
  * @returns pointer to acquired SaltModule
  */
-struct SaltModule *load(char *name);
+struct SaltModule *load(SVMRuntime *_rt, char *name);
 
 #endif // SVM_LOADER_H
