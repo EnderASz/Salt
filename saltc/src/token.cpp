@@ -2,9 +2,9 @@
  * tokenizer/token.h implementation
  *
  */
-#include "../../include/tokenizer/token.h"
+#include "../include/token.h"
 
-#include "../../include/utils.h"
+#include "../include/utils.h"
 
 namespace salt
 {

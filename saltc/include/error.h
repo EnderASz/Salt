@@ -10,7 +10,7 @@
 
 #include "utils.h"
 #include "source_file.h"
-#include "tokenizer/token.h"
+#include "token.h"
 #include <string>
 
 using std::string;

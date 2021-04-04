@@ -6,7 +6,7 @@
 
 #include "../include/source_file.h"
 #include "../include/utils.h"
-#include "../include/tokenizer/special_char.h"
+#include "../include/special_char.h"
 #include "../include/logging.h"
 #include "../include/error.h"
 

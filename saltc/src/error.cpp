@@ -6,7 +6,7 @@
 #include "../include/error.h"
 
 #include "../include/utils.h"
-#include "../include/tokenizer/token.h"
+#include "../include/token.h"
 #include <string>
 
 using std::string;

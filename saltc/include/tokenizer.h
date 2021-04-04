@@ -6,7 +6,7 @@
 #ifndef TOKENIZER_H_
 #define TOKENIZER_H_
 
-#include "tokenizer/token.h"
+#include "token.h"
 #include "source_file.h"
 #include <string>
 #include <vector>
