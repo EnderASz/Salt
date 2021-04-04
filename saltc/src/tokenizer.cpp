@@ -55,7 +55,11 @@ std::vector<Token> Tokenizer::render() {
             parsed_token = (*i)();
             if(!parsed_token.isNothing()) break;
         }
-        if(parsed_token.isNothing()){throw "#TODO: Token parsing failed";}
+        if(parsed_token.isNothing())
+            eprint(new UnknownTokenError(
+                curr_token.position,
+                *source,
+                curr_token.str));
         tokens.push_back(parsed_token);
         dprint(
             "%s parsed to %s token",

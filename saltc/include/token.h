@@ -17,7 +17,6 @@ namespace salt
 enum TokenType
 {
     TOK_0,          // Literally nothing
-    TOK_UNKNOWN,    // Unknown token
 
     // Access keywords
     KW_PUBLIC,      // public
@@ -145,7 +144,6 @@ struct Token
 
     /* Return true if an instance of Token has TOK_0 type. */
     bool isNothing() const;
-    bool isUnknown() const;
 };
 
 /**
