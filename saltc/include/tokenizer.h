@@ -89,6 +89,12 @@ private:
     bool isInRange(string::iterator iterator) const;
 
     /**
+     * Returns true if character on current iterator is
+     * equal to passed argument
+     */
+    bool isChar(char character);
+
+    /**
      * Returns true if current is not last character and next character is
      * decimal digit.
      */

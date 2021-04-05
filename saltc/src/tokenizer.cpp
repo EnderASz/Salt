@@ -165,6 +165,8 @@ bool Tokenizer::isInRange(string::iterator iterator) const {
     return distance(iterator, sourceEnd()-1) >= 0;
 }
 
+bool Tokenizer::isChar(char character) {return *current == character;}
+
 bool Tokenizer::nextIsDigit() const {
     return !isLastChar() && isdigit(*(current+1));
 }
@@ -176,7 +178,7 @@ bool Tokenizer::nextIsXDigit() const {
 Token Tokenizer::getStringLiteral() {
     if(!isInRange()) eprint(new OutOfSourceRangeError(*source));
     resetCurrentToken();
-    if(*current == 'r') {
+    if(isChar('r')) {
         if(isLastChar()) return null_token;
         pushCurrentCharacter();
     }
@@ -191,7 +193,7 @@ Token Tokenizer::getStringLiteral() {
             break;
         }
         if(isLastChar()) break;
-        if(*current == '\\')
+        if(isChar('\\'))
             pushCurrentCharacter();
         pushCurrentCharacter();
     }
@@ -206,11 +208,11 @@ Token Tokenizer::getNumLiteral() {
 
     size_t non_decimal_digits = 0;
     current_num_literal = DEC;
-    if(*current == '0') {
+    if(isChar('0')) {
         pushCurrentCharacter();
         if(!isInRange())
             return token_create(TOKL_INT, curr_token.position, curr_token.str);
-        if(*current == 'x' || *current == 'X') {
+        if(isChar('x') || isChar('X')) {
             if(!nextIsXDigit())
                 eprint(new InvalidLiteralError(
                     curr_token.position,
@@ -260,7 +262,7 @@ Token Tokenizer::getNumLiteral() {
 Token Tokenizer::pushDecDigit() {
     if(!isInRange() || current_num_literal != DEC)
         throw "#TODO: Method pushDecDigit can not be called now.";
-    if(*current == '.') {
+    if(isChar('.')) {
         if(!nextIsDigit())
             return token_create(
                 TOKL_INT,
@@ -357,10 +359,10 @@ Token Tokenizer::pushHexDigit(size_t* digits_counter, size_t max_digits) {
 
 Token Tokenizer::getWordToken() {
     if(!isInRange()) eprint(new OutOfSourceRangeError(*source));
-    if(!(isalpha(*current) || *current == '_')) return null_token;
+    if(!(isalpha(*current) || isChar('_'))) return null_token;
     resetCurrentToken();
     pushCurrentCharacter();
-    while(isInRange() && (isalnum(*current) || *current == '_'))
+    while(isInRange() && (isalnum(*current) || isChar('_')))
         pushCurrentCharacter();
     auto found = static_word_token_types.find(curr_token.str);
     return token_create(
@@ -388,89 +390,89 @@ Token Tokenizer::getSymbolToken() {
     switch(*current) {
         case '+':
             pushCurrentCharacter();
-            if(*current == '+') {
+            if(isChar('+')) {
                 pushCurrentCharacter();
                 return parseToken(ASOP_INCR);           // ++
             }
-            if(*current == '=') {
+            if(isChar('=')) {
                 pushCurrentCharacter();
                 return parseToken(ASOP_ASSSUM);         // +=
             }
             return parseToken(AOP_ADD);                 // +
         case '-':
             pushCurrentCharacter();
-            if(*current == '-') {
+            if(isChar('-')) {
                 pushCurrentCharacter();
                 return parseToken(ASOP_DECR);           // --
             }
-            if(*current == '=') {
+            if(isChar('=')) {
                 pushCurrentCharacter();
                 return parseToken(ASOP_ASSDIFF);        // -=
             }
-            if(*current == '>') {
+            if(isChar('>')) {
                 pushCurrentCharacter();
                 return parseToken(OP_ARROW);            // ->
             }
             return parseToken(AOP_SUB);                 // -
         case '/':
             pushCurrentCharacter();
-            if(*current == '=') {
+            if(isChar('=')) {
                 pushCurrentCharacter();
                 return parseToken(ASOP_ASSQUOT);        // /=
             }
             return parseToken(AOP_DIV);                 // /
         case '%':
             pushCurrentCharacter();
-            if(*current == '=') {
+            if(isChar('=')) {
                 pushCurrentCharacter();
                 return parseToken(ASOP_ASSMOD);         // %=
             }
             return parseToken(AOP_MOD);                 // %
         case '^':
             pushCurrentCharacter();
-            if(*current == '=') {
+            if(isChar('=')) {
                 pushCurrentCharacter();
                 return parseToken(ASOP_ASSPOW);         // ^=
             }
             return parseToken(AOP_POW);                 // ^
         case '|':
             pushCurrentCharacter();
-            if(*current == '=') {
+            if(isChar('=')) {
                 pushCurrentCharacter();
                 return parseToken(ASOP_ASSBOR);         // |=
             }
-            if(*current == '|') {
+            if(isChar('|')) {
                 pushCurrentCharacter();
                 return parseToken(LOP_OR);              // ||
             }
             return parseToken(BOP_OR);                  // |
         case '&':
             pushCurrentCharacter();
-            if(*current == '=') {
+            if(isChar('=')) {
                 pushCurrentCharacter();
                 return parseToken(ASOP_ASSBAND);        // &=
             }
-            if(*current == '&') {
+            if(isChar('&')) {
                 pushCurrentCharacter();
                 return parseToken(LOP_AND);             // &&
             }
             return parseToken(BOP_AND);                 // &
         case '~':
             pushCurrentCharacter();
-            if(*current == '=') {
+            if(isChar('=')) {
                 pushCurrentCharacter();
                 return parseToken(ASOP_ASSBXOR);        // ~=
             }
             return parseToken(BOP_XOR);                 // ~
         case '<':
             pushCurrentCharacter();
-            if(*current == '=') {
+            if(isChar('=')) {
                 pushCurrentCharacter();
                 return parseToken(COP_LOREQ);           // <=
             }
-            if(*current == '<') {
+            if(isChar('<')) {
                 pushCurrentCharacter();
-                if(*current == '=') {
+                if(isChar('=')) {
                     pushCurrentCharacter();
                     return parseToken(ASOP_ASSBLS);     // <<=
                 } 
@@ -479,13 +481,13 @@ Token Tokenizer::getSymbolToken() {
             return parseToken(COP_LT);                  // <
         case '>':
             pushCurrentCharacter();
-            if(*current == '=') {
+            if(isChar('=')) {
                 pushCurrentCharacter();
                 return parseToken(COP_GOREQ);           // >=
             }
-            if(*current == '>') {
+            if(isChar('>')) {
                 pushCurrentCharacter();
-                if(*current == '=') {
+                if(isChar('=')) {
                     pushCurrentCharacter();
                     return parseToken(ASOP_ASSBRS);     // >>=
                 } 
@@ -494,14 +496,14 @@ Token Tokenizer::getSymbolToken() {
             return parseToken(COP_GT);                  // >
         case '=':
             pushCurrentCharacter();
-            if(*current == '=') {
+            if(isChar('=')) {
                 pushCurrentCharacter();
                 return parseToken(COP_EQUAL);           // ==
             }
             return parseToken(ASOP_ASSIGN);             // =
         case '*':
             pushCurrentCharacter();
-            if(*current == '=') {
+            if(isChar('=')) {
                 pushCurrentCharacter();
                 return parseToken(ASOP_ASSPROD);        // *=
             }
