@@ -105,7 +105,7 @@ i32 main(i32 argc, char **argv)
         .registers = NULL,
         .register_size = 0,
 
-        .compare_flag = 0,
+        .flags = 0,
 
         .arg_mem_used = 0,
 

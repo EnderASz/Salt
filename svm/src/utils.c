@@ -11,7 +11,7 @@
 static void dump_hexes(u8 *bytes, short amount)
 {
     for (short i = 0; i < amount; i++) {
-        printf("%02hx", bytes[i]);
+        printf("%02hhx", bytes[i]);
         if (i % 2 != 0)
             printf(" ");
     }
@@ -34,3 +34,19 @@ void util_hexdump(u8 *bytes, u32 amount)
     }
     dump_hexes(bytes + (amount - rest), rest);
 }
+
+void util_bitdump(u8 value)
+{
+    u8 max_byte = 1 << 7; 
+    
+    printf("%02hhx ", value);
+    for (u32 j = 0; j < 8; j++) {
+
+        /* Print one bit, and then move to the next one */
+        printf("%u", value & max_byte ? 1 : 0); 
+        value <<= 1;
+    }
+    printf("\n");
+}
+
+

@@ -127,6 +127,8 @@ i32 exec(SVMRuntime *_rt, struct SaltModule *main)
 
 const struct SVMCall *lookup_exec(char *title)
 {
+    register i32 itext = * (i32 *) title;
+
     for (u32 i = 0; i < g_exec_amount; i++) {
 
         /* This magic comparison without using strncmp is done by casting 
@@ -137,10 +139,8 @@ const struct SVMCall *lookup_exec(char *title)
          *
          * Note that this had to be done because this might be the most called 
          * function in the whole SVM, so it should be optimized.
-         *
-         *                                                      - jd, bellrise
          */
-        if (* (i32 *) title != * (i32 *) g_execs[i].instruction) {
+        if (itext != * (i32 *) g_execs[i].instruction) {
             continue;
         }
 
@@ -231,7 +231,7 @@ u32 exec_cxxeq(SVMRuntime *_rt, struct SaltModule *__restrict module,
 
         case OBJECT_TYPE_BOOL:
             if (* (u8 *) o1->value == * (u8 *) o2->value)
-                _rt->compare_flag = 1;
+                bit_set(&_rt->flags, 2);
             break;
 
         /* the float & i32 case may look pretty slow, but the alternative is 
@@ -240,33 +240,33 @@ u32 exec_cxxeq(SVMRuntime *_rt, struct SaltModule *__restrict module,
         case OBJECT_TYPE_FLOAT:
         {
             if (* (float *) o1->value == * (float *) o2->value)
-                _rt->compare_flag = 1;
+                bit_set(&_rt->flags, 2);
             break;
         }
         case OBJECT_TYPE_INT:
         {
             if (* (i32 *) o1->value == * (i32 *) o2->value)
-                _rt->compare_flag = 1;
+                bit_set(&_rt->flags, 2);
             break;
         }
         case OBJECT_TYPE_STRING:
         {
             u32 size = o1->size;
             if (o2->size != size) {
-                _rt->compare_flag = 0;
+                bit_unset(&_rt->flags, 2);
                 break;
             }
 
             if(strncmp((char *) o1->value, (char *) o2->value, size - 1) == 0)
-                _rt->compare_flag = 1;
+                bit_set(&_rt->flags, 2);
             else
-                _rt->compare_flag = 0;
+                bit_unset(&_rt->flags, 2);    
             break;
         }
         
         default:
             /* if the type is unknown, return false by default */
-            _rt->compare_flag = 0;
+            bit_unset(&_rt->flags, 2);
     
     }
 
@@ -276,8 +276,9 @@ u32 exec_cxxeq(SVMRuntime *_rt, struct SaltModule *__restrict module,
 u32 exec_cxxne(SVMRuntime *_rt, struct SaltModule *__restrict module, 
                 u8 *__restrict payload,  u32 pos)
 {
+    if (bit_at(_rt->flags, 2))
+        bit_unset(&_rt->flags, 2);
     exec_cxxeq(_rt, module, payload, pos);
-    _rt->compare_flag = !_rt->compare_flag;
     return ++pos;
 }
 
@@ -329,8 +330,8 @@ u32 exec_ivsub(SVMRuntime *_rt, struct SaltModule *__restrict module,
 u32 exec_jmpfl(SVMRuntime *_rt, struct SaltModule *__restrict module, 
                 u8 *__restrict payload,  u32 pos)
 {
-    dprintf("Compare flag on %02hx\n", _rt->compare_flag); 
-    if (_rt->compare_flag)
+    dprintf("Compare flag on %02hx\n", bit_at(_rt->flags, 2)); 
+    if (bit_at(_rt->flags, 2))
         return find_label(_rt, module, (char *) (payload + 4));
 
     return ++pos;
@@ -339,8 +340,8 @@ u32 exec_jmpfl(SVMRuntime *_rt, struct SaltModule *__restrict module,
 u32 exec_jmpnf(SVMRuntime *_rt, struct SaltModule *__restrict module, 
                 u8 *__restrict payload,  u32 pos)
 {
-    dprintf("Compare flag on %02hx\n", _rt->compare_flag); 
-    if (!_rt->compare_flag)
+    dprintf("Compare flag on %02hx\n", bit_at(_rt->flags, 2)); 
+    if (!bit_at(_rt->flags, 2))
         return find_label(_rt, module, (char *) (payload + 4));
 
     return ++pos;
