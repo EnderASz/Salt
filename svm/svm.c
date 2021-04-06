@@ -60,7 +60,7 @@
  *
  *
  *
- * @version  Salt Virtual Machine; format 3 version 0.11  
+ * @version  Salt Virtual Machine; format 3 version 0.12  
  */
 #include "include/args.h"
 #include "include/core.h"
@@ -115,7 +115,6 @@ i32 main(i32 argc, char **argv)
         .m_frees = 0,
 
         .module_size = 0,
-        .module_space = 0,
         .modules = NULL,
 
         .callstack_size = 0,
@@ -147,7 +146,10 @@ i32 main(i32 argc, char **argv)
     struct SaltModule *main = load(&runtime, filename);
     strcpy(main->name, "__main__");
 
-    exec(&runtime, main);
+    /* Before executing from the main function, run the private __load function
+     first, if the user wanted to preload any globals. */
+    exec(&runtime, main, "%__load");
+    exec(&runtime, main, "main");
 
     if (runtime.arg_mem_used)
         printf("Memory used: %ld\n", runtime.m_max_used);
