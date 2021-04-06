@@ -9,12 +9,18 @@
 #include "../include/module.h"
 
 #include <string.h>
+#include <stdio.h>
 
 void callstack_push(SVMRuntime *_rt, u32 line, struct SaltModule *module,
                     char *__restrict function)
 {
     dprintf("Pushing stack frame [%ld](%d, %s, %s)\n", _rt->callstack_size, 
             line, module->name, function);
+
+#ifdef DEBUG_CALLSTACK
+    printf("Confirm callstack push ");
+    fgetc(stdin);
+#endif
 
     _rt->callstack = vmrealloc(
         _rt->callstack, 

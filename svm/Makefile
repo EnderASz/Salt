@@ -133,7 +133,7 @@ __setup:
 # All objects are saved in build/objects, which then are linked in __link.
 
 $(SOURCES):
-	$(CC) $(CFLAGS) -D SVM_VERSION=\"$(VERSION)\" $(DFLAGS) -c -o build/objects/$@.o src/$@
+	$(CC) $(CFLAGS) -D SVM_VERSION=\"$(VERSION)\" $(DFLAGS) $(UFLAGS) -c -o build/objects/$@.o src/$@
 
 
 # The link target is the final step in compilation

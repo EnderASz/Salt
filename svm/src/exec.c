@@ -66,7 +66,7 @@ static u32 find_label(SVMRuntime *_rt, struct SaltModule *module, char *label)
 {
     for (u32 i = 0; i < module->label_amount; i++) {
         char *content = module->instructions[module->labels[i]].content;
-        if (strncmp(content + 1, label, strlen(label) - 1) == 0)
+        if (strncmp(content + 1, label, strlen(label)) == 0)
             return module->labels[i];
     }
     exception_throw(_rt, EXCEPTION_LABEL, "Cannot find '%s' label", label);
@@ -93,7 +93,8 @@ i32 exec(SVMRuntime *_rt, struct SaltModule *main, const char *start)
     u32 i = find_label(_rt, main, (char *) start);
 
     // "Call" the main instruction
-    callstack_push(_rt, main->instruction_amount - 1, main, (char *) start);
+    u32 initial_depth = _rt->callstack_size;
+    callstack_push(_rt, i, main, (char *) start);
 
     for (; i < main->instruction_amount;) {
     
@@ -106,6 +107,9 @@ i32 exec(SVMRuntime *_rt, struct SaltModule *main, const char *start)
     
         const struct SVMCall *exec = lookup_exec(main->instructions[i].content);
         i = exec->f_exec(_rt, main, (u8 *) main->instructions[i].content + 5, i);
+    
+        if (_rt->callstack_size == initial_depth)
+            return 0;
     } 
     
     return 0;
@@ -194,9 +198,9 @@ static void copy_object(SVMRuntime *_rt, SaltObject *dest, SaltObject *src)
 u32 exec_callf(SVMRuntime *_rt, struct SaltModule *__restrict module, 
                 u8 *__restrict payload,  u32 pos)
 {
-    u32 line = find_label(_rt, module, (char *) payload);
-    callstack_push(_rt, pos, module, (char *) payload);
-    return line;
+    dprintf("Calling '%s'\n", payload);
+    exec(_rt, module, (char *) payload);
+    return ++pos;
 }
 
 u32 exec_callx(SVMRuntime *_rt, struct SaltModule *__restrict module, 
