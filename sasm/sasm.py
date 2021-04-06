@@ -12,7 +12,7 @@ import struct
 import re
 
 __author__  = 'bellrise'
-__version__ = '0.3'
+__version__ = '0.4'
 
 # This SCC magic value is placed right at the beginning of the header,
 # which lets SVM know that this indeed a Salt compiled code file.
@@ -176,9 +176,9 @@ class Assembler:
         data = self.split_args(line)[1:]
         buffer = bytes(line[:5], 'ascii')
         for elm in data:
-            
+           
             # Add an int onto the buffer
-            if elm.isdigit():
+            if re.match(r'-?[0-9]+', elm):
                 value = int(elm)
                 if value < -2147483647 or value > 2147483647:
                     fatal(f'int out of bounds on line {index}')
