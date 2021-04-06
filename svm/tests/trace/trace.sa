@@ -1,0 +1,25 @@
+; This is the trace test
+
+@%__load
+ TRACE
+RETRN
+
+@main
+ TRACE
+
+ CALLF (func1)
+
+ TRACE
+RETRN
+
+@func1
+ TRACE
+
+ CALLF (func2)
+ 
+ TRACE
+RETRN
+
+@func2
+ TRACE
+RETRN
