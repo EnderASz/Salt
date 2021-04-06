@@ -50,7 +50,7 @@
 </head>
 <body>
     <h1>
-        The SCC3 Standard &nbsp; <a id="svm_version">for SVM 0.11</a>
+        The SCC3 Standard &nbsp; <a id="svm_version">for SVM 0.12</a>
     </h1>
 
     <hr>
@@ -279,7 +279,7 @@
     </p>
 
     <div id="s_callf">
-        <h2 class="svmcall">CALLF strl ...</h2>
+        <h2 class="svmcall">CALLF ...</h2>
         <p>
             Call a function and push the current position and call onto the stack pointer.
             Note that this only works for local functions in the same module, and should be
@@ -295,18 +295,35 @@
             </tr>
             <tr>
                 <td>0</td>
-                <td>4</td>
-                <td>uint</td>
-                <td>string length</td>
-            </tr>
-            <tr>
-                <td>4</td>
                 <td>...</td>
                 <td>string</td>
-                <td>null terminated string</td>
+                <td>function name</td>
             </tr>
         </table>
     </div>
+
+    <div id="s_callx">
+        <h2 class="svmcall">CALLX ... ...</h2>
+        <p>
+            Call an external function from another module loaded with 
+            <code><a href="#s_extld">EXTLD</a></code>.
+        </p>
+        <table class="struct">
+            <tr>
+                <td>0</td>
+                <td>...</td>
+                <td>string</td>
+                <td>module name string</td>
+            </tr>
+            <tr>
+                <td>x</td>
+                <td>...</td>
+                <td>string</td>
+                <td>function name string</td>
+            </tr>
+        </table>
+    </div>
+
 
     <div id="s_cxxeq">
         <h2 class="svmcall">CXXEQ left right</h2>
@@ -376,7 +393,7 @@
     </div>
 
     <div id="s_extld">
-        <h2 class="svmcall">EXTLD string</h2>
+        <h2 class="svmcall">EXTLD ...</h2>
         <p>
             Load an external SCC file and add it to the global module register.
         </p>
@@ -390,7 +407,7 @@
             <tr>
                 <td>0</td>
                 <td>n</td>
-                <td><a href="#s_payload">payload</a>[string]</td>
+                <td>string</td>
                 <td>Name of the external library. Cannot have the <code>.scc</code> extension
                 because it is added later in the SVM when actually reading the file.</td>
             </tr>
@@ -452,7 +469,7 @@
     </div>
 
     <div id="s_jmpfl">
-        <h2 class="svmcall">JMPFL strl ...</h2>
+        <h2 class="svmcall">JMPFL ...</h2>
         <p>
             Jump to the given symbol only if the jump flag is set.
         </p>
@@ -465,12 +482,6 @@
             </tr>
             <tr>
                 <td>0</td>
-                <td>4</td>
-                <td>uint</td>
-                <td>string length</td>
-            </tr>
-            <tr>
-                <td>4</td>
                 <td>...</td>
                 <td>string</td>
                 <td>null terminated string</td>
@@ -479,7 +490,7 @@
     </div>
 
     <div id="s_jmpnf">
-        <h2 class="svmcall">JMPNF strl ...</h2>
+        <h2 class="svmcall">JMPNF ...</h2>
         <p>
             Jump to the given symbol only if the jump flag is <b>NOT</b> set.
         </p>
@@ -492,12 +503,6 @@
             </tr>
             <tr>
                 <td>0</td>
-                <td>4</td>
-                <td>uint</td>
-                <td>string length</td>
-            </tr>
-            <tr>
-                <td>4</td>
                 <td>...</td>
                 <td>string</td>
                 <td>null terminated string</td>
@@ -506,7 +511,7 @@
     </div>
 
     <div id="s_jmpto">
-        <h2 class="svmcall">JMPTO strl ...</h2>
+        <h2 class="svmcall">JMPTO ...</h2>
         <p>
             Jump to the passed label without creating a new entry on the callstack. This may 
             be used in loops, because calling a label and putting it on the callstack costs
@@ -521,41 +526,12 @@
             </tr>
             <tr>
                 <td>0</td>
-                <td>4</td>
-                <td>uint</td>
-                <td>string length</td>
-            </tr>
-            <tr>
-                <td>4</td>
                 <td>...</td>
                 <td>string</td>
                 <td>null terminated string</td>
             </tr>
         </table>
     </div>
-
-    <div id="s_extld">
-        <h2 class="svmcall">EXTLD string</h2>
-        <p>
-            Load an external SCC file and add it to the global module register.
-        </p>
-        <table class="struct">
-            <tr>
-                <th>Offset</th>
-                <th>Width</th>
-                <th>Type</th>
-                <th>What</th>
-            </tr>
-            <tr>
-                <td>0</td>
-                <td>n</td>
-                <td><a href="#s_payload">payload</a>[string]</td>
-                <td>Name of the external library. Cannot have the <code>.scc</code> extension
-                because it is added later in the SVM when actually reading the file.</td>
-            </tr>
-        </table>
-    </div>
-
 
     <div id="s_killx">
         <h2 class="svmcall">KILLX</h2>
@@ -759,6 +735,13 @@
                 <td>Object ID</td>
             </tr>
         </table>
+    </div>
+
+    <div id="s_trace">
+        <h2 class="svmcall">TRACE</h2>
+        <p>
+            Print the current callstack to standard out. Used for debugging.
+        </p>
     </div>
 
     <footer style="height: 100px;"></footer>

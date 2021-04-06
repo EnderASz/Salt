@@ -184,3 +184,67 @@ struct SaltModule *load(SVMRuntime *_rt, char *name)
     fclose(mod);
     return module;
 }
+
+static String *get_module_path(SVMRuntime *_rt, char *name)
+{
+    String *str = vmalloc(sizeof(String));
+    str->size = 256;
+    str->content = vmalloc(sizeof(char) * 256);
+    memset(str->content, 0, 256);
+    
+    // Try local /ext
+
+    snprintf(str->content, 255, "ext/%s.scc", name);
+    FILE *fp = fopen(str->content, "r");
+    if (fp) {
+        fclose(fp);
+        return str; 
+    }
+
+    // Try salt home /ext
+    
+#ifdef _WIN32
+    const char *ext = getenv("SaltHome");
+#else
+    const char *ext = getenv("SALT_HOME");
+#endif
+
+    memset(str->content, 0, 256);
+    snprintf(str->content, 255, "%s/ext/%s.scc", ext, name);
+    FILE *efp = fopen(str->content, "r");
+    if (efp) {
+        fclose(efp);
+        return str;
+    }
+
+    vmfree(str->content, str->size);
+    vmfree(str, sizeof(String));
+    exception_throw(_rt, EXCEPTION_RUNTIME, "Cannot find '%s' module", name);
+
+    return NULL;
+}
+
+struct SaltModule *ext_load(SVMRuntime *_rt, char *name)
+{
+    String *path = get_module_path(_rt, name);
+    FILE *fp = fopen(path->content, "r");
+    
+    vmfree(path->content, path->size);
+    vmfree(path, sizeof(String));
+
+    struct SaltModule *module = module_create(_rt, name);
+    struct LoaderHeaderData ins = load_header(_rt, fp);
+
+    load_instructions(_rt, module, fp, ins.instructions);
+    load_labels(_rt, module);
+
+    register_control(_rt, ins.registers);
+
+    dprintf("Loaded module '%s'\n", module->name);
+
+    fclose(fp);
+    return module;
+}
+
+
+

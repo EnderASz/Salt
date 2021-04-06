@@ -33,16 +33,15 @@
  * in the module scope, and there are no local variables, so the stack frame 
  * only points.
  *
- * @a module   name of the module
+ * @a module   pointer to the module
  * @a function name of the function 
  * @a line     the line the call was made on
  */
 struct StackFrame {
 
-    char module[62];
-    char function[62];
+    struct SaltModule *module;
+    char function[64];
     u32  line;
-
 };
 
 /**
@@ -53,7 +52,7 @@ struct StackFrame {
  * @param   function title of the function, is checked if it's shorter than 62
  *                   chars.
  */
-void callstack_push(SVMRuntime *_rt, u32 line, char *__restrict module, 
+void callstack_push(SVMRuntime *_rt, u32 line, struct SaltModule *module,
                     char *__restrict function);
 
 /**

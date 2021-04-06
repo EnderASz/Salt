@@ -6,27 +6,24 @@
 #include "../include/callstack.h"
 #include "../include/exception.h"
 #include "../include/core.h"
+#include "../include/module.h"
 
 #include <string.h>
 
-void callstack_push(SVMRuntime *_rt, u32 line, char *__restrict module, 
+void callstack_push(SVMRuntime *_rt, u32 line, struct SaltModule *module,
                     char *__restrict function)
 {
     dprintf("Pushing stack frame [%ld](%d, %s, %s)\n", _rt->callstack_size, 
-            line, module, function);
-
-    if (strlen(module) > 61 || strlen(function) > 61) {
-        exception_throw(_rt, EXCEPTION_RUNTIME, "Stack frame name too long");
-    }
+            line, module->name, function);
 
     _rt->callstack = vmrealloc(
         _rt->callstack, 
         sizeof(struct StackFrame) * _rt->callstack_size,
         sizeof(struct StackFrame) * (_rt->callstack_size + 1)
     );
-
-    strcpy(_rt->callstack[_rt->callstack_size].module, module);
-    strcpy(_rt->callstack[_rt->callstack_size].function, function);
+    
+    _rt->callstack[_rt->callstack_size].module = module;
+    strncpy(_rt->callstack[_rt->callstack_size].function, function, 64);
     _rt->callstack[_rt->callstack_size].line = line;
 
     _rt->callstack_size++;

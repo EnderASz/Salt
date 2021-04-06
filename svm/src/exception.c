@@ -6,6 +6,7 @@
 #include "../include/core.h"
 #include "../include/exception.h"
 #include "../include/callstack.h"
+#include "../include/module.h"
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -24,7 +25,7 @@ void exception_throw(SVMRuntime *_rt, const char *exception, const char *fmt, ..
     u64 size = _rt->callstack_size;
     for (u64 i = 0; i < size; i++) {
         struct StackFrame *frame = callstack_peek(_rt);
-        fprintf(stderr, "  at %s.%s\n", frame->module,
+        fprintf(stderr, "  at %s.%s\n", frame->module->name,
                 frame->function);
         callstack_pop(_rt);
     }

@@ -247,8 +247,7 @@ typedef struct _svm_runtime_st {
 
     /* Global table of loaded modules. (module.h) */
     u32 module_size;
-    u32 module_space;
-    struct SaltModule *modules;
+    struct SaltModule **modules;
 
     /* The callstack. (callstack.h) */
     u64 callstack_size;

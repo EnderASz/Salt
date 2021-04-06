@@ -37,9 +37,25 @@
  *  - allocate space for a new salt module
  *  - load symbols from bytecode
  *
- * @param   name name of the module
+ * @param   name    name of the module
  * @returns pointer to acquired SaltModule
  */
 struct SaltModule *load(SVMRuntime *_rt, char *name);
+
+/**
+ * Load an external module from the salt home /ext directory OR the local
+ * /etx directory. The local ext directory has priority over the latter.
+ * If the module with the given name (without the .scc extension) cannot 
+ * be found, it throws an runtime exception.
+ *
+ * This function automatically handles lookups in the runtime module array
+ * and memory allocation for it. If it finds an already imported module with
+ * the same name, it returns the pointer to that module, and does not load 
+ * a new one.
+ * 
+ * @param   name    name of the module to load
+ * @returns pointer to acquired SaltModule
+ */
+struct SaltModule *ext_load(SVMRuntime *_rt, char *name);
 
 #endif // SVM_LOADER_H

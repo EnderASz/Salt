@@ -59,11 +59,14 @@ struct SaltObjectNode {
  *                      should be controlled by the compiler to raise an 
  *                      error if the user tries to do so
  * @a object_first      pointer to the first object
- * @a import_amount     size of import array
- * @a imports           array of pointers to other Salt modules; this is done
- *                      instead of storing all imports in a single, one level
- *                      array to allow for multiple & multilevel imports so you
- *                      can access any imported module from another module
+ * @a module_amount     size of module pointer array
+ * @a modules           this is an array of pointers to modules; in order to 
+ *                      not allow global imports, modules have to be arranged 
+ *                      in a tree style fashion. This is done by storing an 
+ *                      array of pointers to the modules, which are all stored
+ *                      in the runtime module array. This way you can only 
+ *                      access modules which you have imported, but a module
+ *                      is never imported twice.
  * @a instruction_amount  size of instruction array
  * @a instructions      array of instructions; each instruction is represented
  *                      as a SaltInstruction structure
@@ -79,8 +82,8 @@ struct SaltModule {
 
     struct  SaltObjectNode *head;
 
-    u32     import_amount;
-    struct  SaltModule **imports;
+    u32     module_amount;
+    struct SaltModule **modules;
 
     u32     instruction_amount;
     String *instructions;

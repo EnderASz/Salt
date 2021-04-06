@@ -12,20 +12,16 @@
 
 static struct SaltModule *module_acquire_new(SVMRuntime *_rt)
 {
-    if (_rt->module_space == 0) {
-        _rt->module_space++;
-        _rt->modules = vmalloc(sizeof(struct SaltModule));
-    }
-
-    if (_rt->module_size >= _rt->module_space) {
-        _rt->module_space++;
-        _rt->modules = vmrealloc(_rt->modules, sizeof(struct SaltModule)
-                * _rt->module_space - 1, sizeof(struct SaltModule)
-                * _rt->module_space);
-    }
-
+    dprintf("Acquiring new module (%d)\n", _rt->module_size + 1);
+    _rt->modules = vmrealloc(
+        _rt->modules, 
+        sizeof(struct SaltModule *) * (_rt->module_size),
+        sizeof(struct SaltModule *) * (_rt->module_size + 1)
+    );
     _rt->module_size++;
-    return &_rt->modules[_rt->module_size - 1];
+    
+    _rt->modules[_rt->module_size - 1] = vmalloc(sizeof(struct SaltModule));
+    return _rt->modules[_rt->module_size - 1];
 }
 
 // Node operations
@@ -166,6 +162,9 @@ struct SaltModule* module_create(SVMRuntime *_rt, char *name)
     mod->instruction_amount = 0;
     mod->instructions = NULL;
 
+    mod->module_amount = 0;
+    mod->modules = NULL;
+
     mod->label_amount = 0;
     mod->labels = NULL;
 
@@ -186,13 +185,19 @@ static void module_deallocate(SVMRuntime *_rt, struct SaltModule *module)
     }
     vmfree(module->instructions, module->instruction_amount * sizeof(String));
 
+    dprintf("Deallocting module pointer array\n");
+    vmfree(module->modules, sizeof(struct SaltModule *) * module->module_amount);  
+
     nodes_collapse(_rt, module);
+    vmfree(module, sizeof(struct SaltModule));
 }
 
 void module_delete_all(SVMRuntime *_rt)
 {
     for (u32 i = 0; i < _rt->module_size; i++)
-        module_deallocate(_rt, &_rt->modules[i]);
+        module_deallocate(_rt, _rt->modules[i]);
 
-    vmfree(_rt->modules, _rt->module_space * sizeof(struct SaltModule));
+    vmfree(_rt->modules, _rt->module_size * sizeof(struct SaltModule *));
 }
+
+

@@ -62,10 +62,11 @@ extern const u32 g_exec_amount;
  * After: after exiting the main execution loop, it deallocates all used heap
  * memory and safely exits the program.
  *
- * @param   main  main module, the first loaded module should be named __main__
+ * @param   main    main module, the first loaded module should be named __main__
+ * @param   start   name of the function it should start executing from 
  * @return  status of exec_ instructions.
  */
-i32 exec(SVMRuntime *_rt, struct SaltModule* main);
+i32 exec(SVMRuntime *_rt, struct SaltModule* main, const char *start);
 
 /**
  * Return the pointer to the svm call. This will return
@@ -106,6 +107,12 @@ void register_clear(SVMRuntime *_rt);
  * Call a different function and jump to it.
  */
 u32 exec_callf(SVMRuntime *_rt, struct SaltModule *__restrict module, 
+                u8 *__restrict payload, u32 pos);
+
+/**
+ * Call an extenal function from another module loaded with EXTLD.
+ */
+u32 exec_callx(SVMRuntime *_rt, struct SaltModule *__restrict module, 
                 u8 *__restrict payload, u32 pos);
 
 /**
@@ -242,11 +249,16 @@ u32 exec_rnull(SVMRuntime *_rt, struct SaltModule *__restrict module,
 u32 exec_rpush(SVMRuntime *_rt, struct SaltModule *__restrict module, 
                 u8 *__restrict payload, u32 pos);
 
-
 /**
  * Sleep the given amount of miliseconds.
  */
 u32 exec_sleep(SVMRuntime *_rt, struct SaltModule *__restrict module, 
+                u8 *__restrict payload, u32 pos);
+
+/**
+ * Print the current callstack to standard out. Used for debugging.
+ */
+u32 exec_trace(SVMRuntime *_rt, struct SaltModule *__restrict module, 
                 u8 *__restrict payload, u32 pos);
 
 #endif // SVM_EXEC_H
