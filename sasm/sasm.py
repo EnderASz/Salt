@@ -12,7 +12,7 @@ import struct
 import re
 
 __author__  = 'bellrise'
-__version__ = '0.4'
+__version__ = '0.5'
 
 # This SCC magic value is placed right at the beginning of the header,
 # which lets SVM know that this indeed a Salt compiled code file.
@@ -195,7 +195,7 @@ class Assembler:
                 buffer += struct.pack('i', value)
 
             # Add a float value
-            elif re.match(r'[0-9]+\.[0-9]+', elm):
+            elif re.match(r'-?[0-9]+\.[0-9]+', elm):
                 value = float(elm)
                 buffer += struct.pack('f', value)
 
@@ -212,15 +212,10 @@ class Assembler:
                     fatal(f'unknown const value on line {index}')
                 buffer += const_table[elm[1:-1]]
 
-            # String array
+            # Raw string
             elif re.match(r'\(.+\)', elm):
-                items = [s.strip() for s in elm[1:-1].split(',')]
-                
-                for i in items:
-                    buffer += struct.pack('i', len(i))
-
-                for s in items:
-                    buffer += bytes(self.handle_string(s), 'ascii') + b'\0'
+                buffer += bytes(elm[1:-1], 'ascii')
+                buffer += b'\0'
 
             # String
             elif re.match(r'".*"', elm):
