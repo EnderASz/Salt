@@ -188,14 +188,14 @@ class Assembler:
         for elm in data:
 
             # Add an int onto the buffer
-            if re.match(r'-?[0-9]+', elm):
+            if re.match(r'^-{0,1}[0-9]+$', elm):
                 value = int(elm)
                 if value < -2147483647 or value > 2147483647:
                     fatal(f'int out of bounds on line {index}')
                 buffer += struct.pack('i', value)
 
             # Add a float value
-            elif re.match(r'-?[0-9]+\.[0-9]+', elm):
+            elif re.match(r'^-{0,1}[0-9]+\.[0-9]+$', elm):
                 value = float(elm)
                 buffer += struct.pack('f', value)
 
