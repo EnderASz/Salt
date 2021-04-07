@@ -1,4 +1,30 @@
 /**
+ * Salt Virtual Machine
+ * 
+ * Copyright (C) 2021  The Salt Programming Language Developers
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <https://www.gnu.org/licenses/>.
+ *
+ * END OF COPYRIGHT NOTICE
+ *
+ * The Salt Virtual Machine is the interpreter for compiled Salt code generated
+ * by saltc, the Salt compiler. It is written in C to have more control over 
+ * the bytes and what is happening in the background, to achieve better 
+ * execution speeds. This code is mostly written and handled by me (bellrise)
+ * but there may be more people in the future wanting to contribute to the
+ * project. 
+ *
  * exec.h implementation
  *
  * @author bellrise, 2021
@@ -9,6 +35,7 @@
 #include "../include/callstack.h"
 #include "../include/utils.h"
 #include "../include/module.h"
+#include "../include/loader.h"
 
 #include <stdio.h>
 #include <string.h>
@@ -37,15 +64,17 @@ const struct SVMCall g_execs[] = {
     {"IVADD", exec_ivadd, 8},
     {"IVSUB", exec_ivsub, 8},
     {"RETRN", exec_retrn, 0},
-    {"JMPTO", exec_jmpto, 4},
-    {"JMPFL", exec_jmpfl, 8},
-    {"JMPNF", exec_jmpnf, 8},
-    {"CALLF", exec_callf, 4},
-    {"EXTLD", exec_extld, 4},
+    {"JMPTO", exec_jmpto, 0},
+    {"JMPFL", exec_jmpfl, 0},
+    {"JMPNF", exec_jmpnf, 0},
+    {"CALLF", exec_callf, 0},
+    {"CALLX", exec_callx, 0},
+    {"EXTLD", exec_extld, 0},
     {"OBJMK", exec_objmk, 7},
     {"OBJDL", exec_objdl, 4},
     {"PRINT", exec_print, 4},
     {"MLMAP", exec_mlmap, 0},
+    {"TRACE", exec_trace, 0},
     {"CXXEQ", exec_cxxeq, 8},
     {"CXXNE", exec_cxxne, 8},
     {"RNULL", exec_rnull, 0},
@@ -53,7 +82,7 @@ const struct SVMCall g_execs[] = {
 
 };
 
-const u32 g_exec_amount = 21;
+const u32 g_exec_amount = 23;
 
 // ----------------------------------------------------------------------------
 // Utility & loop functions
@@ -63,7 +92,7 @@ static u32 find_label(SVMRuntime *_rt, struct SaltModule *module, char *label)
 {
     for (u32 i = 0; i < module->label_amount; i++) {
         char *content = module->instructions[module->labels[i]].content;
-        if (strncmp(content + 1, label, strlen(label) - 1) == 0)
+        if (strncmp(content + 1, label, strlen(label)) == 0)
             return module->labels[i];
     }
     exception_throw(_rt, EXCEPTION_LABEL, "Cannot find '%s' label", label);
@@ -81,52 +110,41 @@ inline static SaltObject *fetch_from_tape(SVMRuntime *_rt, struct SaltModule
     return obj;
 }
 
-static u32 preload(SVMRuntime *_rt, struct SaltModule *main)
-{
-    i32 i = -1;
-    for (u32 j = 0; j < main->label_amount; j++) {
-        if (strncmp(main->instructions[main->labels[j]].content, "@main", 6) == 0) {
-            dprintf("Found main function at [%d]\n", main->labels[j]);
-            i = main->labels[j];
-        }
-    }
-
-    if (i == -1)
-        exception_throw(_rt, EXCEPTION_RUNTIME, "main function not found");
-
-    return (u32) i;
-}
-
 /* main exec */
 
-i32 exec(SVMRuntime *_rt, struct SaltModule *main)
+i32 exec(SVMRuntime *_rt, struct SaltModule *main, const char *start)
 {
     dprintf("Executing '%s'\n", main->name);
 
-    u32 i = preload(_rt, main);
+    u32 i = find_label(_rt, main, (char *) start);
 
     // "Call" the main instruction
-    callstack_push(_rt, main->instruction_amount - 1, main->name, "main");
+    u32 initial_depth = _rt->callstack_size;
+    callstack_push(_rt, i, main, (char *) start);
 
     for (; i < main->instruction_amount;) {
-
+    
         if (main->instructions[i].content[0] == '@') {
             i++;
             continue;
         }
 
         dprintf("[%d] < \033[95m%.5s\033[0m >\n", i, main->instructions[i].content);
-
+    
         const struct SVMCall *exec = lookup_exec(main->instructions[i].content);
         i = exec->f_exec(_rt, main, (u8 *) main->instructions[i].content + 5, i);
-    }
-
-    dprintf("Finished exec\n");
+    
+        if (_rt->callstack_size == initial_depth)
+            return 0;
+    } 
+    
     return 0;
 }
 
 const struct SVMCall *lookup_exec(char *title)
 {
+    register i32 itext = * (i32 *) title;
+
     for (u32 i = 0; i < g_exec_amount; i++) {
 
         /* This magic comparison without using strncmp is done by casting 
@@ -137,10 +155,8 @@ const struct SVMCall *lookup_exec(char *title)
          *
          * Note that this had to be done because this might be the most called 
          * function in the whole SVM, so it should be optimized.
-         *
-         *                                                      - jd, bellrise
          */
-        if (* (i32 *) title != * (i32 *) g_execs[i].instruction) {
+        if (itext != * (i32 *) g_execs[i].instruction) {
             continue;
         }
 
@@ -153,8 +169,8 @@ const struct SVMCall *lookup_exec(char *title)
 
 void register_control(SVMRuntime *_rt, u8 size)
 {
-    dprintf("Changing %d to %d\n", _rt->register_size, size);
     if (_rt->register_size < size) {
+        dprintf("Changing %d to %d\n", _rt->register_size, size);
         _rt->registers = vmrealloc(
             _rt->registers, 
             sizeof(SaltObject) * _rt->register_size, 
@@ -208,9 +224,35 @@ static void copy_object(SVMRuntime *_rt, SaltObject *dest, SaltObject *src)
 u32 exec_callf(SVMRuntime *_rt, struct SaltModule *__restrict module, 
                 u8 *__restrict payload,  u32 pos)
 {
-    u32 line = find_label(_rt, module, (char *) (payload + 4));
-    callstack_push(_rt, pos, module->name, (char *) (payload + 4));
-    return line;
+    dprintf("Calling '%s'\n", payload);
+    exec(_rt, module, (char *) payload);
+    return ++pos;
+}
+
+u32 exec_callx(SVMRuntime *_rt, struct SaltModule *__restrict module, 
+                u8 *__restrict payload,  u32 pos)
+{
+    char *mod_name  = (char *) payload;
+    char *func_name = ((char *) payload) + strlen(mod_name) + 1;
+
+    dprintf("Calling external '%s.%s'\n", mod_name, func_name);
+
+    struct SaltModule *mod = NULL;
+    // Find the module
+    for (u32 i = 0; i < module->module_amount; i++) {
+        if (strncmp(module->modules[i]->name, mod_name, strlen(mod_name)) == 0)
+            mod = module->modules[i];
+    }
+
+    if (!mod)
+        exception_throw(_rt, EXCEPTION_RUNTIME, "'%s' has not been imported", mod_name);
+
+    dprintf("Found '%s' module, now looking for '%s' function\n", mod_name, func_name);
+
+    // Call the external function
+    exec(_rt, mod, func_name);
+
+    return ++pos;
 }
 
 u32 exec_cxxeq(SVMRuntime *_rt, struct SaltModule *__restrict module, 
@@ -231,7 +273,7 @@ u32 exec_cxxeq(SVMRuntime *_rt, struct SaltModule *__restrict module,
 
         case OBJECT_TYPE_BOOL:
             if (* (u8 *) o1->value == * (u8 *) o2->value)
-                _rt->compare_flag = 1;
+                bit_set(&_rt->flags, 2);
             break;
 
         /* the float & i32 case may look pretty slow, but the alternative is 
@@ -240,33 +282,33 @@ u32 exec_cxxeq(SVMRuntime *_rt, struct SaltModule *__restrict module,
         case OBJECT_TYPE_FLOAT:
         {
             if (* (float *) o1->value == * (float *) o2->value)
-                _rt->compare_flag = 1;
+                bit_set(&_rt->flags, 2);
             break;
         }
         case OBJECT_TYPE_INT:
         {
             if (* (i32 *) o1->value == * (i32 *) o2->value)
-                _rt->compare_flag = 1;
+                bit_set(&_rt->flags, 2);
             break;
         }
         case OBJECT_TYPE_STRING:
         {
             u32 size = o1->size;
             if (o2->size != size) {
-                _rt->compare_flag = 0;
+                bit_unset(&_rt->flags, 2);
                 break;
             }
 
             if(strncmp((char *) o1->value, (char *) o2->value, size - 1) == 0)
-                _rt->compare_flag = 1;
+                bit_set(&_rt->flags, 2);
             else
-                _rt->compare_flag = 0;
+                bit_unset(&_rt->flags, 2);    
             break;
         }
         
         default:
             /* if the type is unknown, return false by default */
-            _rt->compare_flag = 0;
+            bit_unset(&_rt->flags, 2);
     
     }
 
@@ -276,8 +318,9 @@ u32 exec_cxxeq(SVMRuntime *_rt, struct SaltModule *__restrict module,
 u32 exec_cxxne(SVMRuntime *_rt, struct SaltModule *__restrict module, 
                 u8 *__restrict payload,  u32 pos)
 {
+    if (bit_at(_rt->flags, 2))
+        bit_unset(&_rt->flags, 2);
     exec_cxxeq(_rt, module, payload, pos);
-    _rt->compare_flag = !_rt->compare_flag;
     return ++pos;
 }
 
@@ -290,7 +333,37 @@ u32 exec_exite(SVMRuntime *_rt, struct SaltModule *__restrict module,
 u32 exec_extld(SVMRuntime *_rt, struct SaltModule *__restrict module, 
                 u8 *__restrict payload,  u32 pos)
 {
-    exception_throw(_rt, EXCEPTION_RUNTIME, "EXTLD is not implemented yet");
+    const char *name = (char *) payload;
+    struct SaltModule *mod = NULL;
+    
+    /* If the module already exists in the runtime array, don't load
+     the module again, just assign a new pointer in the local module 
+     imports array. */ 
+    for (u32 i = 0; i < _rt->module_size; i++) {
+        if (strncmp(_rt->modules[i]->name, name, strlen(name)) == 0)
+            mod = _rt->modules[i];
+    }
+    
+    if (!mod)
+        mod = ext_load(_rt, (char *) name);
+
+    /* Don't check if the import exists in the local table, just append
+     it onto the local module list. */
+    module->modules = vmrealloc(
+        module->modules,
+        sizeof(struct SaltModule *) * module->module_amount,
+        sizeof(struct SaltModule *) * (module->module_amount + 1)
+    );
+    module->module_amount++;
+
+    module->modules[module->module_amount - 1] = mod;
+
+    /* Execute the private %__load function before returning to the program.
+     This is done to load any globals the user would want to load beforehand,
+     or execute some setup code that has to be done only once. */
+    exec(_rt, mod, "%__load");    
+
+    dprintf("%d\n", _rt->module_size);
     return ++pos;
 }
 
@@ -329,9 +402,9 @@ u32 exec_ivsub(SVMRuntime *_rt, struct SaltModule *__restrict module,
 u32 exec_jmpfl(SVMRuntime *_rt, struct SaltModule *__restrict module, 
                 u8 *__restrict payload,  u32 pos)
 {
-    dprintf("Compare flag on %02hx\n", _rt->compare_flag); 
-    if (_rt->compare_flag)
-        return find_label(_rt, module, (char *) (payload + 4));
+    dprintf("Compare flag on %02hx\n", bit_at(_rt->flags, 2)); 
+    if (bit_at(_rt->flags, 2))
+        return find_label(_rt, module, (char *) payload);
 
     return ++pos;
 }
@@ -339,9 +412,9 @@ u32 exec_jmpfl(SVMRuntime *_rt, struct SaltModule *__restrict module,
 u32 exec_jmpnf(SVMRuntime *_rt, struct SaltModule *__restrict module, 
                 u8 *__restrict payload,  u32 pos)
 {
-    dprintf("Compare flag on %02hx\n", _rt->compare_flag); 
-    if (!_rt->compare_flag)
-        return find_label(_rt, module, (char *) (payload + 4));
+    dprintf("Compare flag on %02hx\n", bit_at(_rt->flags, 2)); 
+    if (!bit_at(_rt->flags, 2))
+        return find_label(_rt, module, (char *) payload);
 
     return ++pos;
 }
@@ -349,7 +422,7 @@ u32 exec_jmpnf(SVMRuntime *_rt, struct SaltModule *__restrict module,
 u32 exec_jmpto(SVMRuntime *_rt, struct SaltModule *__restrict module, 
                 u8 *__restrict payload,  u32 pos)
 {
-    return find_label(_rt, module, (char *) (payload + 4));
+    return find_label(_rt, module, (char *) payload);
 }
 
 u32 exec_killx(SVMRuntime *_rt, struct SaltModule *__restrict module, 
@@ -517,5 +590,16 @@ u32 exec_sleep(SVMRuntime *_rt, struct SaltModule *__restrict module,
                     "Too bad.");
 
 #endif
+    return ++pos;
+}
+
+u32 exec_trace(SVMRuntime *_rt, struct SaltModule *__restrict module, 
+                u8 *__restrict payload,  u32 pos)
+{
+    for (u32 i = 0; i < _rt->callstack_size; i++) {
+        printf("[%d](%d, %s, %s)\n", i, _rt->callstack[i].line, 
+                _rt->callstack[i].module->name, _rt->callstack[i].function);  
+    }
+
     return ++pos;
 }

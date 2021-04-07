@@ -1,4 +1,30 @@
 /**
+ * Salt Virtual Machine
+ * 
+ * Copyright (C) 2021  The Salt Programming Language Developers
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <https://www.gnu.org/licenses/>.
+ *
+ * END OF COPYRIGHT NOTICE
+ *
+ * The Salt Virtual Machine is the interpreter for compiled Salt code generated
+ * by saltc, the Salt compiler. It is written in C to have more control over 
+ * the bytes and what is happening in the background, to achieve better 
+ * execution speeds. This code is mostly written and handled by me (bellrise)
+ * but there may be more people in the future wanting to contribute to the
+ * project. 
+ *
  * loader.h implementation
  *
  * @author bellrise, 2021
@@ -184,3 +210,67 @@ struct SaltModule *load(SVMRuntime *_rt, char *name)
     fclose(mod);
     return module;
 }
+
+static String *get_module_path(SVMRuntime *_rt, char *name)
+{
+    String *str = vmalloc(sizeof(String));
+    str->size = 256;
+    str->content = vmalloc(sizeof(char) * 256);
+    memset(str->content, 0, 256);
+    
+    // Try local /ext
+
+    snprintf(str->content, 255, "ext/%s.scc", name);
+    FILE *fp = fopen(str->content, "r");
+    if (fp) {
+        fclose(fp);
+        return str; 
+    }
+
+    // Try salt home /ext
+    
+#ifdef _WIN32
+    const char *ext = getenv("SaltHome");
+#else
+    const char *ext = getenv("SALT_HOME");
+#endif
+
+    memset(str->content, 0, 256);
+    snprintf(str->content, 255, "%s/ext/%s.scc", ext, name);
+    FILE *efp = fopen(str->content, "r");
+    if (efp) {
+        fclose(efp);
+        return str;
+    }
+
+    vmfree(str->content, str->size);
+    vmfree(str, sizeof(String));
+    exception_throw(_rt, EXCEPTION_RUNTIME, "Cannot find '%s' module", name);
+
+    return NULL;
+}
+
+struct SaltModule *ext_load(SVMRuntime *_rt, char *name)
+{
+    String *path = get_module_path(_rt, name);
+    FILE *fp = fopen(path->content, "r");
+    
+    vmfree(path->content, path->size);
+    vmfree(path, sizeof(String));
+
+    struct SaltModule *module = module_create(_rt, name);
+    struct LoaderHeaderData ins = load_header(_rt, fp);
+
+    load_instructions(_rt, module, fp, ins.instructions);
+    load_labels(_rt, module);
+
+    register_control(_rt, ins.registers);
+
+    dprintf("Loaded module '%s'\n", module->name);
+
+    fclose(fp);
+    return module;
+}
+
+
+

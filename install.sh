@@ -33,9 +33,10 @@ fi
 mv saltc/saltc $SALT_HOME/bin/saltc
 mv svm/svm $SALT_HOME/bin/svm
 
-# Copy over lib & docs to salt home
+# Copy over lib, docs & ext to salt home
 cp -r doc $SALT_HOME
 cp -r lib $SALT_HOME
+cp -r ext $SALT_HOME
 
 # Reload bashrc
 source ~/.profile

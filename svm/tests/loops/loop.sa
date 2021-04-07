@@ -1,15 +1,12 @@
 ; Loops test
 %%reg 8
 
-@__setup_const
+@%__load
   ; The newline
   OBJMK 10 [true] [string] "\n"
 RETRN
 
 @main
-
-  ; Create global const variables
-  CALLF "__setup_const"
 
   OBJMK 100 [false] [int] 1
   OBJMK 101 [true] [int] 21
@@ -24,6 +21,6 @@ RETRN
   
   ; Loop again if the counter object is not 20
   CXXEQ 100 101
-  JMPNF ".loop"
+  JMPNF (.loop)
 
 RETRN

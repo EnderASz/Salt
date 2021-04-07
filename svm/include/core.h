@@ -202,9 +202,38 @@ typedef struct _svm_runtime_st {
     SaltObject *registers;
     u8 register_size;
 
-    /* The comparison flag is set after checks, and jumps are executed based
-     on this flag. */
-    u8 compare_flag;
+    /**
+     * The runtime flags are single bits that are set and unset by different 
+     * instructions. Here is a quick summary about what each flag does:
+     *
+     *      +---+---------------------------------+
+     *      | 1 | System flag, restricted use     |
+     *      +---+---------------------------------+
+     *      | 2 | Comparison flag                 |  
+     *      +---+---------------------------------+
+     *      | 3 |                                 |
+     *      +---+---------------------------------+
+     *      | 4 |                                 |
+     *      +---+---------------------------------+
+     *      | 5 |                                 |
+     *      +---+---------------------------------+
+     *      | 6 |                                 |
+     *      +---+---------------------------------+
+     *      | 7 |                                 |
+     *      +---+---------------------------------+
+     *      | 8 |                                 |
+     *      +---+---------------------------------+
+     *
+     * These flags are set using the predefined RTF (RunTimeFlag) masks.
+     * To set the comparison flag, you need to use the RTF_COMP mask like so:
+     *
+     *      _rt->flags |= RTF_COMP;
+     *
+     * Un-setting is also as easy, the only things that change are the operands:
+     *
+     *      _rt->flags &= ~RTF_COMP; 
+     */
+    u8 flags;
 
     /* Argument flags. */
     u8 arg_mem_used;
@@ -218,8 +247,7 @@ typedef struct _svm_runtime_st {
 
     /* Global table of loaded modules. (module.h) */
     u32 module_size;
-    u32 module_space;
-    struct SaltModule *modules;
+    struct SaltModule **modules;
 
     /* The callstack. (callstack.h) */
     u64 callstack_size;
@@ -239,6 +267,32 @@ typedef struct _string_st {
     char *content;
 
 } String;
+
+// Bit operations
+
+/**
+ * Return the bit at the given value. 
+ *
+ * @param   byte    byte to check
+ * @param   bit     location of bit to check 
+ */
+u8 bit_at(u8 byte, u8 bit);
+
+/**
+ * Set a bit to 1 at the given location.
+ *
+ * @param   byte    value
+ * @param   bit     location of bit to set 
+ */
+void bit_set(u8 *byte, u8 bit);
+
+/**
+ * Set a bit to 1 at the given location.
+ *
+ * @param   byte    value
+ * @param   bit     location of bit to unset 
+ */
+void bit_unset(u8 *byte, u8 bit);
 
 /**
  * Always call this instead of the normal exit, because this function

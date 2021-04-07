@@ -1,4 +1,30 @@
 /**
+ * Salt Virtual Machine
+ * 
+ * Copyright (C) 2021  The Salt Programming Language Developers
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <https://www.gnu.org/licenses/>.
+ *
+ * END OF COPYRIGHT NOTICE
+ *
+ * The Salt Virtual Machine is the interpreter for compiled Salt code generated
+ * by saltc, the Salt compiler. It is written in C to have more control over 
+ * the bytes and what is happening in the background, to achieve better 
+ * execution speeds. This code is mostly written and handled by me (bellrise)
+ * but there may be more people in the future wanting to contribute to the
+ * project. 
+ *
  * module.h implementation
  *
  * @author bellrise, 2021
@@ -12,20 +38,16 @@
 
 static struct SaltModule *module_acquire_new(SVMRuntime *_rt)
 {
-    if (_rt->module_space == 0) {
-        _rt->module_space++;
-        _rt->modules = vmalloc(sizeof(struct SaltModule));
-    }
-
-    if (_rt->module_size >= _rt->module_space) {
-        _rt->module_space++;
-        _rt->modules = vmrealloc(_rt->modules, sizeof(struct SaltModule)
-                * _rt->module_space - 1, sizeof(struct SaltModule)
-                * _rt->module_space);
-    }
-
+    dprintf("Acquiring new module (%d)\n", _rt->module_size + 1);
+    _rt->modules = vmrealloc(
+        _rt->modules, 
+        sizeof(struct SaltModule *) * (_rt->module_size),
+        sizeof(struct SaltModule *) * (_rt->module_size + 1)
+    );
     _rt->module_size++;
-    return &_rt->modules[_rt->module_size - 1];
+    
+    _rt->modules[_rt->module_size - 1] = vmalloc(sizeof(struct SaltModule));
+    return _rt->modules[_rt->module_size - 1];
 }
 
 // Node operations
@@ -166,6 +188,9 @@ struct SaltModule* module_create(SVMRuntime *_rt, char *name)
     mod->instruction_amount = 0;
     mod->instructions = NULL;
 
+    mod->module_amount = 0;
+    mod->modules = NULL;
+
     mod->label_amount = 0;
     mod->labels = NULL;
 
@@ -186,13 +211,19 @@ static void module_deallocate(SVMRuntime *_rt, struct SaltModule *module)
     }
     vmfree(module->instructions, module->instruction_amount * sizeof(String));
 
+    dprintf("Deallocting module pointer array\n");
+    vmfree(module->modules, sizeof(struct SaltModule *) * module->module_amount);  
+
     nodes_collapse(_rt, module);
+    vmfree(module, sizeof(struct SaltModule));
 }
 
 void module_delete_all(SVMRuntime *_rt)
 {
     for (u32 i = 0; i < _rt->module_size; i++)
-        module_deallocate(_rt, &_rt->modules[i]);
+        module_deallocate(_rt, _rt->modules[i]);
 
-    vmfree(_rt->modules, _rt->module_space * sizeof(struct SaltModule));
+    vmfree(_rt->modules, _rt->module_size * sizeof(struct SaltModule *));
 }
+
+

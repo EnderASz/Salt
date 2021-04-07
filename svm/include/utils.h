@@ -35,4 +35,11 @@
  */
 void util_hexdump(u8 *bytes, u32 amount);
 
+/**
+ * Print a single byte in the (hex bits) format. Used for debugging. 
+ *
+ * @param   byte    byte to print
+ */
+void util_bitdump(u8 byte);
+
 #endif // SVM_UTILS_H
