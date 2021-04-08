@@ -223,15 +223,11 @@ typedef struct _svm_runtime_st {
      *      +---+---------------------------------+
      *      | 8 |                                 |
      *      +---+---------------------------------+
-     *
-     * These flags are set using the predefined RTF (RunTimeFlag) masks.
-     * To set the comparison flag, you need to use the RTF_COMP mask like so:
-     *
-     *      _rt->flags |= RTF_COMP;
-     *
-     * Un-setting is also as easy, the only things that change are the operands:
-     *
-     *      _rt->flags &= ~RTF_COMP; 
+     * 
+     * Modifyings flags can be done using bit_set() and bit_unset(), and can
+     * be checked using bit_at(). You should not do it by hand, because you may
+     * access the incorrect flag. The second parameter is always the bit 
+     * position, < which is counted from 1, not 0! >
      */
     u8 flags;
 
