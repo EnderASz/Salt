@@ -41,21 +41,6 @@
 #define DEBUG_ALLOCATIONS 1
 #endif
 
-inline u8 bit_at(u8 byte, u8 bit)
-{
-    return byte & (1 << (8 - bit)) ? 1 : 0;
-}
-
-inline void bit_set(u8 *byte, u8 bit)
-{
-    *byte |= 1 << (8 - bit);
-}
-
-inline void bit_unset(u8 *byte, u8 bit)
-{
-    *byte &= ~(1 << (8 - bit));
-}
-
 void core_exit(SVMRuntime *_rt)
 {
     dprintf("Calling cleanup\n");

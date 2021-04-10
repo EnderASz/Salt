@@ -202,37 +202,13 @@ typedef struct _svm_runtime_st {
     SaltObject *registers;
     u8 register_size;
 
-    /**
-     * The runtime flags are single bits that are set and unset by different 
-     * instructions. Here is a quick summary about what each flag does:
-     *
-     *      +---+---------------------------------+
-     *      | 1 | System flag, restricted use     |
-     *      +---+---------------------------------+
-     *      | 2 | Comparison flag                 |  
-     *      +---+---------------------------------+
-     *      | 3 |                                 |
-     *      +---+---------------------------------+
-     *      | 4 |                                 |
-     *      +---+---------------------------------+
-     *      | 5 |                                 |
-     *      +---+---------------------------------+
-     *      | 6 |                                 |
-     *      +---+---------------------------------+
-     *      | 7 |                                 |
-     *      +---+---------------------------------+
-     *      | 8 |                                 |
-     *      +---+---------------------------------+
-     * 
-     * Modifyings flags can be done using bit_set() and bit_unset(), and can
-     * be checked using bit_at(). You should not do it by hand, because you may
-     * access the incorrect flag. The second parameter is always the bit 
-     * position, < which is counted from 1, not 0! >
-     */
-    u8 flags;
+    /* Flags */
+    u8 flag_comparison;
 
     /* Argument flags. */
-    u8 arg_mem_used;
+     u8 arg_mem_used;
+     u8 arg_debug_output;
+    i32 arg_limit_mem;
 
     /* Memory status variables. This keeps track of every allocation and the 
      amount of memory used. Used for checking for memory leaks. */
@@ -263,32 +239,6 @@ typedef struct _string_st {
     char *content;
 
 } String;
-
-// Bit operations
-
-/**
- * Return the bit at the given value. 
- *
- * @param   byte    byte to check
- * @param   bit     location of bit to check 
- */
-u8 bit_at(u8 byte, u8 bit);
-
-/**
- * Set a bit to 1 at the given location.
- *
- * @param   byte    value
- * @param   bit     location of bit to set 
- */
-void bit_set(u8 *byte, u8 bit);
-
-/**
- * Set a bit to 1 at the given location.
- *
- * @param   byte    value
- * @param   bit     location of bit to unset 
- */
-void bit_unset(u8 *byte, u8 bit);
 
 /**
  * Always call this instead of the normal exit, because this function
