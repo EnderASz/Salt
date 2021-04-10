@@ -10,7 +10,7 @@ import sys
 import os
 
 __author__  = 'bellrise'
-__version__ = '0.1'
+__version__ = '0.3'
 
 
 class TestSuite:
@@ -18,10 +18,13 @@ class TestSuite:
 
     __path   = ''
     __config = {}
+    __output = False
 
-    def __init__(self, directory: str):
+    def __init__(self, directory: str, output: bool):
         """ Load the config file from the given directory creating a new
         test suite. """
+
+        self.__output = output
 
         self.__path = directory
         if not self.__path.endswith('/'):
@@ -57,11 +60,19 @@ class TestSuite:
         else:
             print(f'mNo description provided.')
 
-        print(f'  Running \'svm {self.__path}{self.__config["source"]}\'')
-        out = subprocess.check_output(f'svm {self.__path}{self.__config["source"]}', shell=True)
+        args = ''
+        if 'args' in self.__config:
+            args = self.__config['args']
+
+        print(f'  Running \'svm {args} {self.__path}{self.__config["source"]}\'')
+        out = subprocess.check_output(f'svm {args} {self.__path}{self.__config["source"]}', shell=True)
         out = str(out, 'ascii')
+
+        if self.__output:
+            print(out)
+
         result = self.fetch_file(self.__config['result'])
-        
+
         if out == result:
             print('& \033[92mPassed.\033[0m\n')
             return True
@@ -94,6 +105,7 @@ def main():
     pr = argparse.ArgumentParser(description='The testing software for the SVM')
     pr.add_argument('-f', '--fail', action='store_true', help='exit on first failed test')
     pr.add_argument('-o', '--only', help='run a single test')
+    pr.add_argument('-d', '--debug', help='print test output', action='store_true')
 
     args = pr.parse_args()
 
@@ -114,7 +126,7 @@ def main():
 
     passed = 0
     for test_name in tests:
-        test = TestSuite(test_name)
+        test = TestSuite(test_name, args.debug)
         if test.test():
             passed += 1
         elif args.fail:
