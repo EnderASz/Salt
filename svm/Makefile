@@ -150,7 +150,7 @@ $(SOURCES):
 # The link target is the final step in compilation
 
 __link:
-	$(CC) -D SVM_VERSION=\"$(VERSION)\" $(DFLAGS) -o build/$(RESULT) $(MAIN) $(OBJECTS)
+	$(CC) $(CFLAGS) -D SVM_VERSION=\"$(VERSION)\" $(DFLAGS) -o build/$(RESULT) $(MAIN) $(OBJECTS)
 	@echo "Done"
 
 
