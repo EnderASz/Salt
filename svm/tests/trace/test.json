@@ -2,7 +2,7 @@
     "@version": 1,
 
     "title": "Trace",
-    "args": "-d",
+    "args": "--allow-debug",
     "about": "Functionality of the TRACE instruction",
     "source": "trace.scc",
     "result": "result.txt"
