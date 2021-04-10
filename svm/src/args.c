@@ -91,7 +91,7 @@ char *args_parse(SVMRuntime *_rt, i32 argc, char **argv) Nullable
 {
     char *filename = NULL;
     for (i32 i = 1; i < argc; i++) {
-        dprintf("Checking [%d] \"%s\"\n", i, argv[i]);
+        dprintf("Checking [%d] \"%s\"", i, argv[i]);
 
         if (arg(argv[i], "--help", "-h"))
             /* Show the help page and exit */

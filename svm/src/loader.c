@@ -139,14 +139,15 @@ static void read_instruction(SVMRuntime *_rt, String *ins, FILE *fp)
     ins->content[width] = 0;
     fread(ins->content, 1, width, fp);
 
-    dprintf("Read [%d+1]<%.5s...>\n", width, ins->content);
+    dprintf("Read [%d+1] %.5s", width, ins->content);
     fgetc(fp);
 }
+
 
 static void load_instructions(SVMRuntime *_rt, struct SaltModule *module, 
             FILE *fp, i32 instructions)
 {
-    dprintf("Loading instructions for '%s'\n", module->name);
+    dprintf("Loading instructions for '%s'", module->name);
 
     module->instructions = vmalloc(sizeof(String) * instructions);
     module->instruction_amount = instructions;
@@ -171,12 +172,12 @@ static void load_labels(SVMRuntime *_rt, struct SaltModule *module)
             curlabel++;
         }
     }
-    dprintf("Found %d labels in '%s'\n", module->label_amount, module->name);
+    dprintf("Found %d labels in '%s'", module->label_amount, module->name);
 }
 
 struct SaltModule *load(SVMRuntime *_rt, char *name)
 {
-    dprintf("Trying to load %s\n", name);
+    dprintf("Trying to load %s", name);
 
     // File
     i32 size = sizeof(char) * (strlen(name) + 5);
@@ -205,7 +206,7 @@ struct SaltModule *load(SVMRuntime *_rt, char *name)
 
     register_control(_rt, instructions.registers);
 
-    dprintf("Loaded module %s\n", module->name);
+    dprintf("Loaded module %s", module->name);
 
     fclose(mod);
     return module;
@@ -266,7 +267,7 @@ struct SaltModule *ext_load(SVMRuntime *_rt, char *name)
 
     register_control(_rt, ins.registers);
 
-    dprintf("Loaded module '%s'\n", module->name);
+    dprintf("Loaded module '%s'", module->name);
 
     fclose(fp);
     return module;

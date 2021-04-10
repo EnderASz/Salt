@@ -44,10 +44,10 @@ void exception_throw(SVMRuntime *_rt, const char *exception, const char *fmt, ..
     va_list args;
     va_start(args, fmt);
 
-    dprintf("\033[91mThrowing exception: %s\033[0m\n", exception);
+    dprintf("\033[91mThrowing exception: %s\033[0m", exception);
     fprintf(stderr, "An exception occured during execution: %s\n", exception);
 
-    dprintf("Deconstructing %ld elements from the stack\n", _rt->callstack_size);
+    dprintf("Deconstructing %ld elements from the stack", _rt->callstack_size);
     u64 size = _rt->callstack_size;
     for (u64 i = 0; i < size; i++) {
         struct StackFrame *frame = callstack_peek(_rt);

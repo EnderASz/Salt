@@ -96,17 +96,13 @@
     printf("%s: ", __func__);                                       \
     SetConsoleTextAttribute(hOut, ((0 & 0x0F) << 4) + (15 & 0x0F)); \
     printf(__VA_ARGS__);                                            \
+    printf("\n");                                                   \
 }
 
 #elif defined(__linux__)
 
-/* The simple Linux version which just uses ANSI escape codes. */
-#define dprintf(...)                                  \
-{                                                     \
-    printf("\033[96m%s\033[34m::\033[92m%s: \033[0m", \
-    __FILE__, __func__);                              \
-    printf(__VA_ARGS__);                              \
-}
+/* The Linux dprintf version has its own implementation in _linux_dprintf. */
+#define dprintf(...) _linux_dprintf(__FILE__, __func__, __VA_ARGS__);
 
 #endif // __linux__
 #else // DEBUG
@@ -246,6 +242,12 @@ typedef struct _string_st {
  * from stdlib.
  */
 void core_exit(SVMRuntime *_rt);
+
+/**
+ * Linux-only debug printf. Prints very nice debug messages using the passed
+ * format and variables. Note: This places a newline at the end.
+ */
+void _linux_dprintf(char *file, const char *func, const char *fmt, ...);
 
 /**
  * Allocate n bytes in the heap, registering the memory usage in the global

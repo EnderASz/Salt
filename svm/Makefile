@@ -142,16 +142,22 @@ __setup:
 
 # The compile target is called compiling the source files into object files.
 # All objects are saved in build/objects, which then are linked in __link.
+# Note: if the MAKE_CFLAGS enviroment variable is defined, it will be placed
+# at the end of the compilation instruction.
 
 $(SOURCES):
-	$(CC) $(CFLAGS) -D SVM_VERSION=\"$(VERSION)\" $(DFLAGS) $(UFLAGS) -c -o build/objects/$@.o src/$@
+	$(CC) $(CFLAGS) -D SVM_VERSION=\"$(VERSION)\" $(DFLAGS) $(UFLAGS) ${MAKE_CFLAGS} \
+		-c -o build/objects/$@.o src/$@
 
 
-# The link target is the final step in compilation
+# The link target is the final step in compilation. Note: if the MAKE_CFLAGS
+# enviroment variable is defined, it will be placed at the end of the linking
+# instruction.
 
 __link:
-	$(CC) $(CFLAGS) -D SVM_VERSION=\"$(VERSION)\" $(DFLAGS) -o build/$(RESULT) $(MAIN) $(OBJECTS)
-	@echo "Done"
+	$(CC) $(CFLAGS) -D SVM_VERSION=\"$(VERSION)\" $(DFLAGS) -o build/$(RESULT) ${MAKE_CFLAGS} \
+		$(MAIN) $(OBJECTS)
+	@printf "\e[92mDone\e[0m\n"
 
 
 # -----------------------------------------------------------------------------

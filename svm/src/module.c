@@ -38,7 +38,7 @@
 
 static struct SaltModule *module_acquire_new(SVMRuntime *_rt)
 {
-    dprintf("Acquiring new module (%d)\n", _rt->module_size + 1);
+    dprintf("Acquiring new module (%d)", _rt->module_size + 1);
     _rt->modules = vmrealloc(
         _rt->modules, 
         sizeof(struct SaltModule *) * (_rt->module_size),
@@ -54,7 +54,7 @@ static struct SaltModule *module_acquire_new(SVMRuntime *_rt)
 
 static void nodes_collapse(SVMRuntime *_rt, struct SaltModule *module)
 {
-    dprintf("Collapsing nodes from the top\n");
+    dprintf("Collapsing nodes from the top");
 
     struct SaltObjectNode *node = module->head;
     struct SaltObjectNode *hook = NULL;
@@ -63,7 +63,7 @@ static void nodes_collapse(SVMRuntime *_rt, struct SaltModule *module)
         return;
 
     while (1) {
-        dprintf("Collapsing : %p : {%d}\n", (void *) node, node->data.id);
+        dprintf("Collapsing : %p : {%d}", (void *) node, node->data.id);
 
         // Assign the pointer to the next element to the hook and check if it's
         // not null. This is used because we are free-ing memory right under
@@ -87,7 +87,7 @@ static void nodes_collapse(SVMRuntime *_rt, struct SaltModule *module)
 
 SaltObject *module_object_acquire(SVMRuntime *_rt, struct SaltModule *module)
 {
-    dprintf("Acquiring new object\n");
+    dprintf("Acquiring new object");
     struct SaltObjectNode *new_node = vmalloc(sizeof(struct SaltObjectNode));
 
     // Setup the new node
@@ -140,7 +140,7 @@ void module_object_delete(SVMRuntime *_rt, struct SaltModule *module, u32 id)
             
             if (node->previous == NULL) {
                 // If it's the first element of this list
-                dprintf("Removing {%d} at the beginning\n", node->data.id);
+                dprintf("Removing {%d} at the beginning", node->data.id);
                 module->head = module->head->next;
                 if (module->head != NULL)
                     module->head->previous = NULL;
@@ -148,12 +148,12 @@ void module_object_delete(SVMRuntime *_rt, struct SaltModule *module, u32 id)
             else if (node->next == NULL) {
                 // If it's the last object in the list, set the pointer to the
                 // next node in the previous one to null.
-                dprintf("Removing {%d} at the end\n", node->data.id);
+                dprintf("Removing {%d} at the end", node->data.id);
                 node->previous->next = NULL;
             }
             else {
                 // If it's somewhere in the middle...
-                dprintf("Removing {%d} in the middle\n", node->data.id);
+                dprintf("Removing {%d} in the middle", node->data.id);
                 node->previous->next = node->next;
                 node->next->previous = node->previous;    
             }
@@ -169,7 +169,7 @@ void module_object_delete(SVMRuntime *_rt, struct SaltModule *module, u32 id)
     }
 
     if (nf_flag)
-        exception_throw(_rt, EXCEPTION_RUNTIME, "Cannot find object of ID %d\n", id);
+        exception_throw(_rt, EXCEPTION_RUNTIME, "Cannot find object of ID %d", id);
 }
 
 
@@ -201,17 +201,17 @@ struct SaltModule* module_create(SVMRuntime *_rt, char *name)
 
 static void module_deallocate(SVMRuntime *_rt, struct SaltModule *module)
 {
-    dprintf("Clearing module '%s'\n", module->name);
-    dprintf("Deallocating label list\n");
+    dprintf("Clearing module '%s'", module->name);
+    dprintf("Deallocating label list");
     vmfree(module->labels, module->label_amount * sizeof(u32));
 
-    dprintf("Deallocating instructions\n");
+    dprintf("Deallocating instructions");
     for (u32 i = 0; i < module->instruction_amount; i++) {
         vmfree(module->instructions[i].content, module->instructions[i].size);
     }
     vmfree(module->instructions, module->instruction_amount * sizeof(String));
 
-    dprintf("Deallocting module pointer array\n");
+    dprintf("Deallocting module pointer array");
     vmfree(module->modules, sizeof(struct SaltModule *) * module->module_amount);  
 
     nodes_collapse(_rt, module);

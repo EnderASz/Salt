@@ -45,7 +45,7 @@ SaltObject *salt_object_create(SVMRuntime *_rt)
 
 void salt_object_copy(SVMRuntime *_rt, SaltObject *dest, SaltObject *src)
 {
-    dprintf("Copying object {%d} to {%d}\n", src->id, dest->id);
+    dprintf("Copying object {%d} to {%d}", src->id, dest->id);
     dest->id = src->id;
     dest->type = src->type;
     dest->readonly = src->readonly;
@@ -75,8 +75,6 @@ void salt_object_print(SVMRuntime *_rt, SaltObject *obj)
     if (obj->id == 0)
         exception_throw(_rt, EXCEPTION_NULLPTR, "Cannot resolve object");
 
-    dprintf("Printing {%d} of type 0x%02hhx\n", obj->id, obj->type);
-
     switch (obj->type) {
 
         case OBJECT_TYPE_INT:
@@ -105,7 +103,7 @@ void salt_object_print(SVMRuntime *_rt, SaltObject *obj)
 
 static void render_value(SVMRuntime *_rt, SaltObject *obj, u8 *payload)
 {
-    dprintf("Rendering type 0x%02hhx\n", obj->type);
+    dprintf("Rendering type 0x%02hhx", obj->type);
     switch (obj->type) {
 
         case OBJECT_TYPE_INT:
@@ -154,7 +152,7 @@ void salt_object_define(SVMRuntime *_rt, SaltObject *obj, u8 *payload)
     obj->readonly = * (u8  *) (payload + 4);
     obj->type     = * (u8  *) (payload + 5);
     render_value(_rt, obj, payload + 6);
-    dprintf("Created object {%d} of type 0x%02hhx\n", obj->id, obj->type);
+    dprintf("Created object {%d} of type 0x%02hhx", obj->id, obj->type);
 }
 
 void salt_object_ctor(void *_rt, SaltObject *self)

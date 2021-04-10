@@ -103,7 +103,7 @@ static u32 find_label(SVMRuntime *_rt, struct SaltModule *module, char *label)
 inline static SaltObject *fetch_from_tape(SVMRuntime *_rt, struct SaltModule 
                           *module, u32 id)
 {
-    dprintf("Looking up object {%d} in '%s'\n", id, module->name);
+    dprintf("Looking up object {%d} in '%s'", id, module->name);
     SaltObject *obj = module_object_find(module, id);
     if (!obj) {
         exception_throw(_rt, EXCEPTION_NULLPTR, "Object %d not found", id);
@@ -115,7 +115,7 @@ inline static SaltObject *fetch_from_tape(SVMRuntime *_rt, struct SaltModule
 
 i32 exec(SVMRuntime *_rt, struct SaltModule *main, const char *start)
 {
-    dprintf("Executing '%s'\n", main->name);
+    dprintf("Executing '%s'", main->name);
 
     u32 i = find_label(_rt, main, (char *) start);
 
@@ -130,7 +130,7 @@ i32 exec(SVMRuntime *_rt, struct SaltModule *main, const char *start)
             continue;
         }
 
-        dprintf("[%d] < \033[95m%.5s\033[0m >\n", i, main->instructions[i].content);
+        dprintf("[%d] \033[95m%.5s\033[0m", i, main->instructions[i].content);
     
         const struct SVMCall *exec = lookup_exec(main->instructions[i].content);
         i = exec->f_exec(_rt, main, (u8 *) main->instructions[i].content + 5, i);
@@ -171,7 +171,7 @@ const struct SVMCall *lookup_exec(char *title)
 void register_control(SVMRuntime *_rt, u8 size)
 {
     if (_rt->register_size < size) {
-        dprintf("Changing %d to %d\n", _rt->register_size, size);
+        dprintf("Changing %d to %d", _rt->register_size, size);
         _rt->registers = vmrealloc(
             _rt->registers, 
             sizeof(SaltObject) * _rt->register_size, 
@@ -225,7 +225,7 @@ static void copy_object(SVMRuntime *_rt, SaltObject *dest, SaltObject *src)
 u32 exec_callf(SVMRuntime *_rt, struct SaltModule *__restrict module, 
                 u8 *__restrict payload,  u32 pos)
 {
-    dprintf("Calling '%s'\n", payload);
+    dprintf("Calling '%s'", payload);
     exec(_rt, module, (char *) payload);
     return ++pos;
 }
@@ -236,7 +236,7 @@ u32 exec_callx(SVMRuntime *_rt, struct SaltModule *__restrict module,
     char *mod_name  = (char *) payload;
     char *func_name = ((char *) payload) + strlen(mod_name) + 1;
 
-    dprintf("Calling external '%s.%s'\n", mod_name, func_name);
+    dprintf("Calling external '%s.%s'", mod_name, func_name);
 
     struct SaltModule *mod = NULL;
     // Find the module
@@ -248,7 +248,7 @@ u32 exec_callx(SVMRuntime *_rt, struct SaltModule *__restrict module,
     if (!mod)
         exception_throw(_rt, EXCEPTION_RUNTIME, "'%s' has not been imported", mod_name);
 
-    dprintf("Found '%s' module, now looking for '%s' function\n", mod_name, func_name);
+    dprintf("Found '%s' module, now looking for '%s' function", mod_name, func_name);
 
     // Call the external function
     exec(_rt, mod, func_name);
@@ -262,7 +262,7 @@ u32 exec_cxxeq(SVMRuntime *_rt, struct SaltModule *__restrict module,
     SaltObject *o1 = module_object_find(module, * (u32 *) payload);
     SaltObject *o2 = module_object_find(module, * (u32 *) (payload + 4));
 
-    dprintf("Comparing {%d} and {%d}\n", o1->id, o2->id);
+    dprintf("Comparing {%d} and {%d}", o1->id, o2->id);
 
     if (o1 == NULL || o2 == NULL)
         exception_throw(_rt, EXCEPTION_NULLPTR, "Cannot find object");
@@ -363,7 +363,7 @@ u32 exec_extld(SVMRuntime *_rt, struct SaltModule *__restrict module,
      or execute some setup code that has to be done only once. */
     exec(_rt, mod, "%__load");    
 
-    dprintf("%d\n", _rt->module_size);
+    dprintf("%d", _rt->module_size);
     return ++pos;
 }
 
@@ -377,7 +377,7 @@ u32 exec_ivadd(SVMRuntime *_rt, struct SaltModule *__restrict module,
     if (obj->readonly)
         exception_throw(_rt, EXCEPTION_READONLY, "Cannot mutate read-only object");
 
-    dprintf("Adding %d\n", * (i32 *) (payload + 4));
+    dprintf("Adding %d", * (i32 *) (payload + 4));
     * (i32 *) obj->value += * (i32 *) (payload + 4);
 
     return ++pos;
@@ -393,7 +393,7 @@ u32 exec_ivsub(SVMRuntime *_rt, struct SaltModule *__restrict module,
     if (obj->readonly)
         exception_throw(_rt, EXCEPTION_READONLY, "Cannot mutate read-only object");
 
-    dprintf("Subtracting %d\n", * (i32 *) (payload + 4));
+    dprintf("Subtracting %d", * (i32 *) (payload + 4));
     * (i32 *) obj->value -= * (i32 *) (payload + 4);
 
     return ++pos;
@@ -402,7 +402,7 @@ u32 exec_ivsub(SVMRuntime *_rt, struct SaltModule *__restrict module,
 u32 exec_jmpfl(SVMRuntime *_rt, struct SaltModule *__restrict module, 
                 u8 *__restrict payload,  u32 pos)
 {
-    dprintf("Compare flag on %02hx\n", _rt->flag_comparison);
+    dprintf("Compare flag on %02hx", _rt->flag_comparison);
     if (_rt->flag_comparison)
         return find_label(_rt, module, (char *) payload);
 
@@ -412,7 +412,7 @@ u32 exec_jmpfl(SVMRuntime *_rt, struct SaltModule *__restrict module,
 u32 exec_jmpnf(SVMRuntime *_rt, struct SaltModule *__restrict module, 
                 u8 *__restrict payload,  u32 pos)
 {
-    dprintf("Compare flag on %02hx\n", _rt->flag_comparison);
+    dprintf("Compare flag on %02hx", _rt->flag_comparison);
     if (!_rt->flag_comparison)
         return find_label(_rt, module, (char *) payload);
 
@@ -516,7 +516,7 @@ u32 exec_retrn(SVMRuntime *_rt, struct SaltModule *__restrict module,
             pos--;
         }
     }
-    dprintf("Jumping back to [%d]\n", pos);
+    dprintf("Jumping back to [%d]", pos);
     callstack_pop(_rt);
     return pos;
 }
@@ -532,7 +532,7 @@ u32 exec_rgpop(SVMRuntime *_rt, struct SaltModule *__restrict module,
     if (r >= _rt->register_size)
         exception_throw(_rt, EXCEPTION_REGISTER, "Register %d out of bounds", r);
 
-    dprintf("Pulling from register [%d] to {%d}\n", r, id);
+    dprintf("Pulling from register [%d] to {%d}", r, id);
 
     copy_object(_rt, obj, &_rt->registers[r]);
     obj->id = id;
@@ -573,7 +573,7 @@ u32 exec_rpush(SVMRuntime *_rt, struct SaltModule *__restrict module,
     if (r >= _rt->register_size)
         exception_throw(_rt, EXCEPTION_REGISTER, "Register %d out of bounds");
 
-    dprintf("Pushing to register [%d] from {%d}\n", r, id);
+    dprintf("Pushing to register [%d] from {%d}", r, id);
 
     copy_object(_rt, &_rt->registers[r], obj);
     

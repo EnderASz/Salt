@@ -124,6 +124,8 @@ def main():
         if not i.startswith('.') and i not in to_remove:
             tests.append(i)
 
+    print()
+
     passed = 0
     for test_name in tests:
         test = TestSuite(test_name, args.debug)
@@ -133,7 +135,9 @@ def main():
             print('Exiting on failure (\'-f\')')
             exit(1)
 
-    print(f'Passed [{passed}/{len(tests)}] tests.')
+    if passed == len(tests):
+        print('\033[92m', end='')
+    print(f'Passed [{passed}/{len(tests)}] tests.\033[0m')
 
 if __name__ == '__main__':
     main()

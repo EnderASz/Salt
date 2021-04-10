@@ -36,6 +36,7 @@
 #include "../include/callstack.h"
 
 #include <stdlib.h>
+#include <stdarg.h>
 
 #ifndef DEBUG_ALLOCATIONS
 #define DEBUG_ALLOCATIONS 1
@@ -43,7 +44,7 @@
 
 void core_exit(SVMRuntime *_rt)
 {
-    dprintf("Calling cleanup\n");
+    dprintf("Calling cleanup");
     
     // Clear callstack
     for (u64 i = 0; i < _rt->callstack_size; i++)
@@ -60,6 +61,42 @@ void core_exit(SVMRuntime *_rt)
     exit(0);
 }
 
+void _linux_dprintf(char *file, const char *func, const char *fmt, ...)
+{
+#ifdef DEBUG
+    /* We only want this function to compile if DEBUG is defined. Otherwise,
+     just keep this empty. The ununsed parameter checks are disabled by default
+     because of the exec_ functions. */
+
+    va_list args;
+    va_start(args, fmt);
+
+    u32 pos = 0;
+    for (u32 i = 0; i < strlen(file); i++) {
+        if (file[i] == '/')
+            pos = i + 1;
+    }
+
+    i32 file_size = (i32) strlen(file);
+    i32 func_size = (i32) strlen(func);
+
+    char *path[file_size + func_size];
+    memset((char *) path, 0, file_size + func_size);
+
+    strncpy((char *) path, file + pos, file_size - 2 - pos);
+
+    printf("\033[96m%*s\033[0m \033[90m: \033[92m%s%*c\033[90m|\033[0m ",
+            12, (char *) path,
+            (char *) func, 20 - func_size, ' '
+    );
+
+    vprintf(fmt, args);
+    printf("\n");
+
+    va_end(args);
+#endif
+}
+
 static inline void check_memory_limit(SVMRuntime *_rt)
 {
     if (_rt->arg_limit_mem && (u64) _rt->arg_limit_mem <= _rt->m_max_used) {
@@ -70,8 +107,8 @@ static inline void check_memory_limit(SVMRuntime *_rt)
 
 void *_vmalloc(SVMRuntime *_rt, u32 size, const char *func)
 {
-#ifdef DEBUG_ALLOCATIONS
-    dprintf("\033[90mAllocating \033[32m%d\033[90m bytes in %s\033[0m\n", 
+#if DEBUG_ALLOCATIONS == 1
+    dprintf("\033[90mAllocating \033[92m%d\033[90m bytes in %s\033[0m",
             size, func);
 #endif
     _rt->m_allocations++;
@@ -95,8 +132,8 @@ void *_vmalloc(SVMRuntime *_rt, u32 size, const char *func)
 
 void _vmfree(SVMRuntime *_rt, void *ptr, u32 size, const char *func)
 {
-#ifdef DEBUG_ALLOCATIONS
-    dprintf("\033[90mFreeing \033[33m%d\033[90m bytes in %s\033[0m\n", 
+#if DEBUG_ALLOCATIONS == 1
+    dprintf("\033[90mFreeing \033[93m%d\033[90m bytes in %s\033[0m",
             size, func);
 #endif
     _rt->m_frees++;
@@ -108,9 +145,9 @@ void _vmfree(SVMRuntime *_rt, void *ptr, u32 size, const char *func)
 void *_vmrealloc(SVMRuntime *_rt, void *ptr, u32 before, u32 after, 
                  const char *func)
 {
-#ifdef DEBUG_ALLOCATIONS
-    dprintf("\033[90mReallocating \033[33m%d\033[90m to \033[32m%d\033[90m"
-            " bytes in %s\033[0m\n", before, after, func);
+#if DEBUG_ALLOCATIONS == 1
+    dprintf("\033[90mReallocating \033[93m%d\033[90m to \033[92m%d\033[90m"
+            " bytes in %s\033[0m", before, after, func);
 #endif
     _rt->m_allocations++;
 
@@ -134,10 +171,10 @@ void *_vmrealloc(SVMRuntime *_rt, void *ptr, u32 before, u32 after,
 void vibe_check(SVMRuntime *_rt)
 {
     if (_rt->m_used == 0) {
-        dprintf("heap memory clean (%ld, %ld, %ld)\n", _rt->m_max_used,
+        dprintf("heap memory clean (%ld, %ld, %ld)", _rt->m_max_used,
                 _rt->m_allocations, _rt->m_frees);
         return;
     }
-    dprintf("\033[91m( %ld ) bytes are not free'd yet!\033[0m\n", _rt->m_used);
+    dprintf("\033[91m( %ld ) bytes are not free'd yet!\033[0m", _rt->m_used);
 }
 

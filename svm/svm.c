@@ -96,7 +96,7 @@ static void interrupt_handler(i32 _sig);
 
 i32 main(i32 argc, char **argv)
 {
-    dprintf("Starting %s\n", SVM_VERSION);
+    dprintf("Starting %s", SVM_VERSION);
 
     /* The runtime variables have to be initalized early, and they are put on
      the stack in order to keep it memory safe (without heap allocation). */
@@ -107,7 +107,6 @@ i32 main(i32 argc, char **argv)
 
         .flag_comparison = 0,
 
-        .arg_mem_used = 0,
         .arg_allow_debug = 0,
         .arg_limit_mem = 0,
 
@@ -163,12 +162,12 @@ end:
 
 static void size_check()
 {
-    dprintf("sizeof(SVMRuntime) = %ld\n", sizeof(SVMRuntime));
-    dprintf("sizeof(SaltObject) = %ld\n", sizeof(SaltObject));
-    dprintf("sizeof(SaltModule) = %ld\n", sizeof(struct SaltModule));
-    dprintf("sizeof(SaltObjectNode) = %ld\n", sizeof(struct SaltObjectNode));
-    dprintf("sizeof(StackFrame) = %ld\n", sizeof(struct StackFrame));
-    dprintf("sizeof(String) = %ld\n", sizeof(String));
+    dprintf("sizeof(SVMRuntime) = %ld", sizeof(SVMRuntime));
+    dprintf("sizeof(SaltObject) = %ld", sizeof(SaltObject));
+    dprintf("sizeof(SaltModule) = %ld", sizeof(struct SaltModule));
+    dprintf("sizeof(SaltObjectNode) = %ld", sizeof(struct SaltObjectNode));
+    dprintf("sizeof(StackFrame) = %ld", sizeof(struct StackFrame));
+    dprintf("sizeof(String) = %ld", sizeof(String));
 }
 
 static void interrupt_handler(i32 _sig)

@@ -40,7 +40,7 @@
 void callstack_push(SVMRuntime *_rt, u32 line, struct SaltModule *module,
                     char *__restrict function)
 {
-    dprintf("Pushing stack frame [%ld](%d, %s, %s)\n", _rt->callstack_size, 
+    dprintf("Pushing stack frame [%ld](%d, %s, %s)", _rt->callstack_size,
             line, module->name, function);
 
 #ifdef DEBUG_CALLSTACK
@@ -68,7 +68,7 @@ void callstack_push(SVMRuntime *_rt, u32 line, struct SaltModule *module,
 
 struct StackFrame *callstack_peek(SVMRuntime *_rt) Nullable
 {
-    dprintf("Peeking at [%ld]\n", _rt->callstack_size - 1);
+    dprintf("Peeking at [%ld]", _rt->callstack_size - 1);
     if (_rt->callstack_size == 0)
         return NULL;
     return &_rt->callstack[_rt->callstack_size - 1];
@@ -76,7 +76,7 @@ struct StackFrame *callstack_peek(SVMRuntime *_rt) Nullable
 
 void callstack_pop(SVMRuntime *_rt)
 {
-    dprintf("Popping %ld -> %ld\n", _rt->callstack_size, 
+    dprintf("Popping %ld -> %ld", _rt->callstack_size,
             _rt->callstack_size - 1);
 
     if (_rt->callstack_size == 1) {
