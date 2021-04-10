@@ -60,6 +60,14 @@ void core_exit(SVMRuntime *_rt)
     exit(0);
 }
 
+static inline void check_memory_limit(SVMRuntime *_rt)
+{
+    if (_rt->arg_limit_mem && (u64) _rt->arg_limit_mem <= _rt->m_max_used) {
+        printf("Out of memory\n");
+        core_exit(_rt);
+    }
+}
+
 void *_vmalloc(SVMRuntime *_rt, u32 size, const char *func)
 {
 #ifdef DEBUG_ALLOCATIONS
@@ -71,6 +79,8 @@ void *_vmalloc(SVMRuntime *_rt, u32 size, const char *func)
     _rt->m_used += size;
     if (_rt->m_used > _rt->m_max_used)
         _rt->m_max_used = _rt->m_max_used;
+
+    check_memory_limit(_rt);
 
     void *ptr = malloc(size);
     if (!ptr) {
@@ -108,6 +118,10 @@ void *_vmrealloc(SVMRuntime *_rt, void *ptr, u32 before, u32 after,
     _rt->m_used += after;
     if (_rt->m_used > _rt->m_max_used)
         _rt->m_max_used = _rt->m_used;
+
+    /* If we're dropping memory, do not check for the limit again. */
+    if (before <= after)
+        check_memory_limit(_rt);
 
     void *pointer = realloc(ptr, (unsigned long) after);
     if (!pointer) {

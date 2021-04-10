@@ -105,9 +105,11 @@ i32 main(i32 argc, char **argv)
         .registers = NULL,
         .register_size = 0,
 
-        .flags = 0,
+        .flag_comparison = 0,
 
         .arg_mem_used = 0,
+        .arg_allow_debug = 0,
+        .arg_limit_mem = 0,
 
         .m_used = 0,
         .m_max_used = 0,

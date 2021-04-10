@@ -207,7 +207,7 @@ typedef struct _svm_runtime_st {
 
     /* Argument flags. */
      u8 arg_mem_used;
-     u8 arg_debug_output;
+     u8 arg_allow_debug;
     i32 arg_limit_mem;
 
     /* Memory status variables. This keeps track of every allocation and the 

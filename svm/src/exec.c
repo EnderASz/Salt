@@ -434,6 +434,9 @@ u32 exec_killx(SVMRuntime *_rt, struct SaltModule *__restrict module,
 u32 exec_mlmap(SVMRuntime *_rt, struct SaltModule *__restrict module, 
                 u8 *__restrict payload,  u32 pos)
 {
+    if (!_rt->arg_allow_debug)
+        return ++pos;
+
     struct SaltObjectNode *node = module->head;
     while (node != NULL) {
 
@@ -595,6 +598,9 @@ u32 exec_sleep(SVMRuntime *_rt, struct SaltModule *__restrict module,
 u32 exec_trace(SVMRuntime *_rt, struct SaltModule *__restrict module, 
                 u8 *__restrict payload,  u32 pos)
 {
+    if (!_rt->arg_allow_debug)
+        return ++pos;
+
     for (u32 i = 0; i < _rt->callstack_size; i++) {
         printf("[%d](%d, %s, %s)\n", i, _rt->callstack[i].line, 
                 _rt->callstack[i].module->name, _rt->callstack[i].function);  
