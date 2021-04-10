@@ -59,6 +59,11 @@ void callstack_push(SVMRuntime *_rt, u32 line, struct SaltModule *module,
     _rt->callstack[_rt->callstack_size].line = line;
 
     _rt->callstack_size++;
+
+    if (_rt->callstack_size > 8192) {
+        printf("fatal: Callstack is way too big, try using loops!\n");
+        core_exit(_rt);
+    }
 }
 
 struct StackFrame *callstack_peek(SVMRuntime *_rt) Nullable
