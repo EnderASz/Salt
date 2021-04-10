@@ -273,7 +273,7 @@ u32 exec_cxxeq(SVMRuntime *_rt, struct SaltModule *__restrict module,
 
         case OBJECT_TYPE_BOOL:
             if (* (u8 *) o1->value == * (u8 *) o2->value)
-                bit_set(&_rt->flags, 2);
+                _rt->flag_comparison = 1;
             break;
 
         /* the float & i32 case may look pretty slow, but the alternative is 
@@ -282,33 +282,33 @@ u32 exec_cxxeq(SVMRuntime *_rt, struct SaltModule *__restrict module,
         case OBJECT_TYPE_FLOAT:
         {
             if (* (float *) o1->value == * (float *) o2->value)
-                bit_set(&_rt->flags, 2);
+                _rt->flag_comparison = 1;
             break;
         }
         case OBJECT_TYPE_INT:
         {
             if (* (i32 *) o1->value == * (i32 *) o2->value)
-                bit_set(&_rt->flags, 2);
+                _rt->flag_comparison = 1;
             break;
         }
         case OBJECT_TYPE_STRING:
         {
             u32 size = o1->size;
             if (o2->size != size) {
-                bit_unset(&_rt->flags, 2);
+                _rt->flag_comparison = 0;
                 break;
             }
 
             if(strncmp((char *) o1->value, (char *) o2->value, size - 1) == 0)
-                bit_set(&_rt->flags, 2);
+                _rt->flag_comparison = 1;
             else
-                bit_unset(&_rt->flags, 2);    
+                _rt->flag_comparison = 0;
             break;
         }
         
         default:
             /* if the type is unknown, return false by default */
-            bit_unset(&_rt->flags, 2);
+            _rt->flag_comparison = 0;
     
     }
 
@@ -318,8 +318,7 @@ u32 exec_cxxeq(SVMRuntime *_rt, struct SaltModule *__restrict module,
 u32 exec_cxxne(SVMRuntime *_rt, struct SaltModule *__restrict module, 
                 u8 *__restrict payload,  u32 pos)
 {
-    if (bit_at(_rt->flags, 2))
-        bit_unset(&_rt->flags, 2);
+    _rt->flag_comparison = !_rt->flag_comparison;
     exec_cxxeq(_rt, module, payload, pos);
     return ++pos;
 }
@@ -402,8 +401,8 @@ u32 exec_ivsub(SVMRuntime *_rt, struct SaltModule *__restrict module,
 u32 exec_jmpfl(SVMRuntime *_rt, struct SaltModule *__restrict module, 
                 u8 *__restrict payload,  u32 pos)
 {
-    dprintf("Compare flag on %02hx\n", bit_at(_rt->flags, 2)); 
-    if (bit_at(_rt->flags, 2))
+    dprintf("Compare flag on %02hx\n", _rt->flag_comparison);
+    if (_rt->flag_comparison)
         return find_label(_rt, module, (char *) payload);
 
     return ++pos;
@@ -412,8 +411,8 @@ u32 exec_jmpfl(SVMRuntime *_rt, struct SaltModule *__restrict module,
 u32 exec_jmpnf(SVMRuntime *_rt, struct SaltModule *__restrict module, 
                 u8 *__restrict payload,  u32 pos)
 {
-    dprintf("Compare flag on %02hx\n", bit_at(_rt->flags, 2)); 
-    if (!bit_at(_rt->flags, 2))
+    dprintf("Compare flag on %02hx\n", _rt->flag_comparison);
+    if (!_rt->flag_comparison)
         return find_label(_rt, module, (char *) payload);
 
     return ++pos;
