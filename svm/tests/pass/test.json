@@ -1,0 +1,8 @@
+{
+    "@version": 1,
+
+    "title": "Pass",
+    "about": "Check if the svm properly passes PASSL instructions",
+    "source": "pass.scc",
+    "result": "result.txt"
+}

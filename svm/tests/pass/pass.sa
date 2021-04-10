@@ -1,0 +1,11 @@
+; Pass test. This test is used to determine if PASSL instructions
+; are properly passed.
+
+%%reg 8
+
+@%__load
+RETRN
+
+@main
+  PASSL "0x0a bytes are forbidden here."
+RETRN
