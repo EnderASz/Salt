@@ -43,8 +43,21 @@ CC := clang
 # the unused parameters in exec_ functions even if they are supposed to 
 # work like that.
 
-CFLAGS := -Wall -Wextra -Wpedantic -Wno-unused-parameter -std=c2x
+CFLAGS := -Wall -Wextra -Wpedantic -Werror -Wno-unused-parameter -std=c2x \
+		  -fstack-protector-strong -O3
 
+
+# Remember to set different CFLAGS if we're compiling for debug mode.
+
+debug : CFLAGS := -Wall -Wextra -Wpedantic -Wno-unused-parameter -std=c2x \
+                  -fstack-protector-strong -ggdb
+
+
+# Options for the clang static analyzer.
+
+ifeq ($(CC), clang)
+debug : DFLAGS += -Wunused-command-line-argument
+endif
 
 # If the targets are win32 or win64, this automatically chooses the gcc-mingw 
 # compilers instead. We don't support windows clang yet! (I don't even know
@@ -56,15 +69,13 @@ win64 : CC := x86_64-w64-mingw32-gcc
 
 # DEBUG is defined it the debug target is selected. Additionally, if the 
 # compiler is clang, the sanitizer parameters are strapped onto the executable.
-# The -pg flag is also added for additional profiliing functionality.
 
-debug : DFLAGS := -D DEBUG
+debug : DFLAGS := -D DEBUG -pg -O1
 debug : RESULT := svmd
 
 ifeq ($(CC), clang)
 debug : DFLAGS += -fsanitize=address -fno-omit-frame-pointer \
-		  -fno-optimize-sibling-calls -O1
-debug : DFLAGS += -pg
+		          -fno-optimize-sibling-calls
 endif
 
 
