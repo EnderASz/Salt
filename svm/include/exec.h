@@ -207,6 +207,13 @@ u32 exec_objdl(SVMRuntime *_rt, struct SaltModule *__restrict module,
                 u8 *__restrict payload, u32 pos);
 
 /**
+ * Do nothing. This may be an area for a compiler comment, or for debugging
+ * tools.
+ */
+u32 exec_passl(SVMRuntime *_rt, struct SaltModule *__restrict module,
+                u8 *__restrict payload, u32 pos);
+
+/**
  * Print the value of the object (without a newline). Most prints require
  * a newline anyway, so it is a good idea for the compiler to create a readonly
  * string with only a newline character, and chain the PRINT object & PRINT
@@ -214,6 +221,7 @@ u32 exec_objdl(SVMRuntime *_rt, struct SaltModule *__restrict module,
  */
 u32 exec_print(SVMRuntime *_rt, struct SaltModule *__restrict module, 
                 u8 *__restrict payload, u32 pos);
+
 /**
  * Print the object at the given register. This can be done in 3 instructions,
  * RGPOP to move it into an object, PRINT to print it and then move it back to

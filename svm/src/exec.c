@@ -78,11 +78,12 @@ const struct SVMCall g_execs[] = {
     {"CXXEQ", exec_cxxeq, 8},
     {"CXXNE", exec_cxxne, 8},
     {"RNULL", exec_rnull, 0},
-    {"SLEEP", exec_sleep, 4}
+    {"SLEEP", exec_sleep, 4},
+    {"PASSL", exec_passl, 0}
 
 };
 
-const u32 g_exec_amount = 23;
+const u32 g_exec_amount = 24;
 
 // ----------------------------------------------------------------------------
 // Utility & loop functions
@@ -465,7 +466,13 @@ u32 exec_objdl(SVMRuntime *_rt, struct SaltModule *__restrict module,
     return ++pos;
 }
 
-u32 exec_print(SVMRuntime *_rt, struct SaltModule *__restrict module, 
+u32 exec_passl(SVMRuntime *_rt, struct SaltModule *__restrict module,
+                u8 *__restrict payload,  u32 pos)
+{
+    return ++pos;
+}
+
+u32 exec_print(SVMRuntime *_rt, struct SaltModule *__restrict module,
                 u8 *__restrict payload,  u32 pos)
 {
     SaltObject *obj = module_object_find(module, * (u32 *) payload);
