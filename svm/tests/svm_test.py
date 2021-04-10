@@ -53,8 +53,8 @@ class TestSuite:
     def test(self) -> bool:
         """ Run the test. """
 
-        print('-' * 80)
-        print(f'* Running test suite \033[93m{self.__config["title"]}\033[0m')
+        print('-' * 80, end='\n\n')
+        print(f'* Testing suite \033[93m{self.__config["title"]}\033[0m')
         if 'about' in self.__config:
             print(f'\033[94m  {self.__config["about"]}\033[0m')
         else:
@@ -64,7 +64,7 @@ class TestSuite:
         if 'args' in self.__config:
             args = self.__config['args']
 
-        print(f'  Running \'svm {args} {self.__path}{self.__config["source"]}\'')
+        print(f'  Running \'svm {args} {self.__path}{self.__config["source"]}\'', end=' - ')
         out = subprocess.check_output(f'svm {args} {self.__path}{self.__config["source"]}', shell=True)
         out = str(out, 'ascii')
 
@@ -74,10 +74,10 @@ class TestSuite:
         result = self.fetch_file(self.__config['result'])
 
         if out == result:
-            print('& \033[92mPassed.\033[0m\n')
+            print('[\033[92m Passed \033[0m]\n')
             return True
         
-        print('& \033[91mFailed.\033[0m\n')
+        print('[\033[91m Failed \033[0m]\n')
         return False
 
 
@@ -124,8 +124,6 @@ def main():
         if not i.startswith('.') and i not in to_remove:
             tests.append(i)
 
-    print()
-
     passed = 0
     for test_name in tests:
         test = TestSuite(test_name, args.debug)
@@ -135,9 +133,14 @@ def main():
             print('Exiting on failure (\'-f\')')
             exit(1)
 
+    print('-' * 80, end='\n\n')
+
     if passed == len(tests):
         print('\033[92m', end='')
+    else:
+        print('\033[91m', end='')
     print(f'Passed [{passed}/{len(tests)}] tests.\033[0m')
+
 
 if __name__ == '__main__':
     main()
