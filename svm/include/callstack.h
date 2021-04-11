@@ -26,7 +26,7 @@
 #ifndef SVM_CALLSTACK_H
 #define SVM_CALLSTACK_H
 
-#include "core.h"
+#include "svm.h"
 
 /**
  * The callstack is built out of single StackFrames. Because objects are stored

@@ -1,6 +1,6 @@
 /**
  * Salt Virtual Machine
- * 
+ *
  * Copyright (C) 2021  The Salt Programming Language Developers
  *
  * This program is free software: you can redistribute it and/or modify
@@ -25,96 +25,103 @@
  *
  * @author bellrise, 2021
  */
-
-/* The Nullable symbol is placed before function declarations and implemen-
- -tations to signify that it may return NULL. */
-#ifndef Nullable
-#define Nullable /* may return null */
-#endif
-
-/* The SVM_VERSION defined here is just to not upset the auto complete and 
- static analasys. The actual value of SVM_VERSION is passed on the command
- line when compiling it. */
-#ifndef SVM_VERSION
-#define SVM_VERSION "(unspecified by the compiler)"
-#endif
-
-/* System settings, includes the core os headers for functionality. */
-#ifndef TARGET_SYSTEM
-#ifdef _WIN32
-#define TARGET_SYSTEM "Windows"
-#elif defined(__linux__)
-#define TARGET_SYSTEM "Linux"
-#else
-/* Add your system here if you're porting to something else & have fun
- fixing all the system dependencies! There shouldn't be a lot of them,
- because I'm just using the standard C lib.  */
-
-#error "There is no support for the system you're using"
-#endif
-#endif
-
-/* Header guard */
 #ifndef SVM_CORE_H
 #define SVM_CORE_H
 
 #include <stdio.h>
 #include <string.h>
 
-/* Compilation settings. TARGET_ARCH is defined to the target bits. */
+
+/* The Nullable symbol is placed before function declarations and implemen-
+   -tations to signify that it may return NULL. */
+#ifndef Nullable
+#define Nullable /* may return null */
+#endif
+
+/* The SVM_VERSION defined here is just to not upset the auto complete and
+   static analasys. The actual value of SVM_VERSION is passed on the command
+   line when compiling it. */
+#ifndef SVM_VERSION
+#define SVM_VERSION "(unspecified by the compiler)"
+#endif
+
+/* System settings, includes the core os headers for functionality. */
+#ifndef TARGET_SYSTEM
+#if defined(_WIN32)
+#define TARGET_SYSTEM "Windows"
+
+#elif defined(__linux__)
+#define TARGET_SYSTEM "Linux"
+
+#else
+
+/* Add your system here if you're porting to something else & have fun
+   fixing all the system dependencies! There shouldn't be a lot of them,
+   because I'm just using the standard C lib.  */
+
+#error "There is no support for the system you're using"
+#endif /* _WIN32 / __linux__ */
+#endif /* TARGET_SYSTEM */
+
+
+/* TARGET_ARCH is the amount of bits the program will be compiled on. I'm
+   throwing an error if we're not using building for 32 or 64 bits, because
+   I have no idea why that would happen! If you're building for 16 bits, it's
+   probably and embeded system and you should know how to fix this yourself.
+   Have fun! */
+
 #if __INTPTR_MAX__ == __INT32_MAX__
 #define TARGET_ARCH 32
+
 #elif __INTPTR_MAX__ == __INT64_MAX__
 #define TARGET_ARCH 64
+
 #else
 #define TARGET_ARCH 0
 #error "Other than 32/64 bit are not supported"
+
 #endif
 
 
 /* Wrap the given value in quotes. This is needed for svm_grep_string where the
- const string is created from concatinating several values. */
-#define ISTRINGIFY(X)  #X
-#define STRINGIFY(NUM) ISTRINGIFY(NUM)
+   const string is created by concatinating several values. */
 
-/* dprintf implementations */
+#define UTIL_STRINGIFY_INTERNAL(X)  #X
+#define UTIL_STRINGIFY(NUM) UTIL_STRINGIFY_INTERNAL(NUM)
+
+// ----------------------------------------------------------------------------
+// DEBUG
+// ----------------------------------------------------------------------------
+
+/* This section will only be included if DEBUG is defined by the compiler. It
+   contains the dprintf macro, which is basically a printf but for debug output.
+   I'd probably add debug malloc & realloc wrappers if I was not using this
+   amazing clang sanitizer. */
+
 #ifdef DEBUG
 
 #ifdef _WIN32
+/* Use _win_dprintf for Windows, you can check the implementation in the source
+   file, it looks kinda strage. */
+#define dprintf(...) _win_dprintf(__FILE__, __func__, __VA_ARGS__)
 
-/* Bruh, programming on windows sucks! This looks actually terrible but I was 
- told this had to be done to support terminal colouring on the original 32bit
- windows cmd. - bellrise */
-#define dprintf(...)                                                \
-{                                                                   \
-    HANDLE hOut = GetStdHandle(STD_OUTPUT_HANDLE);                  \
-    SetConsoleTextAttribute(hOut, ((0 & 0x0F) << 4) + (3 & 0x0F));  \
-    printf("%s", __FILE__);                                         \
-    SetConsoleTextAttribute(hOut, ((0 & 0x0F) << 4) + (1 & 0x0F));  \
-    printf("::");                                                   \
-    SetConsoleTextAttribute(hOut, ((0 & 0x0F) << 4) + (2 & 0x0F));  \
-    printf("%s: ", __func__);                                       \
-    SetConsoleTextAttribute(hOut, ((0 & 0x0F) << 4) + (15 & 0x0F)); \
-    printf(__VA_ARGS__);                                            \
-    printf("\n");                                                   \
-}
 
 #elif defined(__linux__)
-
-/* The Linux dprintf version has its own implementation in _linux_dprintf. */
+/* Use _linux_dprintf for Linux, you can check the implementation in the source
+   file, it's much better than the Windows one for sure! */
 #define dprintf(...) _linux_dprintf(__FILE__, __func__, __VA_ARGS__);
 
-#endif // __linux__
-#else // DEBUG
+#endif
+#else
 
-/* If DEBUG is not defined, define dprintf as an empty function. */
+/* If DEBUG is not defined, define dprintf as nothing, because we don't want
+   to compile with useless code. */
 #define dprintf(...)
 
-#endif // DEBUG
-
 /* The notice me macro will print detailed information about the current
- location where it was called and make you notice the point where it 
- happened. */
+   location where it was called and make you notice the point where it
+   happened. */
+
 #ifndef NOTICE_ME
 #define NOTICE_ME(STR)                                                      \
 {                                                                           \
@@ -124,16 +131,30 @@
 }
 #endif
 
-#define READONLY_FALSE (0x00)
-#define READONLY_TRUE  (0x01)
+#endif /* DEBUG */
 
-// Simple types
 
-#define OBJECT_TYPE_NULL   (0x00)
-#define OBJECT_TYPE_INT    (0x01)
-#define OBJECT_TYPE_FLOAT  (0x02)
-#define OBJECT_TYPE_BOOL   (0x03)
-#define OBJECT_TYPE_STRING (0x04)
+// ----------------------------------------------------------------------------
+// GLOBAL TYPES
+// ----------------------------------------------------------------------------
+
+/* Read-only markers. These u8 flags are stored in an object and they mark if
+   the object is constant or not. */
+
+#define READONLY_FALSE  (0x00)
+#define READONLY_TRUE   (0x01)
+
+/* Salt object types. */
+
+#define SALT_TYPE_NULL      (0x00)
+#define SALT_TYPE_INT       (0x01)
+#define SALT_TYPE_FLOAT     (0x02)
+#define SALT_TYPE_BOOL      (0x03)
+#define SALT_TYPE_STRING    (0x04)
+#define SALT_TYPE_MODEL     (0x05)
+
+/* All the Rust programming language style integers are defined here, I use them
+   because a) they look nice b) I can be sure about the size of the variable. */
 
 typedef __INT8_TYPE__       i8;
 typedef __INT16_TYPE__      i16;
@@ -148,40 +169,37 @@ typedef __UINT64_TYPE__     u64;
 /**
  * This represents a single object, which can hold different types of data
  * depending on the [type] byte. When building a new object, default values are
- * assigned an the constructor & destructor pointers are passed, which take 
- * care of allocating the needed memory on the heap. Be sure to never build a 
- * raw object yourself, instead use salt_object_create(...). 
- *
- * @a id            ID of the object
- * @a readonly      0x01 if the object should be const 
- * @a type          type of the object, see OBJECT_TYPE_xxx
- * @a mutex_acquired if this is not 1, it means the object 
- * @a value         pointer to the value
- * @a size          amount of bytes allocated
- * @a vhandler      value handler method
- * @a destructor    object destructor
+ * assigned an the constructor & destructor pointers are passed, which take
+ * care of allocating the needed memory on the heap. Be sure to never build a
+ * raw object yourself, instead use salt_object_create(...).
  */
 typedef struct _salt_object_st {
 
-     u32 id;
-      u8 readonly;
-      u8 type;
-      u8 mutex_acquired;
+    /* ID of the object. The virutal machine does not control if the created
+       object has a unique ID or not, it's up to the compiler to not break
+       anything. */
+    u32 id;
 
-      u8 _pad1[1];
- 
-     u32 size;
+    /* Can be either READONLY_TRUE or READONLY_FALSE. If true, this object is
+       const, and therefor the value cannot be modified. */
+    u8  readonly;
+
+    /* Salt object type. This can be one of SALT_TYPE_... */
+    u8  type;
+
+    /* Padding between the first values and the data. */
+    u8 _pad1[2];
+
+    /* The value the object stores, paired with the size for more solid memory
+       control. And yes, strings cannot have a length > 4 bilion. */
+    u32   size;
     void *value;
 
-    /* the runtime pointers have to be set to a void * because the actual
-     type is defined later on, being struct _svm_runtime_st. */
+    /* The runtime pointers have to be set to a void * because the actual
+       type is defined later on, being struct _svm_runtime_st. */
     void (* ctor) (void *_rt, struct _salt_object_st *self);
     void (* dtor) (void *_rt, struct _salt_object_st *self);
     void (*print) (void *_rt, struct _salt_object_st *self);
-
-#if TARGET_ARCH == 32 
-    u8 _pad2[12];
-#endif
 
 } SaltObject;
 
@@ -193,21 +211,22 @@ typedef struct _salt_object_st {
  */
 typedef struct _svm_runtime_st {
 
-    /* Global register array. The amount of registers is defined in SCC 
-     headers, and is handled upon loading every module. */
+    /* Global register array. The amount of registers is defined in SCC
+       headers, and is handled upon loading every module. */
     SaltObject *registers;
     u8 register_size;
 
     /* Flags */
     u8 flag_comparison;
 
-    /* Argument flags. */
+    /* Argument flags. These are set by arg_parse, and different code is
+       run depending on these flags. */
      u8 arg_mem_used;
      u8 arg_allow_debug;
     i32 arg_limit_mem;
 
-    /* Memory status variables. This keeps track of every allocation and the 
-     amount of memory used. Used for checking for memory leaks. */
+    /* Memory status variables. This keeps track of every allocation and the
+       amount of memory used. Used for checking for memory leaks. */
     u64 m_used;
     u64 m_max_used;
     u64 m_allocations;
@@ -236,18 +255,9 @@ typedef struct _string_st {
 
 } String;
 
-/**
- * Always call this instead of the normal exit, because this function
- * additionally cleans up the heap allocated memory before calling exit
- * from stdlib.
- */
-void core_exit(SVMRuntime *_rt);
-
-/**
- * Linux-only debug printf. Prints very nice debug messages using the passed
- * format and variables. Note: This places a newline at the end.
- */
-void _linux_dprintf(char *file, const char *func, const char *fmt, ...);
+// ----------------------------------------------------------------------------
+// VIRTUAL MACHINE ALLOCATION FUNCTIONS
+// ----------------------------------------------------------------------------
 
 /**
  * Allocate n bytes in the heap, registering the memory usage in the global
@@ -274,19 +284,47 @@ void _vmfree(SVMRuntime *_rt, void *ptr, u32 size, const char *func);
  * @param   after   amount of memory used after
  * @return  pointer to memory
  */
-void *_vmrealloc(SVMRuntime *_rt, void *ptr, u32 before, u32 after, 
+void *_vmrealloc(SVMRuntime *_rt, void *ptr, u32 before, u32 after,
                  const char *func);
 
-/* These macros wrap around the allocation functions passing the runtime and 
- function name automatically. */
+/* These macros wrap around the allocation functions passing the runtime and
+   function name automatically. */
 #define vmalloc(N) _vmalloc(_rt, N, __func__)
 #define vmfree(PTR, N) _vmfree(_rt, PTR, N, __func__)
 #define vmrealloc(PTR, N, M) _vmrealloc(_rt, PTR, N, M, __func__)
+
+
+// ----------------------------------------------------------------------------
+// CORE SVM FUNCTIONS
+// ----------------------------------------------------------------------------
+
+/**
+ * Always call this instead of the normal exit, because this function
+ * additionally cleans up the heap allocated memory before calling exit
+ * from stdlib.
+ */
+void core_exit(SVMRuntime *_rt);
+
+/**
+ * Linux-only debug printf. Prints very nice debug messages using the passed
+ * format and variables. Note: This places a newline at the end.
+ */
+void _linux_dprintf(char *file, const char *func, const char *fmt, ...);
+
+/**
+ * Debug output for Windows.
+ */
+void _win_dprintf(char *file, const char *func, const char *fmt, ...);
 
 /**
  * Check the current status of the memory.
  */
 void vibe_check(SVMRuntime *_rt);
+
+
+// ----------------------------------------------------------------------------
+// SALT OBJECT FUNCTIONS
+// ----------------------------------------------------------------------------
 
 /**
  * Create a raw salt object. Assign all the needed values, settings the object

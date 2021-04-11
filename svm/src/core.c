@@ -25,11 +25,11 @@
  * but there may be more people in the future wanting to contribute to the
  * project. 
  *
- * core.h implementation
+ * svm.h implementation
  *
  * @author bellrise, 2021
  */
-#include "../include/core.h"
+#include "../include/svm.h"
 #include "../include/module.h"
 #include "../include/exception.h"
 #include "../include/exec.h"
@@ -37,6 +37,12 @@
 
 #include <stdlib.h>
 #include <stdarg.h>
+
+#if defined(_WIN32) && defined(DEBUG)
+/* If we're compiling for _WIN32 (debug mode only), include the Windows header
+   in order to call SetConsoleTextAttribute to make terminal colours. */
+#include <windows.h>
+#endif
 
 #ifndef DEBUG_ALLOCATIONS
 #define DEBUG_ALLOCATIONS 1
@@ -51,7 +57,7 @@ void core_exit(SVMRuntime *_rt)
         callstack_pop(_rt);
 
     /* For some reason this *reallY* likes to break, so just check if the
-     whole callstack has been cleared. */
+       whole callstack has been cleared. */
     if (_rt->callstack_size == 1)
         callstack_pop(_rt);
 
@@ -65,8 +71,8 @@ void _linux_dprintf(char *file, const char *func, const char *fmt, ...)
 {
 #ifdef DEBUG
     /* We only want this function to compile if DEBUG is defined. Otherwise,
-     just keep this empty. The ununsed parameter checks are disabled by default
-     because of the exec_ functions. */
+       just keep this empty. The ununsed parameter checks are disabled by
+       default because of the exec_ functions. */
 
     va_list args;
     va_start(args, fmt);
@@ -90,6 +96,31 @@ void _linux_dprintf(char *file, const char *func, const char *fmt, ...)
             (char *) func, 20 - func_size, ' '
     );
 
+    vprintf(fmt, args);
+    printf("\n");
+
+    va_end(args);
+#endif
+}
+
+void _win_dprintf(char *file, const char *func, const char *fmt, ...)
+{
+#if defined(DEBUG) && defined(_WIN32)
+    /* Again, we want to compile this only if we're building a debug
+       version. Also, thank god I don't have to deal with this shit from
+       Windows. */
+
+    va_list args;
+    va_start(args, fmt);
+
+    HANDLE hOut = GetStdHandle(STD_OUTPUT_HANDLE);
+    SetConsoleTextAttribute(hOut, ((0 & 0x0F) << 4) + (3 & 0x0F));
+    printf("%s", file);
+    SetConsoleTextAttribute(hOut, ((0 & 0x0F) << 4) + (1 & 0x0F));
+    printf("::");
+    SetConsoleTextAttribute(hOut, ((0 & 0x0F) << 4) + (2 & 0x0F));
+    printf("%s: ", func);
+    SetConsoleTextAttribute(hOut, ((0 & 0x0F) << 4) + (15 & 0x0F));
     vprintf(fmt, args);
     printf("\n");
 
@@ -142,7 +173,7 @@ void _vmfree(SVMRuntime *_rt, void *ptr, u32 size, const char *func)
     free(ptr);
 }
 
-void *_vmrealloc(SVMRuntime *_rt, void *ptr, u32 before, u32 after, 
+void *_vmrealloc(SVMRuntime *_rt, void *ptr, u32 before, u32 after,
                  const char *func)
 {
 #if DEBUG_ALLOCATIONS == 1

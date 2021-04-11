@@ -29,7 +29,7 @@
  *
  * @author bellrise, 2021
  */
-#include "../include/core.h"
+#include "../include/svm.h"
 #include "../include/exec.h"
 #include "../include/exception.h"
 #include "../include/callstack.h"
@@ -203,7 +203,6 @@ static void copy_object(SVMRuntime *_rt, SaltObject *dest, SaltObject *src)
     dest->type = src->type;
     dest->readonly = src->readonly;
 
-    dest->mutex_acquired = src->mutex_acquired;
     dest->ctor = src->ctor;
     dest->dtor = src->dtor;
     dest->print = src->print;
@@ -272,7 +271,7 @@ u32 exec_cxxeq(SVMRuntime *_rt, struct SaltModule *__restrict module,
 
     switch (o1->type) {
 
-        case OBJECT_TYPE_BOOL:
+        case SALT_TYPE_BOOL:
             if (* (u8 *) o1->value == * (u8 *) o2->value)
                 _rt->flag_comparison = 1;
             break;
@@ -280,19 +279,19 @@ u32 exec_cxxeq(SVMRuntime *_rt, struct SaltModule *__restrict module,
         /* the float & i32 case may look pretty slow, but the alternative is 
          comparing 4 u8, while the CPU can compare ints & floats in one 
          clock cycle. */
-        case OBJECT_TYPE_FLOAT:
+        case SALT_TYPE_FLOAT:
         {
             if (* (float *) o1->value == * (float *) o2->value)
                 _rt->flag_comparison = 1;
             break;
         }
-        case OBJECT_TYPE_INT:
+        case SALT_TYPE_INT:
         {
             if (* (i32 *) o1->value == * (i32 *) o2->value)
                 _rt->flag_comparison = 1;
             break;
         }
-        case OBJECT_TYPE_STRING:
+        case SALT_TYPE_STRING:
         {
             u32 size = o1->size;
             if (o2->size != size) {
@@ -371,7 +370,7 @@ u32 exec_ivadd(SVMRuntime *_rt, struct SaltModule *__restrict module,
                 u8 *__restrict payload,  u32 pos)
 {
     SaltObject *obj = fetch_from_tape(_rt, module, * (u32 *) payload);
-    if (obj->type != OBJECT_TYPE_INT)
+    if (obj->type != SALT_TYPE_INT)
         exception_throw(_rt, EXCEPTION_TYPE, "Cannot add to non-i32 type");
 
     if (obj->readonly)
@@ -387,7 +386,7 @@ u32 exec_ivsub(SVMRuntime *_rt, struct SaltModule *__restrict module,
                 u8 *__restrict payload,  u32 pos)
 {
     SaltObject *obj = fetch_from_tape(_rt, module, * (u32 *) payload);
-    if (obj->type != OBJECT_TYPE_INT)
+    if (obj->type != SALT_TYPE_INT)
         exception_throw(_rt, EXCEPTION_TYPE, "Cannot subtract from non-i32 type");
     
     if (obj->readonly)
@@ -495,7 +494,7 @@ u32 exec_rdump(SVMRuntime *_rt, struct SaltModule *__restrict module,
     /* If the value is set to NULL and the type is not null, that means the 
      object has been removed. */    
     if (_rt->registers[r].value != NULL 
-     && _rt->registers[r].type != OBJECT_TYPE_NULL)
+     && _rt->registers[r].type != SALT_TYPE_NULL)
         salt_object_print(_rt, &_rt->registers[r]);
     else
         exception_throw(_rt, EXCEPTION_REGISTER, "Register %d is empty", r);
@@ -553,7 +552,7 @@ u32 exec_rnull(SVMRuntime *_rt, struct SaltModule *__restrict module,
         _rt->registers[i].size = 0;
         
         /* Set it to a bool type so RDUMP knows this object is unprintable */
-        _rt->registers[i].type = OBJECT_TYPE_BOOL;
+        _rt->registers[i].type = SALT_TYPE_BOOL;
     }
     return ++pos;
 }

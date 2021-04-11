@@ -25,7 +25,7 @@
 #ifndef SVM_ARGS_H
 #define SVM_ARGS_H
 
-#include "core.h"
+#include "svm.h"
 
 /**
  * Parse the given arguments of the program and set variables depending on

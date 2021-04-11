@@ -62,8 +62,8 @@
  *
  * @version  Salt Virtual Machine; format 3 version 0.12  
  */
+#include "include/svm.h"
 #include "include/args.h"
-#include "include/core.h"
 #include "include/module.h"
 #include "include/callstack.h"
 #include "include/loader.h"
@@ -73,7 +73,7 @@
 #include <string.h>
 #include <stdio.h>
 
-/* If we're in linux, add support for signalling */
+/* If we're in linux, add support for signalling. */
 #ifdef __linux__
 #include <signal.h>
 #include <unistd.h>
@@ -88,7 +88,7 @@
 /* This string will show up in the compiled version of SVM which you can then
  grep to, checking the format. */
 const char *svm_grep_string = "SVM: f3 "SVM_VERSION" on "__TIMESTAMP__" ("
-            STRINGIFY(TARGET_ARCH)" bit for "TARGET_SYSTEM")"
+            UTIL_STRINGIFY(TARGET_ARCH)" bit for "TARGET_SYSTEM")"
             SVM_GREP_STRING_DEBUG_FLAG;
 
 static void size_check();

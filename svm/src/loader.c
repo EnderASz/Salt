@@ -29,7 +29,7 @@
  *
  * @author bellrise, 2021
  */
-#include "../include/core.h"
+#include "../include/svm.h"
 #include "../include/loader.h"
 #include "../include/utils.h"
 #include "../include/exception.h"

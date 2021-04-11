@@ -29,8 +29,8 @@
  *
  * @author  bellrise, 2021
  */
+#include "../include/svm.h"
 #include "../include/args.h"
-#include "../include/core.h"
 #include "../include/exception.h"
 
 #include <string.h>

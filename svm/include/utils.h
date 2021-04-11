@@ -25,7 +25,7 @@
 #ifndef SVM_UTILS_H
 #define SVM_UTILS_H
 
-#include "core.h"
+#include "svm.h"
 
 /**
  * Print n amount of bytes in hex format. Used for debugging.

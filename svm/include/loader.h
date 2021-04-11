@@ -26,7 +26,7 @@
 #ifndef SVM_LOADER_H
 #define SVM_LOADER_H
 
-#include "core.h"
+#include "svm.h"
 #include "module.h"
 
 /**

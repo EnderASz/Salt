@@ -26,7 +26,7 @@
 #ifndef SVM_MODULE_H
 #define SVM_MODULE_H
 
-#include "core.h"
+#include "svm.h"
 
 #define MODULE_OBJECT_SPACE 32
 

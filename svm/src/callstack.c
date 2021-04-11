@@ -29,9 +29,9 @@
  *
  * @author  bellrise, 2021
  */
+#include "../include/svm.h"
 #include "../include/callstack.h"
 #include "../include/exception.h"
-#include "../include/core.h"
 #include "../include/module.h"
 
 #include <string.h>

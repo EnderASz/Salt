@@ -26,7 +26,7 @@
 #ifndef SVM_EXEC_H
 #define SVM_EXEC_H
 
-#include "core.h"
+#include "svm.h"
 #include "module.h"
 
 /**

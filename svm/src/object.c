@@ -25,11 +25,11 @@
  * but there may be more people in the future wanting to contribute to the
  * project. 
  *
- * core.h implementation from the salt object size
+ * object.h implementation
  *
  * @author bellrise, 2021
  */
-#include "../include/core.h"
+#include "../include/svm.h"
 #include "../include/utils.h"
 #include "../include/exception.h"
 
@@ -49,7 +49,6 @@ void salt_object_copy(SVMRuntime *_rt, SaltObject *dest, SaltObject *src)
     dest->id = src->id;
     dest->type = src->type;
     dest->readonly = src->readonly;
-    dest->mutex_acquired = src->mutex_acquired;
 
     dest->ctor = src->ctor;
     dest->dtor = src->dtor;
@@ -77,26 +76,26 @@ void salt_object_print(SVMRuntime *_rt, SaltObject *obj)
 
     switch (obj->type) {
 
-        case OBJECT_TYPE_INT:
+        case SALT_TYPE_INT:
             printf("%d", * (i32 *) obj->value);
             break;
 
-        case OBJECT_TYPE_FLOAT:
+        case SALT_TYPE_FLOAT:
             printf("%f", * (float *) obj->value);
             break;
 
-        case OBJECT_TYPE_STRING:
+        case SALT_TYPE_STRING:
             printf("%s", (char *) obj->value);
             break;
 
-        case OBJECT_TYPE_BOOL:
+        case SALT_TYPE_BOOL:
             if (* (u8 *) obj->value)
                 printf("true");
             else
                 printf("false");
             break;
 
-        case OBJECT_TYPE_NULL:
+        case SALT_TYPE_NULL:
             printf("null");
     }
 }
@@ -106,19 +105,19 @@ static void render_value(SVMRuntime *_rt, SaltObject *obj, u8 *payload)
     dprintf("Rendering type 0x%02hhx", obj->type);
     switch (obj->type) {
 
-        case OBJECT_TYPE_INT:
+        case SALT_TYPE_INT:
             obj->value = vmalloc(sizeof(i32));
             obj->size = sizeof(i32);
             memcpy(obj->value, payload, 4);
             return;
 
-        case OBJECT_TYPE_FLOAT:
+        case SALT_TYPE_FLOAT:
             obj->value = vmalloc(sizeof(float));
             obj->size = sizeof(float);
             memcpy(obj->value, payload, 4);
             return;
 
-        case OBJECT_TYPE_STRING:
+        case SALT_TYPE_STRING:
             obj->size = * (u32 *) payload;
             obj->value = vmalloc(sizeof(char) * obj->size);
             memcpy(obj->value, (payload + sizeof(u32)), obj->size);
@@ -132,13 +131,13 @@ static void render_value(SVMRuntime *_rt, SaltObject *obj, u8 *payload)
             ((char *) obj->value)[obj->size - 1] = 0;
             return;
 
-        case OBJECT_TYPE_BOOL:
+        case SALT_TYPE_BOOL:
             obj->value = vmalloc(1);
             obj->size = 1;
             memcpy(obj->value, payload, 1);
             return;
 
-        case OBJECT_TYPE_NULL:
+        case SALT_TYPE_NULL:
             return;
 
         default:
@@ -159,7 +158,6 @@ void salt_object_ctor(void *_rt, SaltObject *self)
 {
     self->id = 0;
     self->readonly = 0;
-    self->mutex_acquired = 0;
 
     self->value = NULL;
     self->size = 0;
