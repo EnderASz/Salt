@@ -110,147 +110,29 @@ void register_clear(SVMRuntime *_rt);
  * @return  instruction number to jump to
  */
 
-/**
- * Call a different function and jump to it.
- */
 __SVMCALL (callf);
-
-/**
- * Call an extenal function from another module loaded with EXTLD.
- */
 __SVMCALL (callx);
-
-/**
- * Compare two objects for an equal value, can compare bools, ints, floats and
- * strings. If true, sets the jump flag.
- */
 __SVMCALL (cxxeq);
-
-/**
- * Compare two object for an equal value, an compare bools, ints, floats and 
- * strings. If false sets the jump flag.
- */
-__SVMCALL (cxxne);
-
-/**
- * Exit the current executed module. This is the safe version of KILLX, because
- * it jumps to the last instruction and leaves exec to pop everything from the
- * stack and finish execution. This is different to said kill instruction,
- * which immediately collapses the module tapes and exits the program.
- */
+__SVMCALL (cxxlt);
 __SVMCALL (exite);
-
-/**
- * Load an external SCC file and add it to the global module register.
- */
 __SVMCALL (extld);
-
-/**
- * Add the value to the object of type int.
- */
 __SVMCALL (ivadd);
-
-/**
- * Subtract a given value from the object of type int.
- */
 __SVMCALL (ivsub);
-
-/**
- * Jump to the given symbol only if the jump flag is set.
- */
 __SVMCALL (jmpfl);
-
-/**
- * Jump to the given symbol only if the jump flag is NOT set.
- */
 __SVMCALL (jmpnf);
-
-/**
- * Jump to the passed label without creating a new entry on the callstack. 
- * This may be used in loops, because calling a label and putting it on the
- * callstack costs a lot of memory in the long run.
- */
 __SVMCALL (jmpto);
-
-/**
- * Kill the whole program on-the-spot. This tried to free any memory it can as
- * fast as possible, and this kills the whole program. Note that this almost
- * certainly produce unwanted memory leaks, so it's recommended not to use it.
- */
 __SVMCALL (killx);
-
-/**
- * Map the whole module list.
- */
 __SVMCALL (mlmap);
-
-/**
- * Create a new object in the current module. This should be handled by
- * an external function in the compiler, to always get it right because
- * it's a quite complex instruction.
- */
 __SVMCALL (objmk);
-
-/**
- * Delete the object in the current module. This doesn't actually remove
- * the object from memory, but signs it as "inactive". The virtual machine
- * decides when to actually free the memory and remove the object permanently.
- */
 __SVMCALL (objdl);
-
-/**
- * Do nothing. This may be an area for a compiler comment, or for debugging
- * tools.
- */
 __SVMCALL (passl);
-
-/**
- * Print the value of the object (without a newline). Most prints require
- * a newline anyway, so it is a good idea for the compiler to create a readonly
- * string with only a newline character, and chain the PRINT object & PRINT
- * const_newline.
- */
 __SVMCALL (print);
-
-/**
- * Print the object at the given register. This can be done in 3 instructions,
- * RGPOP to move it into an object, PRINT to print it and then move it back to
- * the register using RPUSH.
- */
 __SVMCALL (rdump);
-
-/**
- * Load an external SCC file and add it to the global module register.
- */
 __SVMCALL (retrn);
-
-/**
- * Move the value from the register onto the module object list, making it an
- * object with a set ID. Note that this does not remove any previous objects 
- * with the same IDs from the list, but adds a brand new object at the beginning.
- */
 __SVMCALL (rgpop);
-
-/**
- * Clear all registers.
- */
 __SVMCALL (rnull);
-
-/**
- * Set the value of the given register to the selected object by ID. 
- * Important note: this removes the original object from the module object
- * list, assigning it only to the register.
- */
 __SVMCALL (rpush);
-
-/**
- * Sleep the given amount of miliseconds.
- */
 __SVMCALL (sleep);
-
-/**
- * Print the current callstack to standard out. Used for debugging.
- */
 __SVMCALL (trace);
 
 #endif // SVM_EXEC_H

@@ -76,7 +76,7 @@ const struct SVMCall g_execs[] = {
     {"MLMAP", exec_mlmap, 0},
     {"TRACE", exec_trace, 0},
     {"CXXEQ", exec_cxxeq, 8},
-    {"CXXNE", exec_cxxne, 8},
+    {"CXXLT", exec_cxxlt, 8},
     {"RNULL", exec_rnull, 0},
     {"SLEEP", exec_sleep, 4},
     {"PASSL", exec_passl, 0}
@@ -217,6 +217,116 @@ static void copy_object(SVMRuntime *_rt, SaltObject *dest, SaltObject *src)
     memcpy(dest->value, src->value, dest->size);
 }
 
+/* Type comparison functions. These are here to make the code more readable for
+   the user.  */
+
+#define COMPARISON_NOT_EQUAL    0
+#define COMPARISON_EQUAL        1
+#define COMPARISON_LESSER       2
+#define COMPARISON_GREATER      3
+
+static u8 compare_floats(float *v1, float *v2)
+{
+    if (*v1 == *v2)
+        return COMPARISON_EQUAL;
+    if (*v1 < *v2)
+        return COMPARISON_LESSER;
+    return COMPARISON_GREATER;
+}
+
+static u8 compare_ints(int *v1, int *v2)
+{
+    if (*v1 == *v2)
+        return COMPARISON_EQUAL;
+    if (*v1 < *v2)
+        return COMPARISON_LESSER;
+    return COMPARISON_GREATER;
+}
+
+static u8 compare_strings(u32 len, char *v1, char *v2)
+{
+    u32 i = 0;
+    for (; i < len; i++) {
+        if (v1[i] != v2[i])
+             goto compare_distace;
+    }
+    return COMPARISON_EQUAL;
+
+compare_distace:
+    if (v1[i] < v2[i])
+        return COMPARISON_LESSER;
+    return COMPARISON_GREATER;
+}
+
+static u8 compare_objects(SVMRuntime *_rt, SaltObject *o1, SaltObject *o2)
+{
+    dprintf("Comparing {%d} and {%d}", o1->id, o2->id);
+
+    if (o1 == NULL || o2 == NULL)
+        exception_throw(_rt, EXCEPTION_NULLPTR, "Cannot find object");
+
+    if (o1->type != o2->type)
+        exception_throw(_rt, EXCEPTION_TYPE, "Cannot compare two different types");
+
+    switch (o1->type) {
+
+        /* Compare two boolean values. Return COMPARISON_EQUAL if they are
+           equal. Otherwise, if the first value is false and the second
+           value is true, return COMPARISON_LESSER. Return COMPARISON_GREATER
+           for the opposite. */
+
+        case SALT_TYPE_BOOL:
+        {
+            if (* (u8 *) o1->value == * (u8 *) o2->value)
+                return COMPARISON_EQUAL;
+            if (* (u8 *) o1->value < * (u8 *) o2->value)
+                return COMPARISON_LESSER;
+            return COMPARISON_GREATER;
+        }
+
+        /* Standard rules apply to the float & int comparison. */
+
+        case SALT_TYPE_FLOAT:
+        {
+            return compare_floats((float *) o1->value, (float *) o2->value);
+        }
+        case SALT_TYPE_INT:
+        {
+            return compare_ints((int *) o1->value, (int *) o2->value);
+        }
+
+        /* Comparing string is a little more complex. Because we strive for
+           a small amount of instructions in the SVM but each rich with
+           functionality, comparing strings have their own set of special
+           rules.
+
+           First, check if both strings are the same length. If not,
+           return the comparison of the lengths. This is also done to reduce
+           computation time, because if the strings are not equal we already
+           know they won't be equal. Then check the single chars, and return
+           COMPARISON_NOT_EQUAL if the strings do not match. */
+
+        case SALT_TYPE_STRING:
+        {
+            if (o1->size != o2->size) {
+                if (o1->size > o2->size)
+                    return COMPARISON_GREATER;
+                return COMPARISON_LESSER;
+            }
+
+            return compare_strings(o1->size, (char *) o1->value, (char *) o2->value);
+        }
+
+        /* Crash if we try to compare an unsupported type. */
+        default:
+        {
+            exception_throw(_rt, EXCEPTION_RUNTIME, "Cannot compare object"
+                    " %u with %u", o1->id, o2->id);
+            return COMPARISON_NOT_EQUAL;
+        }
+    }
+}
+
 // ----------------------------------------------------------------------------
 // Instruction implementations
 // ----------------------------------------------------------------------------
@@ -258,64 +368,22 @@ __SVMCALL (cxxeq)
     SaltObject *o1 = module_object_find(module, * (u32 *) payload);
     SaltObject *o2 = module_object_find(module, * (u32 *) (payload + 4));
 
-    dprintf("Comparing {%d} and {%d}", o1->id, o2->id);
-
-    if (o1 == NULL || o2 == NULL)
-        exception_throw(_rt, EXCEPTION_NULLPTR, "Cannot find object");
-
-    if (o1->type != o2->type)
-        exception_throw(_rt, EXCEPTION_TYPE, "Cannot compare two different types");
-
-    switch (o1->type) {
-
-        case SALT_TYPE_BOOL:
-            if (* (u8 *) o1->value == * (u8 *) o2->value)
-                _rt->flag_comparison = 1;
-            break;
-
-        /* the float & i32 case may look pretty slow, but the alternative is 
-         comparing 4 u8, while the CPU can compare ints & floats in one 
-         clock cycle. */
-        case SALT_TYPE_FLOAT:
-        {
-            if (* (float *) o1->value == * (float *) o2->value)
-                _rt->flag_comparison = 1;
-            break;
-        }
-        case SALT_TYPE_INT:
-        {
-            if (* (i32 *) o1->value == * (i32 *) o2->value)
-                _rt->flag_comparison = 1;
-            break;
-        }
-        case SALT_TYPE_STRING:
-        {
-            u32 size = o1->size;
-            if (o2->size != size) {
-                _rt->flag_comparison = 0;
-                break;
-            }
-
-            if(strncmp((char *) o1->value, (char *) o2->value, size - 1) == 0)
-                _rt->flag_comparison = 1;
-            else
-                _rt->flag_comparison = 0;
-            break;
-        }
-        
-        default:
-            /* if the type is unknown, return false by default */
-            _rt->flag_comparison = 0;
-    
-    }
+    _rt->flag_comparison = 0;
+    if (compare_objects(_rt, o1, o2) == COMPARISON_EQUAL)
+        _rt->flag_comparison = 1;
 
     return ++pos;
 }
 
-__SVMCALL (cxxne)
+__SVMCALL (cxxlt)
 {
-    _rt->flag_comparison = !_rt->flag_comparison;
-    exec_cxxeq(_rt, module, payload, pos);
+    SaltObject *o1 = module_object_find(module, * (u32 *) payload);
+    SaltObject *o2 = module_object_find(module, * (u32 *) (payload + 4));
+
+    _rt->flag_comparison = 1;
+    if (compare_objects(_rt, o1, o2) == COMPARISON_LESSER)
+        _rt->flag_comparison = 1;
+
     return ++pos;
 }
 
