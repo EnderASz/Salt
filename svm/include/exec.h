@@ -29,6 +29,14 @@
 #include "svm.h"
 #include "module.h"
 
+
+/* Because svmcalls are very long, I use this macro to automatically generate
+   a function declaration for me in the place of the call. I don't think this
+   decreases readability, only increases it because it's a simple __SVMCALL. */
+
+#define __SVMCALL(NAME) u32 exec_##NAME(SVMRuntime *_rt, \
+        struct SaltModule *module, u8 *payload, u32 pos)
+
 /**
  * This structure is used for storing a single SVM instruction. An array of 
  * these is created in the exec.c source file called g_execs. 
@@ -42,8 +50,7 @@ struct SVMCall {
     char instruction[6];
     
     /* the exec function */
-    u32 ( * f_exec )
-    (SVMRuntime *_rt, struct SaltModule *module, u8 *payload, u32 pos);
+    u32 ( * f_exec ) (SVMRuntime *_r, struct SaltModule *_m, u8 *_p, u32 _s);
 
     i32 pad;
 };
@@ -106,28 +113,24 @@ void register_clear(SVMRuntime *_rt);
 /**
  * Call a different function and jump to it.
  */
-u32 exec_callf(SVMRuntime *_rt, struct SaltModule *__restrict module, 
-                u8 *__restrict payload, u32 pos);
+__SVMCALL (callf);
 
 /**
  * Call an extenal function from another module loaded with EXTLD.
  */
-u32 exec_callx(SVMRuntime *_rt, struct SaltModule *__restrict module, 
-                u8 *__restrict payload, u32 pos);
+__SVMCALL (callx);
 
 /**
  * Compare two objects for an equal value, can compare bools, ints, floats and
  * strings. If true, sets the jump flag.
  */
-u32 exec_cxxeq(SVMRuntime *_rt, struct SaltModule *__restrict module, 
-                u8 *__restrict payload, u32 pos);
+__SVMCALL (cxxeq);
 
 /**
  * Compare two object for an equal value, an compare bools, ints, floats and 
  * strings. If false sets the jump flag.
  */
-u32 exec_cxxne(SVMRuntime *_rt, struct SaltModule *__restrict module, 
-                u8 *__restrict payload, u32 pos);
+__SVMCALL (cxxne);
 
 /**
  * Exit the current executed module. This is the safe version of KILLX, because
@@ -135,83 +138,71 @@ u32 exec_cxxne(SVMRuntime *_rt, struct SaltModule *__restrict module,
  * stack and finish execution. This is different to said kill instruction,
  * which immediately collapses the module tapes and exits the program.
  */
-u32 exec_exite(SVMRuntime *_rt, struct SaltModule *__restrict module, 
-                u8 *__restrict payload, u32 pos);
+__SVMCALL (exite);
 
 /**
  * Load an external SCC file and add it to the global module register.
  */
-u32 exec_extld(SVMRuntime *_rt, struct SaltModule *__restrict module, 
-                u8 *__restrict payload, u32 pos);
+__SVMCALL (extld);
 
 /**
  * Add the value to the object of type int.
  */
-u32 exec_ivadd(SVMRuntime *_rt, struct SaltModule *__restrict module, 
-                u8 *__restrict payload, u32 pos);
+__SVMCALL (ivadd);
 
 /**
  * Subtract a given value from the object of type int.
  */
-u32 exec_ivsub(SVMRuntime *_rt, struct SaltModule *__restrict module, 
-                u8 *__restrict payload, u32 pos);
+__SVMCALL (ivsub);
 
 /**
  * Jump to the given symbol only if the jump flag is set.
  */
-u32 exec_jmpfl(SVMRuntime *_rt, struct SaltModule *__restrict module, 
-                u8 *__restrict payload, u32 pos);
+__SVMCALL (jmpfl);
 
 /**
  * Jump to the given symbol only if the jump flag is NOT set.
  */
-u32 exec_jmpnf(SVMRuntime *_rt, struct SaltModule *__restrict module, 
-                u8 *__restrict payload, u32 pos);
+__SVMCALL (jmpnf);
 
 /**
  * Jump to the passed label without creating a new entry on the callstack. 
  * This may be used in loops, because calling a label and putting it on the
  * callstack costs a lot of memory in the long run.
  */
-u32 exec_jmpto(SVMRuntime *_rt, struct SaltModule *__restrict module, 
-                u8 *__restrict payload, u32 pos);
+__SVMCALL (jmpto);
 
 /**
  * Kill the whole program on-the-spot. This tried to free any memory it can as
  * fast as possible, and this kills the whole program. Note that this almost
  * certainly produce unwanted memory leaks, so it's recommended not to use it.
  */
-u32 exec_killx(SVMRuntime *_rt, struct SaltModule *__restrict module, 
-                u8 *__restrict payload, u32 pos);
+__SVMCALL (killx);
 
 /**
  * Map the whole module list.
  */
-u32 exec_mlmap(SVMRuntime *_rt, struct SaltModule *__restrict module, 
-                u8 *__restrict payload, u32 pos);
+__SVMCALL (mlmap);
 
 /**
  * Create a new object in the current module. This should be handled by
  * an external function in the compiler, to always get it right because
  * it's a quite complex instruction.
  */
-u32 exec_objmk(SVMRuntime *_rt, struct SaltModule *__restrict module, 
-                u8 *__restrict payload, u32 pos);
+__SVMCALL (objmk);
 
 /**
  * Delete the object in the current module. This doesn't actually remove
  * the object from memory, but signs it as "inactive". The virtual machine
  * decides when to actually free the memory and remove the object permanently.
  */
-u32 exec_objdl(SVMRuntime *_rt, struct SaltModule *__restrict module, 
-                u8 *__restrict payload, u32 pos);
+__SVMCALL (objdl);
 
 /**
  * Do nothing. This may be an area for a compiler comment, or for debugging
  * tools.
  */
-u32 exec_passl(SVMRuntime *_rt, struct SaltModule *__restrict module,
-                u8 *__restrict payload, u32 pos);
+__SVMCALL (passl);
 
 /**
  * Print the value of the object (without a newline). Most prints require
@@ -219,54 +210,47 @@ u32 exec_passl(SVMRuntime *_rt, struct SaltModule *__restrict module,
  * string with only a newline character, and chain the PRINT object & PRINT
  * const_newline.
  */
-u32 exec_print(SVMRuntime *_rt, struct SaltModule *__restrict module, 
-                u8 *__restrict payload, u32 pos);
+__SVMCALL (print);
 
 /**
  * Print the object at the given register. This can be done in 3 instructions,
  * RGPOP to move it into an object, PRINT to print it and then move it back to
  * the register using RPUSH.
  */
-u32 exec_rdump(SVMRuntime *_rt, struct SaltModule *__restrict module, 
-                u8 *__restrict payload, u32 pos);
+__SVMCALL (rdump);
 
 /**
  * Load an external SCC file and add it to the global module register.
  */
-u32 exec_retrn(SVMRuntime *_rt, struct SaltModule *__restrict module, 
-                u8 *__restrict payload, u32 pos);
+__SVMCALL (retrn);
+
 /**
  * Move the value from the register onto the module object list, making it an
  * object with a set ID. Note that this does not remove any previous objects 
  * with the same IDs from the list, but adds a brand new object at the beginning.
  */
-u32 exec_rgpop(SVMRuntime *_rt, struct SaltModule *__restrict module, 
-                u8 *__restrict payload, u32 pos);
+__SVMCALL (rgpop);
 
 /**
  * Clear all registers.
  */
-u32 exec_rnull(SVMRuntime *_rt, struct SaltModule *__restrict module, 
-                u8 *__restrict payload, u32 pos);
+__SVMCALL (rnull);
 
 /**
  * Set the value of the given register to the selected object by ID. 
  * Important note: this removes the original object from the module object
  * list, assigning it only to the register.
  */
-u32 exec_rpush(SVMRuntime *_rt, struct SaltModule *__restrict module, 
-                u8 *__restrict payload, u32 pos);
+__SVMCALL (rpush);
 
 /**
  * Sleep the given amount of miliseconds.
  */
-u32 exec_sleep(SVMRuntime *_rt, struct SaltModule *__restrict module, 
-                u8 *__restrict payload, u32 pos);
+__SVMCALL (sleep);
 
 /**
  * Print the current callstack to standard out. Used for debugging.
  */
-u32 exec_trace(SVMRuntime *_rt, struct SaltModule *__restrict module, 
-                u8 *__restrict payload, u32 pos);
+__SVMCALL (trace);
 
 #endif // SVM_EXEC_H
