@@ -331,14 +331,14 @@ static u8 compare_objects(SVMRuntime *_rt, SaltObject *o1, SaltObject *o2)
 // Instruction implementations
 // ----------------------------------------------------------------------------
 
-__SVMCALL (callf)
+__SVMCALL (callf) /* _rt, module, payload, pos */
 {
     dprintf("Calling '%s'", payload);
     exec(_rt, module, (char *) payload);
     return ++pos;
 }
 
-__SVMCALL (callx)
+__SVMCALL (callx) /* _rt, module, payload, pos */
 {
     char *mod_name  = (char *) payload;
     char *func_name = ((char *) payload) + strlen(mod_name) + 1;
@@ -363,7 +363,7 @@ __SVMCALL (callx)
     return ++pos;
 }
 
-__SVMCALL (cxxeq)
+__SVMCALL (cxxeq) /* _rt, module, payload, pos */
 {
     SaltObject *o1 = module_object_find(module, * (u32 *) payload);
     SaltObject *o2 = module_object_find(module, * (u32 *) (payload + 4));
@@ -375,7 +375,7 @@ __SVMCALL (cxxeq)
     return ++pos;
 }
 
-__SVMCALL (cxxlt)
+__SVMCALL (cxxlt) /* _rt, module, payload, pos */
 {
     SaltObject *o1 = module_object_find(module, * (u32 *) payload);
     SaltObject *o2 = module_object_find(module, * (u32 *) (payload + 4));
@@ -387,12 +387,12 @@ __SVMCALL (cxxlt)
     return ++pos;
 }
 
-__SVMCALL (exite)
+__SVMCALL (exite) /* _rt, module, payload, pos */
 {
     return module->instruction_amount - 1;
 }
 
-__SVMCALL (extld)
+__SVMCALL (extld) /* _rt, module, payload, pos */
 {
     const char *name = (char *) payload;
     struct SaltModule *mod = NULL;
@@ -428,7 +428,7 @@ __SVMCALL (extld)
     return ++pos;
 }
 
-__SVMCALL (ivadd)
+__SVMCALL (ivadd) /* _rt, module, payload, pos */
 {
     SaltObject *obj = fetch_from_tape(_rt, module, * (u32 *) payload);
     if (obj->type != SALT_TYPE_INT)
@@ -443,7 +443,7 @@ __SVMCALL (ivadd)
     return ++pos;
 }
 
-__SVMCALL (ivsub)
+__SVMCALL (ivsub) /* _rt, module, payload, pos */
 {
     SaltObject *obj = fetch_from_tape(_rt, module, * (u32 *) payload);
     if (obj->type != SALT_TYPE_INT)
@@ -458,7 +458,7 @@ __SVMCALL (ivsub)
     return ++pos;
 }
 
-__SVMCALL (jmpfl)
+__SVMCALL (jmpfl) /* _rt, module, payload, pos */
 {
     dprintf("Compare flag on %02hx", _rt->flag_comparison);
     if (_rt->flag_comparison)
@@ -467,7 +467,7 @@ __SVMCALL (jmpfl)
     return ++pos;
 }
 
-__SVMCALL (jmpnf)
+__SVMCALL (jmpnf) /* _rt, module, payload, pos */
 {
     dprintf("Compare flag on %02hx", _rt->flag_comparison);
     if (!_rt->flag_comparison)
@@ -476,18 +476,18 @@ __SVMCALL (jmpnf)
     return ++pos;
 }
 
-__SVMCALL (jmpto)
+__SVMCALL (jmpto) /* _rt, module, payload, pos */
 {
     return find_label(_rt, module, (char *) payload);
 }
 
-__SVMCALL (killx)
+__SVMCALL (killx) /* _rt, module, payload, pos */
 {
     core_exit(_rt);
     return ++pos;
 }
 
-__SVMCALL (mlmap)
+__SVMCALL (mlmap) /* _rt, module, payload, pos */
 {
     if (!_rt->arg_allow_debug)
         return ++pos;
@@ -505,25 +505,25 @@ __SVMCALL (mlmap)
 }
 
 
-__SVMCALL (objmk)
+__SVMCALL (objmk) /* _rt, module, payload, pos */
 {
     SaltObject *obj = module_object_acquire(_rt, module);
     salt_object_define(_rt, obj, payload);
     return ++pos;
 }
 
-__SVMCALL (objdl)
+__SVMCALL (objdl) /* _rt, module, payload, pos */
 {
     module_object_delete(_rt, module, * (u32 *) payload);
     return ++pos;
 }
 
-__SVMCALL (passl)
+__SVMCALL (passl) /* _rt, module, payload, pos */
 {
     return ++pos;
 }
 
-__SVMCALL (print)
+__SVMCALL (print) /* _rt, module, payload, pos */
 {
     SaltObject *obj = module_object_find(module, * (u32 *) payload);
     if (obj == NULL) {
@@ -535,7 +535,7 @@ __SVMCALL (print)
     return ++pos;
 }
 
-__SVMCALL (rdump)
+__SVMCALL (rdump) /* _rt, module, payload, pos */
 {
     u32 r = * (u32 *) payload;
     if (r >= _rt->register_size)
@@ -552,7 +552,7 @@ __SVMCALL (rdump)
     return ++pos;
 }
 
-__SVMCALL (retrn)
+__SVMCALL (retrn) /* _rt, module, payload, pos */
 {
     struct StackFrame *frame = callstack_peek(_rt);
     if (frame == NULL) {
@@ -569,7 +569,7 @@ __SVMCALL (retrn)
     return pos;
 }
 
-__SVMCALL (rgpop)
+__SVMCALL (rgpop) /* _rt, module, payload, pos */
 {
     u32 r = * (u32 *) payload;
     u32 id = * (u32 *) (payload + 1);
@@ -591,7 +591,7 @@ __SVMCALL (rgpop)
     return ++pos;  
 }
 
-__SVMCALL (rnull)
+__SVMCALL (rnull) /* _rt, module, payload, pos */
 {
     for (u32 i = 0; i < _rt->register_size; i++) {
         vmfree(_rt->registers[i].value, _rt->registers[i].size);
@@ -604,7 +604,7 @@ __SVMCALL (rnull)
     return ++pos;
 }
 
-__SVMCALL (rpush)
+__SVMCALL (rpush) /* _rt, module, payload, pos */
 {
     u32 r = * (u32 *) payload;
     u32 id = * (u32 *) (payload + 1);
@@ -627,7 +627,7 @@ __SVMCALL (rpush)
     return ++pos;
 }
 
-__SVMCALL (sleep)
+__SVMCALL (sleep) /* _rt, module, payload, pos */
 {
 #if defined(_WIN32)
     /* The windows sleep is a bit easier because it uses miliseconds by 
@@ -646,7 +646,7 @@ __SVMCALL (sleep)
     return ++pos;
 }
 
-__SVMCALL (trace)
+__SVMCALL (trace) /* _rt, module, payload, pos */
 {
     if (!_rt->arg_allow_debug)
         return ++pos;
