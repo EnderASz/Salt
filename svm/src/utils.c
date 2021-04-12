@@ -34,10 +34,27 @@
 
 #include <stdio.h>
 
-static void dump_hexes(u8 *bytes, short amount)
+
+/* A bit of compiler compaibilty: if we're using clang, we get the format
+   specifier warning, which tells us to use hhx instead of hx for bytes, 
+   but if we're using mingw instead, it tell us to NOT use hhx. \o/ */
+
+#if defined(_WIN32)
+#define SVM_UTIL_DUMP_BYTE_FORMAT "%02hx"
+
+#elif defined(__clang__) && !defined(_WIN32)
+#define SVM_UTIL_DUMP_BYTE_FORMAT "%02hhx"
+
+#else 
+#define SVM_UTIL_DUMP_BYTE_FORMAT "%02hhx"
+
+#endif
+
+
+static void dump_hexes(u8 *bytes, u32 amount)
 {
-    for (short i = 0; i < amount; i++) {
-        printf("%02hhx", bytes[i]);
+    for (u32 i = 0; i < amount; i++) {
+        printf(SVM_UTIL_DUMP_BYTE_FORMAT, bytes[i]);
         if (i % 2 != 0)
             printf(" ");
     }
@@ -65,7 +82,7 @@ void util_bitdump(u8 value)
 {
     u8 max_byte = 1 << 7; 
     
-    printf("%02hhx ", value);
+    printf(SVM_UTIL_DUMP_BYTE_FORMAT" ", value);
     for (u32 j = 0; j < 8; j++) {
 
         /* Print one bit, and then move to the next one */
@@ -74,5 +91,4 @@ void util_bitdump(u8 value)
     }
     printf("\n");
 }
-
 

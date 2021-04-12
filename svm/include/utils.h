@@ -42,4 +42,5 @@ void util_hexdump(u8 *bytes, u32 amount);
  */
 void util_bitdump(u8 byte);
 
-#endif // SVM_UTILS_H
+#endif /* SVM_UTILS_H */
+

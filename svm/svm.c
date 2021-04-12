@@ -85,21 +85,22 @@
 #define SVM_GREP_STRING_DEBUG_FLAG ""
 #endif
 
+
 /* This string will show up in the compiled version of SVM which you can then
- grep to, checking the format. */
-const char *svm_grep_string = "SVM: f3 "SVM_VERSION" on "__TIMESTAMP__" ("
-            UTIL_STRINGIFY(TARGET_ARCH)" bit for "TARGET_SYSTEM")"
-            SVM_GREP_STRING_DEBUG_FLAG;
+   grep to, checking the format. */
+
+const char *svm_grep_string = "SVM: f3 "SVM_VERSION" on "__TIMESTAMP__
+    " ("SVM_STRINGIFY(SVM_TARGET_ARCH)" bit for "SVM_TARGET_SYSTEM")"
+    SVM_GREP_STRING_DEBUG_FLAG;
 
 static void size_check();
 static void interrupt_handler(i32 _sig);
+
 
 i32 main(i32 argc, char **argv)
 {
     dprintf("Starting %s", SVM_VERSION);
 
-    /* The runtime variables have to be initalized early, and they are put on
-     the stack in order to keep it memory safe (without heap allocation). */
     SVMRuntime runtime = {
         
         .registers = NULL,
@@ -123,15 +124,10 @@ i32 main(i32 argc, char **argv)
 
     };
 
-    /* Debug function. */
     size_check();
-
-    /* Parse the arguments and set some values in the runtime structure. */
     char *filename = args_parse(&runtime, argc, argv);
 
 #ifdef __linux__
-    /* If we're compiling for linux, include some signal support like catching 
-     SIGi32 when hitting Ctrl C. Subscribe to the kernel's signal handler. */
     signal(SIGINT, interrupt_handler);
 #endif
 
@@ -141,19 +137,17 @@ i32 main(i32 argc, char **argv)
     }
 
     /* End of the preparation stage, load the main file and start executing it. 
-     The runtime variables have to be loaded before this, in order to pass it
-     to the program. */
+       The runtime variables have to be loaded before this, in order to pass it
+       to the program. */
 
     struct SaltModule *main = load(&runtime, filename);
     strcpy(main->name, "__main__");
 
-    /* Before executing from the main function, run the private __load function
-     first, if the user wanted to preload any globals. */
     exec(&runtime, main, "%__load");
     exec(&runtime, main, "main");
 
     if (runtime.arg_mem_used)
-        printf("Memory used: %ld\n", runtime.m_max_used);
+        printf("Memory used: %lu\n", runtime.m_max_used);
 
     core_exit(&runtime);
 end:
@@ -173,9 +167,11 @@ static void size_check()
 static void interrupt_handler(i32 _sig)
 {
 #ifdef __linux__
+
     if (_sig != SIGINT)
         return;
     printf("Recieved interrupt\n");
     exit(1);
+
 #endif
 }

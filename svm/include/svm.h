@@ -34,24 +34,27 @@
 
 /* The Nullable symbol is placed before function declarations and implemen-
    -tations to signify that it may return NULL. */
+
 #ifndef Nullable
 #define Nullable /* may return null */
 #endif
 
+
 /* The SVM_VERSION defined here is just to not upset the auto complete and
    static analasys. The actual value of SVM_VERSION is passed on the command
    line when compiling it. */
+
 #ifndef SVM_VERSION
 #define SVM_VERSION "(unspecified by the compiler)"
 #endif
 
 /* System settings, includes the core os headers for functionality. */
-#ifndef TARGET_SYSTEM
+#ifndef SVM_TARGET_SYSTEM
 #if defined(_WIN32)
-#define TARGET_SYSTEM "Windows"
+#define SVM_TARGET_SYSTEM "Windows"
 
 #elif defined(__linux__)
-#define TARGET_SYSTEM "Linux"
+#define SVM_TARGET_SYSTEM "Linux"
 
 #else
 
@@ -71,13 +74,13 @@
    Have fun! */
 
 #if __INTPTR_MAX__ == __INT32_MAX__
-#define TARGET_ARCH 32
+#define SVM_TARGET_ARCH 32
 
 #elif __INTPTR_MAX__ == __INT64_MAX__
-#define TARGET_ARCH 64
+#define SVM_TARGET_ARCH 64
 
 #else
-#define TARGET_ARCH 0
+#define SVM_TARGET_ARCH 0
 #error "Other than 32/64 bit are not supported"
 
 #endif
@@ -86,8 +89,8 @@
 /* Wrap the given value in quotes. This is needed for svm_grep_string where the
    const string is created by concatinating several values. */
 
-#define UTIL_STRINGIFY_INTERNAL(X)  #X
-#define UTIL_STRINGIFY(NUM) UTIL_STRINGIFY_INTERNAL(NUM)
+#define SVM_STRINGIFY_INTERNAL(X)  #X
+#define SVM_STRINGIFY(NUM) SVM_STRINGIFY_INTERNAL(NUM)
 
 // ----------------------------------------------------------------------------
 // DEBUG
@@ -102,9 +105,10 @@
 
 #ifdef _WIN32
 /* Use _win_dprintf for Windows, you can check the implementation in the source
-   file, it looks kinda strage. */
+   file, it looks kinda strage. Look, I'll be honest, programming in C kinda 
+   sucks on Windows. I hope my co-worker doesn't lose his mind working on Windows 
+   compatibility problems hehe. */
 #define dprintf(...) _win_dprintf(__FILE__, __func__, __VA_ARGS__)
-
 
 #elif defined(__linux__)
 /* Use _linux_dprintf for Linux, you can check the implementation in the source
@@ -347,7 +351,6 @@ void salt_object_copy(SVMRuntime *_rt, SaltObject *dest, SaltObject *src);
  * information about the payload.
  *
  * @param   payload  pointer to bytes
- * @return  brand new heap allocated SaltObject.
  */
 void salt_object_define(SVMRuntime *_rt, SaltObject *obj, u8 *payload);
 
@@ -367,4 +370,5 @@ void salt_object_print(SVMRuntime *_rt, SaltObject *obj);
 void salt_object_ctor(void *_rt, SaltObject *self);
 void salt_object_dtor(void *_rt, SaltObject *self);
 
-#endif // SVM_CORE_H
+#endif /* SVM_CORE_H */
+

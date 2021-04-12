@@ -37,4 +37,5 @@
  */
 char *args_parse(SVMRuntime *_rt, i32 argc, char **argv) Nullable;
 
-#endif // SVM_ARGS_H
+#endif /* SVM_ARGS_H */
+

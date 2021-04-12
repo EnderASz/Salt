@@ -44,6 +44,9 @@ void callstack_push(SVMRuntime *_rt, u32 line, struct SaltModule *module,
             line, module->name, function);
 
 #ifdef DEBUG_CALLSTACK
+    /* We want to give an option of "stepping" through the function calls if 
+       some recursion bug has to be fixed. */
+    
     printf("Confirm callstack push ");
     fgetc(stdin);
 #endif
@@ -55,7 +58,7 @@ void callstack_push(SVMRuntime *_rt, u32 line, struct SaltModule *module,
     );
     
     _rt->callstack[_rt->callstack_size].module = module;
-    strncpy(_rt->callstack[_rt->callstack_size].function, function, 64);
+    strncpy(_rt->callstack[_rt->callstack_size].function, function, 63);
     _rt->callstack[_rt->callstack_size].line = line;
 
     _rt->callstack_size++;
@@ -93,3 +96,4 @@ void callstack_pop(SVMRuntime *_rt)
     );
     _rt->callstack_size--;
 }
+

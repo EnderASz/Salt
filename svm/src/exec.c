@@ -53,7 +53,6 @@
 // Global const values
 // ----------------------------------------------------------------------------
 
-/* killx is the last instruction if no other is found. */
 const struct SVMCall g_execs[] = {
         
     {"KILLX", exec_killx, 0},
@@ -86,7 +85,7 @@ const struct SVMCall g_execs[] = {
 const u32 g_exec_amount = 24;
 
 // ----------------------------------------------------------------------------
-// Utility & loop functions
+// Utility & core functions
 // ----------------------------------------------------------------------------
 
 static u32 find_label(SVMRuntime *_rt, struct SaltModule *module, char *label)
@@ -111,15 +110,13 @@ inline static SaltObject *fetch_from_tape(SVMRuntime *_rt, struct SaltModule
     return obj;
 }
 
-/* main exec */
-
 i32 exec(SVMRuntime *_rt, struct SaltModule *main, const char *start)
 {
     dprintf("Executing '%s'", main->name);
 
     u32 i = find_label(_rt, main, (char *) start);
 
-    // "Call" the main instruction
+    /* Jump to the `start` instruction. */
     u32 initial_depth = _rt->callstack_size;
     callstack_push(_rt, i, main, (char *) start);
 
@@ -170,20 +167,22 @@ const struct SVMCall *lookup_exec(char *title)
 
 void register_control(SVMRuntime *_rt, u8 size)
 {
-    if (_rt->register_size < size) {
-        dprintf("Changing %d to %d", _rt->register_size, size);
-        _rt->registers = vmrealloc(
-            _rt->registers, 
-            sizeof(SaltObject) * _rt->register_size, 
-            sizeof(SaltObject) * size
-        );
-        _rt->register_size = size;
-        for (u32 i = 0; i < _rt->register_size; i++) {
-            _rt->registers[i].ctor = salt_object_ctor;
-            _rt->registers[i].dtor = salt_object_dtor;
+    if (_rt->register_size >= size)
+        return;
 
-            _rt->registers[i].ctor(_rt, &_rt->registers[i]);
-        }
+    dprintf("Changing %d to %d", _rt->register_size, size);
+    _rt->registers = vmrealloc(
+        _rt->registers, 
+        sizeof(SaltObject) * _rt->register_size, 
+        sizeof(SaltObject) * size
+    );
+    _rt->register_size = size;
+
+    for (u32 i = 0; i < _rt->register_size; i++) {
+        _rt->registers[i].ctor = salt_object_ctor;
+        _rt->registers[i].dtor = salt_object_dtor;
+
+        _rt->registers[i].ctor(_rt, &_rt->registers[i]);
     }
 }
 
@@ -207,7 +206,6 @@ static void copy_object(SVMRuntime *_rt, SaltObject *dest, SaltObject *src)
     dest->dtor = src->dtor;
     dest->print = src->print;
 
-    // Free previous memory in dest
     vmfree(dest->value, dest->size);
     dest->value = NULL;
     dest->size = 0;
@@ -331,14 +329,14 @@ static u8 compare_objects(SVMRuntime *_rt, SaltObject *o1, SaltObject *o2)
 // Instruction implementations
 // ----------------------------------------------------------------------------
 
-__SVMCALL (callf) /* _rt, module, payload, pos */
+_svm_call_function (callf) /* _rt, module, payload, pos */
 {
     dprintf("Calling '%s'", payload);
     exec(_rt, module, (char *) payload);
     return ++pos;
 }
 
-__SVMCALL (callx) /* _rt, module, payload, pos */
+_svm_call_function (callx) /* _rt, module, payload, pos */
 {
     char *mod_name  = (char *) payload;
     char *func_name = ((char *) payload) + strlen(mod_name) + 1;
@@ -346,7 +344,7 @@ __SVMCALL (callx) /* _rt, module, payload, pos */
     dprintf("Calling external '%s.%s'", mod_name, func_name);
 
     struct SaltModule *mod = NULL;
-    // Find the module
+    
     for (u32 i = 0; i < module->module_amount; i++) {
         if (strncmp(module->modules[i]->name, mod_name, strlen(mod_name)) == 0)
             mod = module->modules[i];
@@ -357,13 +355,13 @@ __SVMCALL (callx) /* _rt, module, payload, pos */
 
     dprintf("Found '%s' module, now looking for '%s' function", mod_name, func_name);
 
-    // Call the external function
+    /* Recursively call exec putting an item on the callstack. */
     exec(_rt, mod, func_name);
 
     return ++pos;
 }
 
-__SVMCALL (cxxeq) /* _rt, module, payload, pos */
+_svm_call_function (cxxeq) /* _rt, module, payload, pos */
 {
     SaltObject *o1 = module_object_find(module, * (u32 *) payload);
     SaltObject *o2 = module_object_find(module, * (u32 *) (payload + 4));
@@ -375,7 +373,7 @@ __SVMCALL (cxxeq) /* _rt, module, payload, pos */
     return ++pos;
 }
 
-__SVMCALL (cxxlt) /* _rt, module, payload, pos */
+_svm_call_function (cxxlt) /* _rt, module, payload, pos */
 {
     SaltObject *o1 = module_object_find(module, * (u32 *) payload);
     SaltObject *o2 = module_object_find(module, * (u32 *) (payload + 4));
@@ -387,19 +385,20 @@ __SVMCALL (cxxlt) /* _rt, module, payload, pos */
     return ++pos;
 }
 
-__SVMCALL (exite) /* _rt, module, payload, pos */
+_svm_call_function (exite) /* _rt, module, payload, pos */
 {
     return module->instruction_amount - 1;
 }
 
-__SVMCALL (extld) /* _rt, module, payload, pos */
+_svm_call_function (extld) /* _rt, module, payload, pos */
 {
     const char *name = (char *) payload;
     struct SaltModule *mod = NULL;
     
     /* If the module already exists in the runtime array, don't load
-     the module again, just assign a new pointer in the local module 
-     imports array. */ 
+       the module again, just assign a new pointer in the local module 
+       imports array. */ 
+
     for (u32 i = 0; i < _rt->module_size; i++) {
         if (strncmp(_rt->modules[i]->name, name, strlen(name)) == 0)
             mod = _rt->modules[i];
@@ -409,7 +408,8 @@ __SVMCALL (extld) /* _rt, module, payload, pos */
         mod = ext_load(_rt, (char *) name);
 
     /* Don't check if the import exists in the local table, just append
-     it onto the local module list. */
+       it onto the local module list. */
+
     module->modules = vmrealloc(
         module->modules,
         sizeof(struct SaltModule *) * module->module_amount,
@@ -420,30 +420,30 @@ __SVMCALL (extld) /* _rt, module, payload, pos */
     module->modules[module->module_amount - 1] = mod;
 
     /* Execute the private %__load function before returning to the program.
-     This is done to load any globals the user would want to load beforehand,
-     or execute some setup code that has to be done only once. */
+       This is done to load any globals the user would want to load beforehand,
+       or execute some setup code that has to be done only once. */
+    
     exec(_rt, mod, "%__load");    
 
-    dprintf("%d", _rt->module_size);
     return ++pos;
 }
 
-__SVMCALL (ivadd) /* _rt, module, payload, pos */
+_svm_call_function (ivadd) /* _rt, module, payload, pos */
 {
     SaltObject *obj = fetch_from_tape(_rt, module, * (u32 *) payload);
+
     if (obj->type != SALT_TYPE_INT)
-        exception_throw(_rt, EXCEPTION_TYPE, "Cannot add to non-i32 type");
+        exception_throw(_rt, EXCEPTION_TYPE, "Cannot add to non-int type");
 
     if (obj->readonly)
         exception_throw(_rt, EXCEPTION_READONLY, "Cannot mutate read-only object");
 
-    dprintf("Adding %d", * (i32 *) (payload + 4));
     * (i32 *) obj->value += * (i32 *) (payload + 4);
 
     return ++pos;
 }
 
-__SVMCALL (ivsub) /* _rt, module, payload, pos */
+_svm_call_function (ivsub) /* _rt, module, payload, pos */
 {
     SaltObject *obj = fetch_from_tape(_rt, module, * (u32 *) payload);
     if (obj->type != SALT_TYPE_INT)
@@ -452,49 +452,50 @@ __SVMCALL (ivsub) /* _rt, module, payload, pos */
     if (obj->readonly)
         exception_throw(_rt, EXCEPTION_READONLY, "Cannot mutate read-only object");
 
-    dprintf("Subtracting %d", * (i32 *) (payload + 4));
     * (i32 *) obj->value -= * (i32 *) (payload + 4);
-
+    
     return ++pos;
 }
 
-__SVMCALL (jmpfl) /* _rt, module, payload, pos */
+_svm_call_function (jmpfl) /* _rt, module, payload, pos */
 {
     dprintf("Compare flag on %02hx", _rt->flag_comparison);
+    
     if (_rt->flag_comparison)
         return find_label(_rt, module, (char *) payload);
 
     return ++pos;
 }
 
-__SVMCALL (jmpnf) /* _rt, module, payload, pos */
+_svm_call_function (jmpnf) /* _rt, module, payload, pos */
 {
     dprintf("Compare flag on %02hx", _rt->flag_comparison);
+
     if (!_rt->flag_comparison)
         return find_label(_rt, module, (char *) payload);
 
     return ++pos;
 }
 
-__SVMCALL (jmpto) /* _rt, module, payload, pos */
+_svm_call_function (jmpto) /* _rt, module, payload, pos */
 {
     return find_label(_rt, module, (char *) payload);
 }
 
-__SVMCALL (killx) /* _rt, module, payload, pos */
+_svm_call_function (killx) /* _rt, module, payload, pos */
 {
     core_exit(_rt);
     return ++pos;
 }
 
-__SVMCALL (mlmap) /* _rt, module, payload, pos */
+_svm_call_function (mlmap) /* _rt, module, payload, pos */
 {
     if (!_rt->arg_allow_debug)
         return ++pos;
 
     struct SaltObjectNode *node = module->head;
-    while (node != NULL) {
 
+    while (node != NULL) {
         printf("SaltObjectNode[%d] %p : %p : %p\n", node->data.id, 
               (void *) node->previous, (void *) node, (void *) node->next);
 
@@ -505,27 +506,28 @@ __SVMCALL (mlmap) /* _rt, module, payload, pos */
 }
 
 
-__SVMCALL (objmk) /* _rt, module, payload, pos */
+_svm_call_function (objmk) /* _rt, module, payload, pos */
 {
     SaltObject *obj = module_object_acquire(_rt, module);
     salt_object_define(_rt, obj, payload);
     return ++pos;
 }
 
-__SVMCALL (objdl) /* _rt, module, payload, pos */
+_svm_call_function (objdl) /* _rt, module, payload, pos */
 {
     module_object_delete(_rt, module, * (u32 *) payload);
     return ++pos;
 }
 
-__SVMCALL (passl) /* _rt, module, payload, pos */
+_svm_call_function (passl) /* _rt, module, payload, pos */
 {
     return ++pos;
 }
 
-__SVMCALL (print) /* _rt, module, payload, pos */
+_svm_call_function (print) /* _rt, module, payload, pos */
 {
     SaltObject *obj = module_object_find(module, * (u32 *) payload);
+    
     if (obj == NULL) {
         exception_throw(_rt, EXCEPTION_NULLPTR, "Cannot find object %d", 
                         * (u32 *) payload);
@@ -535,14 +537,15 @@ __SVMCALL (print) /* _rt, module, payload, pos */
     return ++pos;
 }
 
-__SVMCALL (rdump) /* _rt, module, payload, pos */
+_svm_call_function (rdump) /* _rt, module, payload, pos */
 {
     u32 r = * (u32 *) payload;
     if (r >= _rt->register_size)
         exception_throw(_rt, EXCEPTION_REGISTER, "Register %d out of bounds", r);
 
     /* If the value is set to NULL and the type is not null, that means the 
-     object has been removed. */    
+       object has been removed. */
+
     if (_rt->registers[r].value != NULL 
      && _rt->registers[r].type != SALT_TYPE_NULL)
         salt_object_print(_rt, &_rt->registers[r]);
@@ -552,7 +555,7 @@ __SVMCALL (rdump) /* _rt, module, payload, pos */
     return ++pos;
 }
 
-__SVMCALL (retrn) /* _rt, module, payload, pos */
+_svm_call_function (retrn) /* _rt, module, payload, pos */
 {
     struct StackFrame *frame = callstack_peek(_rt);
     if (frame == NULL) {
@@ -564,81 +567,84 @@ __SVMCALL (retrn) /* _rt, module, payload, pos */
             pos--;
         }
     }
-    dprintf("Jumping back to [%d]", pos);
+
+    dprintf("Jumping back to [%d] '%s'", pos, frame->function);
     callstack_pop(_rt);
     return pos;
 }
 
-__SVMCALL (rgpop) /* _rt, module, payload, pos */
+_svm_call_function (rgpop) /* _rt, module, payload, pos */
 {
-    u32 r = * (u32 *) payload;
+    u8 register_idx = * (u8 *) payload;
     u32 id = * (u32 *) (payload + 1);
 
     SaltObject *obj = module_object_acquire(_rt, module);
 
-    if (r >= _rt->register_size)
-        exception_throw(_rt, EXCEPTION_REGISTER, "Register %d out of bounds", r);
+    if (register_idx >= _rt->register_size) {
+        exception_throw(_rt, EXCEPTION_REGISTER, "Register %d out of bounds", 
+                        register_idx);
+    }
 
-    dprintf("Pulling from register [%d] to {%d}", r, id);
+    dprintf("Pulling from register [%d] to {%d}", register_idx, id);
 
-    copy_object(_rt, obj, &_rt->registers[r]);
+    copy_object(_rt, obj, &_rt->registers[register_idx]);
     obj->id = id;
 
-    vmfree(_rt->registers[r].value, _rt->registers[r].size);
-    _rt->registers[r].value = NULL;
-    _rt->registers[r].size = 0;
+    vmfree(_rt->registers[register_idx].value, 
+           _rt->registers[register_idx].size);
+    _rt->registers[register_idx].value = NULL;
+    _rt->registers[register_idx].size = 0;
 
     return ++pos;  
 }
 
-__SVMCALL (rnull) /* _rt, module, payload, pos */
+_svm_call_function (rnull) /* _rt, module, payload, pos */
 {
     for (u32 i = 0; i < _rt->register_size; i++) {
         vmfree(_rt->registers[i].value, _rt->registers[i].size);
         _rt->registers[i].value = NULL;
         _rt->registers[i].size = 0;
         
-        /* Set it to a bool type so RDUMP knows this object is unprintable */
+        /* Set it to a null type so RDUMP knows this object is unprintable */
         _rt->registers[i].type = SALT_TYPE_BOOL;
     }
     return ++pos;
 }
 
-__SVMCALL (rpush) /* _rt, module, payload, pos */
+_svm_call_function (rpush) /* _rt, module, payload, pos */
 {
-    u32 r = * (u32 *) payload;
+    u8 register_idx = * (u8 *) payload;
     u32 id = * (u32 *) (payload + 1);
 
     SaltObject *obj = module_object_find(module, id);
     if (obj == NULL) {
         exception_throw(_rt, EXCEPTION_RUNTIME, "Cannot load object %d into the "
-                "register because it does not exist");
+                "register because it does not exist", id);
+    }
+ 
+    if (register_idx >= _rt->register_size) {
+        exception_throw(_rt, EXCEPTION_REGISTER, "Register %d out of bounds", 
+                        register_idx);
     }
 
-    if (r >= _rt->register_size)
-        exception_throw(_rt, EXCEPTION_REGISTER, "Register %d out of bounds");
+    dprintf("Pushing to register [%d] from {%d}", register_idx, id);
 
-    dprintf("Pushing to register [%d] from {%d}", r, id);
-
-    copy_object(_rt, &_rt->registers[r], obj);
-    
+    copy_object(_rt, &_rt->registers[register_idx], obj);
     module_object_delete(_rt, module, obj->id);
 
     return ++pos;
 }
 
-__SVMCALL (sleep) /* _rt, module, payload, pos */
+_svm_call_function (sleep) /* _rt, module, payload, pos */
 {
 #if defined(_WIN32)
     /* The windows sleep is a bit easier because it uses miliseconds by 
-     default. */
+       default. */
     Sleep(* (i32 *) payload);
 
 #elif defined(__linux__)
-    /* The linux sleep on the other hand takes seconds, so we must use nanosleep
-     here. The bad thing is usleep has been deprecated so we have to use some
-     timespec magic. */
-     
+    /* TODO: Some magical timespec implementation. */ 
+
     exception_throw(_rt, EXCEPTION_RUNTIME, "Sleep does not work on linux yet. "
                     "Too bad.");
 
@@ -646,7 +652,7 @@ __SVMCALL (sleep) /* _rt, module, payload, pos */
     return ++pos;
 }
 
-__SVMCALL (trace) /* _rt, module, payload, pos */
+_svm_call_function (trace) /* _rt, module, payload, pos */
 {
     if (!_rt->arg_allow_debug)
         return ++pos;

@@ -41,6 +41,9 @@
 #define ARG_INVALID_VALUE   -1
 #define ARG_NO_ARGUMENT     -2
 
+/* This is defined in svm.c */
+extern const char *svm_grep_string;
+
 
 static u8 arg(char *str, const char *_long, const char *_short)
 {
@@ -65,7 +68,7 @@ static void help_page(SVMRuntime *_rt)
 
 static void version_page(SVMRuntime *_rt)
 {
-    printf("%s\n", SVM_VERSION);
+    printf("%s\n", svm_grep_string);
     core_exit(_rt);
 }
 
@@ -90,28 +93,28 @@ static i32 consume_i32(i32 argc, char **argv, i32 pos)
 char *args_parse(SVMRuntime *_rt, i32 argc, char **argv) Nullable
 {
     char *filename = NULL;
+
     for (i32 i = 1; i < argc; i++) {
+
         dprintf("Checking [%d] \"%s\"", i, argv[i]);
 
-        if (arg(argv[i], "--help", "-h"))
-            /* Show the help page and exit */
+        if (arg(argv[i], "--help", "-h")) {
             help_page(_rt);
+        }
 
-        else if (arg(argv[i], "--version", "-v"))
-            /* Show the version and exit */
+        else if (arg(argv[i], "--version", "-v")) {
             version_page(_rt);
+        }
 
-        else if (arg(argv[i], "--mem-used", "-m"))
-            /* Show the memory used at the end */
+        else if (arg(argv[i], "--mem-used", "-m")) {
             _rt->arg_mem_used = 1;
+        }
 
-        else if (arg(argv[i], "--allow-debug", "-d"))
-            /* Allow debug output from MLMAP & TRACE */
+        else if (arg(argv[i], "--allow-debug", "-d")) {
             _rt->arg_allow_debug = 1;
+        }
 
         else if (arg(argv[i], "--limit-mem", "-l")) {
-            /* Limit heap memory amount */
-
             i32 value = consume_i32(argc, argv, i);
             if (value == ARG_NO_ARGUMENT)
                 arg_error("limit-mem requires a int value");
@@ -121,15 +124,15 @@ char *args_parse(SVMRuntime *_rt, i32 argc, char **argv) Nullable
             if (value > 2097151)
                 arg_error("value of limit-mem is too high");
 
-            /* Multiply the result by 1024, because the limit-mem takes
-             the amount of kilobytes, not bytes. */
             _rt->arg_limit_mem = value * 1024;
             i++;
         }
 
-        else
-            /* The empty argument is always the filename */
+        else {
             filename = argv[i];
+        }
+    
     }
     return filename;
 }
+

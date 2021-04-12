@@ -36,6 +36,7 @@
 
 #include <string.h>
 
+
 static struct SaltModule *module_acquire_new(SVMRuntime *_rt)
 {
     dprintf("Acquiring new module (%d)", _rt->module_size + 1);
@@ -50,8 +51,6 @@ static struct SaltModule *module_acquire_new(SVMRuntime *_rt)
     return _rt->modules[_rt->module_size - 1];
 }
 
-// Node operations
-
 static void nodes_collapse(SVMRuntime *_rt, struct SaltModule *module)
 {
     dprintf("Collapsing nodes from the top");
@@ -65,9 +64,11 @@ static void nodes_collapse(SVMRuntime *_rt, struct SaltModule *module)
     while (1) {
         dprintf("Collapsing : %p : {%d}", (void *) node, node->data.id);
 
-        // Assign the pointer to the next element to the hook and check if it's
-        // not null. This is used because we are free-ing memory right under
-        // out feet, and we still need to know the location of the next object.
+        /* Assign the pointer to the next element to the hook and check if it's
+           not null. This is used because we are free-ing memory right under
+           our feet, and we still need to know the location of the next object.
+           This way we can determine when to exit. */
+
         hook = node->next;
         if (hook == NULL)
             break;
@@ -75,12 +76,13 @@ static void nodes_collapse(SVMRuntime *_rt, struct SaltModule *module)
         vmfree(node->data.value, node->data.size);
         vmfree(node, sizeof(struct SaltObjectNode));
 
-        // And set the pointer to the current work node to the hook to the next
-        // object.
+        /* Move the node one forward. */
+
         node = hook;
     }
 
-    // Delete ourself when we reach the last object
+    /* Free the last object in the array. */
+
     vmfree(node->data.value, node->data.size);
     vmfree(node, sizeof(struct SaltObjectNode));
 }
@@ -90,7 +92,8 @@ SaltObject *module_object_acquire(SVMRuntime *_rt, struct SaltModule *module)
     dprintf("Acquiring new object");
     struct SaltObjectNode *new_node = vmalloc(sizeof(struct SaltObjectNode));
 
-    // Setup the new node
+    /* Setup the new node first to not get any casual segfaults. */
+    
     new_node->next = module->head;
     new_node->previous = NULL;
     
@@ -99,12 +102,12 @@ SaltObject *module_object_acquire(SVMRuntime *_rt, struct SaltModule *module)
     
     new_node->data.ctor(_rt, &new_node->data);
 
-    // Make the next node point to us but only if we're not the only ones 
-    // in the list.
     if (new_node->next != NULL)
         new_node->next->previous = new_node;
 
-    // Make the head point to the new node
+    /* Move the head pointer to the newly created node, "moving it back by 
+       one element". */
+
     module->head = new_node;
 
     return &new_node->data;
@@ -118,7 +121,6 @@ SaltObject *module_object_find(struct SaltModule *module, u32 id) Nullable
             return &node->data;
         node = node->next;
     }
-    // Return null value otherwise
     return NULL;
 }
 
@@ -135,24 +137,22 @@ void module_object_delete(SVMRuntime *_rt, struct SaltModule *module, u32 id)
         if (node == NULL)
             break;
 
-        // When the object is found, unlink & free it
         if (node->data.id == id) {
             
+            /* There are 3 cases here, depending where we are in the list. We
+               don't want to segfault here! */
+
             if (node->previous == NULL) {
-                // If it's the first element of this list
                 dprintf("Removing {%d} at the beginning", node->data.id);
                 module->head = module->head->next;
                 if (module->head != NULL)
                     module->head->previous = NULL;
             }
             else if (node->next == NULL) {
-                // If it's the last object in the list, set the pointer to the
-                // next node in the previous one to null.
                 dprintf("Removing {%d} at the end", node->data.id);
                 node->previous->next = NULL;
             }
             else {
-                // If it's somewhere in the middle...
                 dprintf("Removing {%d} in the middle", node->data.id);
                 node->previous->next = node->next;
                 node->next->previous = node->previous;    
@@ -172,9 +172,6 @@ void module_object_delete(SVMRuntime *_rt, struct SaltModule *module, u32 id)
         exception_throw(_rt, EXCEPTION_RUNTIME, "Cannot find object of ID %d", id);
 }
 
-
-// Module operations
-
 struct SaltModule* module_create(SVMRuntime *_rt, char *name)
 {
     struct SaltModule *mod = module_acquire_new(_rt);
@@ -184,6 +181,8 @@ struct SaltModule* module_create(SVMRuntime *_rt, char *name)
     }
 
     strncpy(mod->name, name, strlen(name));
+
+    /* Again, we don't want to segfault. */
 
     mod->instruction_amount = 0;
     mod->instructions = NULL;
@@ -201,6 +200,8 @@ struct SaltModule* module_create(SVMRuntime *_rt, char *name)
 
 static void module_deallocate(SVMRuntime *_rt, struct SaltModule *module)
 {
+    /* We want to deallocate everything in one place, to be sure it happened. */
+
     dprintf("Clearing module '%s'", module->name);
     dprintf("Deallocating label list");
     vmfree(module->labels, module->label_amount * sizeof(u32));
@@ -225,5 +226,4 @@ void module_delete_all(SVMRuntime *_rt)
 
     vmfree(_rt->modules, _rt->module_size * sizeof(struct SaltModule *));
 }
-
 

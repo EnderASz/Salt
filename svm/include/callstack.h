@@ -42,6 +42,7 @@ struct StackFrame {
     struct SaltModule *module;
     char function[64];
     u32  line;
+
 };
 
 /**
@@ -68,4 +69,5 @@ struct StackFrame *callstack_peek(SVMRuntime *_rt) Nullable;
  */
 void callstack_pop(SVMRuntime *_rt);
 
-#endif // SVM_CALLSTACK_H
+#endif /* SVM_CALLSTACK_H */
+

@@ -44,9 +44,14 @@
 #include <windows.h>
 #endif
 
-#ifndef DEBUG_ALLOCATIONS
-#define DEBUG_ALLOCATIONS 1
+#ifndef SVM_DEBUG_ALLOCATIONS
+#define SVM_DEBUG_ALLOCATIONS 1
 #endif
+
+#ifndef SVM_DEBUG_COLORED
+#define SVM_DEBUG_COLORED 1
+#endif
+
 
 void core_exit(SVMRuntime *_rt)
 {
@@ -91,10 +96,13 @@ void _linux_dprintf(char *file, const char *func, const char *fmt, ...)
 
     strncpy((char *) path, file + pos, file_size - 2 - pos);
 
-    printf("\033[96m%*s\033[0m \033[90m: \033[92m%s%*c\033[90m|\033[0m ",
-            12, (char *) path,
-            (char *) func, 20 - func_size, ' '
-    );
+#if SVM_DEBUG_COLORED == 1
+    const char *fmt_str = "\033[96m%*s\033[0m \033[90m: \033[92m%s%*c\033[90m|\033[0m ";
+#else
+    const char *fmt_str = "%*s : %s%*c ";
+#endif
+
+    printf(fmt_str, 12, (char *) path, (char *) func, 20 - func_size, ' ');
 
     vprintf(fmt, args);
     printf("\n");
@@ -138,7 +146,7 @@ static inline void check_memory_limit(SVMRuntime *_rt)
 
 void *_vmalloc(SVMRuntime *_rt, u32 size, const char *func)
 {
-#if DEBUG_ALLOCATIONS == 1
+#if SVM_DEBUG_ALLOCATIONS == 1
     dprintf("\033[90mAllocating \033[92m%d\033[90m bytes in %s\033[0m",
             size, func);
 #endif
@@ -163,7 +171,7 @@ void *_vmalloc(SVMRuntime *_rt, u32 size, const char *func)
 
 void _vmfree(SVMRuntime *_rt, void *ptr, u32 size, const char *func)
 {
-#if DEBUG_ALLOCATIONS == 1
+#if SVM_DEBUG_ALLOCATIONS == 1
     dprintf("\033[90mFreeing \033[93m%d\033[90m bytes in %s\033[0m",
             size, func);
 #endif
@@ -176,7 +184,7 @@ void _vmfree(SVMRuntime *_rt, void *ptr, u32 size, const char *func)
 void *_vmrealloc(SVMRuntime *_rt, void *ptr, u32 before, u32 after,
                  const char *func)
 {
-#if DEBUG_ALLOCATIONS == 1
+#if SVM_DEBUG_ALLOCATIONS == 1
     dprintf("\033[90mReallocating \033[93m%d\033[90m to \033[92m%d\033[90m"
             " bytes in %s\033[0m", before, after, func);
 #endif

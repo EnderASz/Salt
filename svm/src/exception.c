@@ -49,6 +49,7 @@ void exception_throw(SVMRuntime *_rt, const char *exception, const char *fmt, ..
 
     dprintf("Deconstructing %ld elements from the stack", _rt->callstack_size);
     u64 size = _rt->callstack_size;
+
     for (u64 i = 0; i < size; i++) {
         struct StackFrame *frame = callstack_peek(_rt);
         fprintf(stderr, "  at %s.%s\n", frame->module->name,
@@ -63,3 +64,4 @@ void exception_throw(SVMRuntime *_rt, const char *exception, const char *fmt, ..
     va_end(args);
     core_exit(_rt);
 }
+

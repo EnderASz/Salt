@@ -31,10 +31,9 @@
 
 
 /* Because svmcalls are very long, I use this macro to automatically generate
-   a function declaration for me in the place of the call. I don't think this
-   decreases readability, only increases it because it's a simple __SVMCALL. */
+   a function declaration for me in the place of the call. */ 
 
-#define __SVMCALL(NAME) u32 exec_##NAME(SVMRuntime *_rt, \
+#define _svm_call_function(NAME) u32 exec_##NAME(SVMRuntime *_rt, \
         struct SaltModule *module, u8 *payload, u32 pos)
 
 /**
@@ -48,14 +47,12 @@
 struct SVMCall {
 
     char instruction[6];
-    
-    /* the exec function */
-    u32 ( * f_exec ) (SVMRuntime *_r, struct SaltModule *_m, u8 *_p, u32 _s);
-
+    u32 (*f_exec) (SVMRuntime *_r, struct SaltModule *_m, u8 *_p, u32 _s);
     i32 pad;
+
 };
 
-/* Exec functions */
+/* Global table of SVM calls. */
 extern const struct SVMCall g_execs[];
 extern const u32 g_exec_amount;
 
@@ -99,40 +96,37 @@ void register_control(SVMRuntime *_rt, u8 size);
 void register_clear(SVMRuntime *_rt);
 
 /**
- * This comment is for all function below.
- *
- * All these functions are exec functions which get executed per instruction. 
- * Each function is registered in the g_execs static variable.
+ * These are all function definitions for SVM calls. 
  *
  * @param   module  pointer to the module. restricted
  * @param   payload the instruction payload
  * @param   pos     current instruction number the execution is at
  * @return  instruction number to jump to
  */
+_svm_call_function (callf);
+_svm_call_function (callx);
+_svm_call_function (cxxeq);
+_svm_call_function (cxxlt);
+_svm_call_function (exite);
+_svm_call_function (extld);
+_svm_call_function (ivadd);
+_svm_call_function (ivsub);
+_svm_call_function (jmpfl);
+_svm_call_function (jmpnf);
+_svm_call_function (jmpto);
+_svm_call_function (killx);
+_svm_call_function (mlmap);
+_svm_call_function (objmk);
+_svm_call_function (objdl);
+_svm_call_function (passl);
+_svm_call_function (print);
+_svm_call_function (rdump);
+_svm_call_function (retrn);
+_svm_call_function (rgpop);
+_svm_call_function (rnull);
+_svm_call_function (rpush);
+_svm_call_function (sleep);
+_svm_call_function (trace);
 
-__SVMCALL (callf);
-__SVMCALL (callx);
-__SVMCALL (cxxeq);
-__SVMCALL (cxxlt);
-__SVMCALL (exite);
-__SVMCALL (extld);
-__SVMCALL (ivadd);
-__SVMCALL (ivsub);
-__SVMCALL (jmpfl);
-__SVMCALL (jmpnf);
-__SVMCALL (jmpto);
-__SVMCALL (killx);
-__SVMCALL (mlmap);
-__SVMCALL (objmk);
-__SVMCALL (objdl);
-__SVMCALL (passl);
-__SVMCALL (print);
-__SVMCALL (rdump);
-__SVMCALL (retrn);
-__SVMCALL (rgpop);
-__SVMCALL (rnull);
-__SVMCALL (rpush);
-__SVMCALL (sleep);
-__SVMCALL (trace);
+#endif /* SVM_EXEC_H */
 
-#endif // SVM_EXEC_H

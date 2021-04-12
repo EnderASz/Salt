@@ -58,4 +58,5 @@ struct SaltModule *load(SVMRuntime *_rt, char *name);
  */
 struct SaltModule *ext_load(SVMRuntime *_rt, char *name);
 
-#endif // SVM_LOADER_H
+#endif /* SVM_LOADER_H */
+

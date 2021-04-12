@@ -39,8 +39,8 @@
 #include <stdio.h>
 #include <string.h>
 
-#define SCC_HEADER "\x7fSCC\xff\xee\0\0\0"
-#define SCC_VERSION 3
+#define SVM_SCC_HEADER "\x7fSCC\xff\xee\0\0\0"
+#define SVM_SCC_VERSION 3
 
 /**
  * The header data container stores all the meta data read from the SCC
@@ -59,10 +59,10 @@ struct LoaderHeaderData {
 
 static i32 validate_header(char *header)
 {
-    if (strncmp(header, SCC_HEADER, 8) != 0)
+    if (strncmp(header, SVM_SCC_HEADER, 8) != 0)
         return 0;
 
-    if (* (u32 *) (header + 8) != SCC_VERSION)
+    if (* (u32 *) (header + 8) != SVM_SCC_VERSION)
         return 0;
 
     return 1;
@@ -88,22 +88,22 @@ static struct LoaderHeaderData load_header(SVMRuntime *_rt, FILE *fp)
 
 static void read_instruction(SVMRuntime *_rt, String *ins, FILE *fp)
 {
-    // Check for label
     char label_char = fgetc(fp);
     i32 width = 0;
 
-    // If it's a label, do a normal read
+    /* If it's a label, consume the whole thing. */
     if (label_char == '@') {
         while (fgetc(fp) != '\n')
             width++;
         fseek(fp, -width - 2, SEEK_CUR);
         width += 1;
     }
-    // Else add the proper amount of initial padding, which it the amount
-    // of bytes that should be ignored when looking for the 0x0a byte,
-    // splitting instructions.
-    // Before doing anything, prepare a 5 byte buffer and move the FILE cursor
-    // back by one char.
+
+    /* Otherwise add the amount of initial padding, which it the amount
+       of bytes that should be ignored when looking for the 0x0a byte,
+       splitting instructions. Before doing anything, prepare a 5 byte 
+       buffer and move the FILE cursor back by one char. */
+
     else {
 
         fseek(fp, -1, SEEK_CUR);
@@ -122,7 +122,7 @@ static void read_instruction(SVMRuntime *_rt, String *ins, FILE *fp)
 
         width += 5;
 
-        // Read [pad] bytes before checking for the newline
+        /* Read pad amount of chars before checking for the newline. */
         for (i32 j = 0; j < g_execs[i].pad; j++) {
             fgetc(fp);
             width++;
@@ -179,13 +179,23 @@ struct SaltModule *load(SVMRuntime *_rt, char *name)
 {
     dprintf("Trying to load %s", name);
 
-    // File
     i32 size = sizeof(char) * (strlen(name) + 5);
     
     char *filename = vmalloc(size);
     memset(filename, 0, size);
 
-    strncpy(filename, name, strlen(name));
+#if !defined(__clang__)
+    /* I know strcpy is bad, but mingw will not shut up aboout it and it
+       doesn't trust me that the length of name will always be smaller 
+       than the filename string buffer. I decided to fix this by giving the
+       unsafe code just to mingw. */
+    strcpy(filename, name);
+
+#else
+    /* But we'll provide the safe version for gcc & clang... */
+    strncpy(filename, name, size - 5);
+
+#endif
 
     FILE *mod = fopen(filename, "rb");
     if (!mod) {
@@ -195,8 +205,6 @@ struct SaltModule *load(SVMRuntime *_rt, char *name)
     vmfree(filename, size);
     
     name[strlen(name) - 4] = 0;
-
-    // Module
 
     struct SaltModule *module = module_create(_rt, name);
     struct LoaderHeaderData instructions = load_header(_rt, mod);
@@ -219,7 +227,7 @@ static String *get_module_path(SVMRuntime *_rt, char *name)
     str->content = vmalloc(sizeof(char) * 256);
     memset(str->content, 0, 256);
     
-    // Try local /ext
+    /* First, try finding the module in a local ext folder. */
 
     snprintf(str->content, 255, "ext/%s.scc", name);
     FILE *fp = fopen(str->content, "r");
@@ -228,8 +236,8 @@ static String *get_module_path(SVMRuntime *_rt, char *name)
         return str; 
     }
 
-    // Try salt home /ext
-    
+    /* Otherwise, find the module in the salt home directory ext. */
+
 #ifdef _WIN32
     const char *ext = getenv("SaltHome");
 #else
@@ -272,6 +280,4 @@ struct SaltModule *ext_load(SVMRuntime *_rt, char *name)
     fclose(fp);
     return module;
 }
-
-
 

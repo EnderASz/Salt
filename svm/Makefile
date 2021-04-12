@@ -5,6 +5,11 @@
 # using gcc-mingw. The main target is set to __all, which is also the
 # first target which translates to the default target for make.
 
+# Just use bash...
+
+SHELL=/bin/bash
+
+
 # The target variable is set to the target system, linux64 for 64 bit 
 # Linux systems and win32 or win64 depending on the goal.
 
@@ -38,27 +43,6 @@ RESULT := svm
 CC := clang
 
 
-# The default CFLAGS are all set to all warnings, and the newest C version,
-# but we turn off unused parameters because it's just useless, and shows
-# the unused parameters in exec_ functions even if they are supposed to 
-# work like that.
-
-CFLAGS := -Wall -Wextra -Wpedantic -Werror -Wno-unused-parameter -std=c2x \
-		  -fstack-protector-strong -O3
-
-
-# Remember to set different CFLAGS if we're compiling for debug mode.
-
-debug : CFLAGS := -Wall -Wextra -Wpedantic -Wno-unused-parameter -std=c2x \
-                  -fstack-protector-strong -ggdb
-
-
-# Options for the clang static analyzer.
-
-ifeq ($(CC), clang)
-debug : DFLAGS += -Wunused-command-line-argument
-endif
-
 # If the targets are win32 or win64, this automatically chooses the gcc-mingw 
 # compilers instead. We don't support windows clang yet! (I don't even know
 # if there is a windows clang for linux for cross compiling)
@@ -67,11 +51,39 @@ win32 : CC := i686-w64-mingw32-gcc
 win64 : CC := x86_64-w64-mingw32-gcc
 
 
+# The default CFLAGS are all set to all warnings, and the newest C version,
+# but we turn off unused parameters because it's just useless, and shows
+# the unused parameters in exec_ functions even if they are supposed to 
+# work like that.
+
+CFLAGS = -Wall -Wextra -Wpedantic -Wno-unused-parameter -std=c2x \
+	      -fstack-protector-strong -O3 -Wno-unused-result
+
+
+# Here are flags which only work if clang is the compiler of choice.
+# We want to enable a lot of warnings, but some are just useless.
+
+CLANG_FLAGS = -Wdocumentation
+
+
+# Remember to set different CFLAGS if we're compiling for debug mode.
+
+debug : CFLAGS := -Wall -Wextra -Wpedantic -Wno-unused-parameter -std=c2x \
+                  -fstack-protector-strong -Wno-unused-result -ggdb
+
+
+# Options for clang only.
+
+ifeq ($(CC), clang)
+debug : DFLAGS += -Wunused-command-line-argument
+endif
+
+
 # DEBUG is defined it the debug target is selected. Additionally, if the 
 # compiler is clang, the sanitizer parameters are strapped onto the executable.
 
 debug : DFLAGS := -D DEBUG -pg -O1
-debug : RESULT := svmd
+debug : RESULT := svm
 
 ifeq ($(CC), clang)
 debug : DFLAGS += -fsanitize=address -fno-omit-frame-pointer \
@@ -98,7 +110,6 @@ OBJECTS := $(foreach var,$(SOURCES),build/objects/$(var).o)
 # get on with your life.
 
 __all: __setup $(SOURCES) __link
-	@echo "Built standard"
 .PHONY : __all
 
 
@@ -106,7 +117,7 @@ __all: __setup $(SOURCES) __link
 
 clean:
 	@echo "Cleaning build directory"
-	rm -rf build
+	@rm -rf build
 .PHONY : clean
 
 
@@ -134,9 +145,13 @@ install:
 __setup:
 	@printf "Building Salt Virtual Machine $(TITLE_VERSION) for $(TARGET) [$(CC)]\n"
 	
+	@if [ "${MAKE_CFLAGS}" != "" ]; then \
+		echo "Using enviromental MAKE_CFLAGS = ${MAKE_CFLAGS}"; \
+	fi
+
 	@echo "Creating directories"
-	mkdir -p build
-	mkdir -p build/objects
+	@mkdir -p build
+	@mkdir -p build/objects
 .PHONY : __setup
 
 
@@ -144,9 +159,20 @@ __setup:
 # All objects are saved in build/objects, which then are linked in __link.
 # Note: if the MAKE_CFLAGS enviroment variable is defined, it will be placed
 # at the end of the compilation instruction.
+# We're using a simple bash evaluation here to determine if we should put 
+# clang analyzer flags, because make if statements just don't seem to work 
+# as I expect them to. Too bad.
 
 $(SOURCES):
-	$(CC) $(CFLAGS) -D SVM_VERSION=\"$(VERSION)\" $(DFLAGS) $(UFLAGS) ${MAKE_CFLAGS} \
+	$(eval CFLAGS := $(shell \
+		if [ "$(CC)" == "clang" ]; then \
+			echo "$(CFLAGS) $(CLANG_FLAGS)"; \
+		else \
+			echo "$(CFLAGS)"; \
+		fi \
+	))
+	@echo "Compiling $@"
+	@$(CC) $(CFLAGS) -D SVM_VERSION=\"$(VERSION)\" $(DFLAGS) $(UFLAGS) ${MAKE_CFLAGS} \
 		-c -o build/objects/$@.o src/$@
 
 
@@ -155,13 +181,14 @@ $(SOURCES):
 # instruction.
 
 __link:
-	$(CC) $(CFLAGS) -D SVM_VERSION=\"$(VERSION)\" $(DFLAGS) -o build/$(RESULT) ${MAKE_CFLAGS} \
+	@echo "Linking objects with main"
+	@$(CC) $(CFLAGS) -D SVM_VERSION=\"$(VERSION)\" $(DFLAGS) -o build/$(RESULT) ${MAKE_CFLAGS} \
 		$(MAIN) $(OBJECTS)
 	@printf "\e[92mDone\e[0m\n"
 
 
 # -----------------------------------------------------------------------------
-# Callable targets
+# Non-default targets
 # -----------------------------------------------------------------------------
 
 # The debug target is used, well, for debugging purposes. The way this works is

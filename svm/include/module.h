@@ -28,16 +28,10 @@
 
 #include "svm.h"
 
-#define MODULE_OBJECT_SPACE 32
-
 /**
  * Objects in the SaltModule are stored in a linked list for greater efficiency
  * when removing objects, which do not require any data movement when stored in
  * a linked list. 
- *
- * @a previous  pointer to previous node
- * @a next      pointer to next node
- * @a data      the actual data
  */
 struct SaltObjectNode {
 
@@ -54,39 +48,35 @@ struct SaltObjectNode {
  * is the salt modules. Because there would be namespace clashes for externally
  * loaded modules, every module loaded with EXTLD is put into its own Salt
  * module, and then linked live during execution. 
- *
- * @a name              name of the module; can only be 63 chars long, this
- *                      should be controlled by the compiler to raise an 
- *                      error if the user tries to do so
- * @a object_first      pointer to the first object
- * @a module_amount     size of module pointer array
- * @a modules           this is an array of pointers to modules; in order to 
- *                      not allow global imports, modules have to be arranged 
- *                      in a tree style fashion. This is done by storing an 
- *                      array of pointers to the modules, which are all stored
- *                      in the runtime module array. This way you can only 
- *                      access modules which you have imported, but a module
- *                      is never imported twice.
- * @a instruction_amount  size of instruction array
- * @a instructions      array of instructions; each instruction is represented
- *                      as a SaltInstruction structure
- * @a label_amount      size of label array
- * @a labels            array of labels; each label is just represented with 
- *                      the line number it's located on; this allows the exec
- *                      to only look at label lines when looking up a function
- *                      to jump to instead of all the instructions
  */
 struct SaltModule {
 
+    /* Name of the module. Can only be 63 chars long: this should be controlled 
+       by the compiler, and should throw an error if the user tries to compile
+       such a module. If the user renames the file to a name longer than 63 
+       chars, SVM will just not find it. */
+    
     char    name[64];
 
+    /* Pointer to the first object node in the dynamic linked object list. */
+    
     struct  SaltObjectNode *head;
 
+    /* These are pointers to other modules, which are managed by the EXTLD 
+       instruction. There is only one global array of modules in the SVM 
+       runtime which are actually loaded, in order to minimize memory usage. */
+    
     u32     module_amount;
-    struct SaltModule **modules;
+    struct  SaltModule **modules;
+
+    /* Module instructions. Each of them is a String with a specified length. */
 
     u32     instruction_amount;
     String *instructions;
+
+    /* To achieve faster lookup speeds, the "pointers" to labels are stored in
+       a different array. This allows the lookup function to visit only places
+       which are actually labels, omiting executable instructions. */
 
     u32     label_amount;
     u32    *labels;
@@ -96,22 +86,20 @@ struct SaltModule {
 /**
  * Create a new SaltModule and put it on the global list.
  *
- * @param   name  name of the object
+ * @param   name name of the object
  * @return  heap-allocated SaltModule.
  */
 struct SaltModule *module_create(SVMRuntime *_rt, char *name);
 
 /**
  * Delete the module from the array.
- *
- * @param name
  */
 void module_delete(SVMRuntime *_rt, char *name);
 
 /**
  * Acquire a new object pointer. This allocates the needed memory.
  *
- * @param   module  the module to acquire the new object in
+ * @param   module the module to acquire the new object in
  * @return  brand new object
  */
 SaltObject *module_object_acquire(SVMRuntime *_rt, struct SaltModule *module);
@@ -119,8 +107,8 @@ SaltObject *module_object_acquire(SVMRuntime *_rt, struct SaltModule *module);
 /**
  * Return the pointer to the given object which matches the ID.
  *
- * @param   module  the module to find the object in
- * @param   id      ID of the object
+ * @param   module the module to find the object in
+ * @param   id ID of the object
  * @return  pointer to object, may return NULL
  */
 SaltObject *module_object_find(struct SaltModule *module, u32 id) Nullable;
@@ -128,8 +116,8 @@ SaltObject *module_object_find(struct SaltModule *module, u32 id) Nullable;
 /**
  * Delete the given object from the module (by ID)
  *
- * @param   module  the module to delete the object in
- * @param   id      ID of the object that will be unlinked.
+ * @param   module the module to delete the object in
+ * @param   id ID of the object that will be unlinked.
  */
 void module_object_delete(SVMRuntime *_rt, struct SaltModule *module, u32 id);
 
@@ -138,4 +126,5 @@ void module_object_delete(SVMRuntime *_rt, struct SaltModule *module, u32 id);
  */
 void module_delete_all(SVMRuntime *_rt);
 
-#endif // SVM_MODULE_H
+#endif /* SVM_MODULE_H */
+

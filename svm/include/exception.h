@@ -25,6 +25,8 @@
 #ifndef SVM_EXCEPTION_H
 #define SVM_EXCEPTION_H
 
+#include "svm.h"
+
 /* Exception strings. You should use these instead of raw strings. */
 #define EXCEPTION_RUNTIME  "RuntimeException"
 #define EXCEPTION_TYPE     "TypeException"
@@ -43,4 +45,5 @@
 void exception_throw(SVMRuntime *_rt, const char *__restrict exception, 
                      const char *__restrict fmt, ...);
 
-#endif // SVM_EXCEPTION_H
+#endif /* SVM_EXCEPTION_H */
+
