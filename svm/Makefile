@@ -7,7 +7,7 @@
 
 # Just use bash...
 
-SHELL=/bin/bash
+SHELL = /bin/bash
 
 
 # Stop users from executing internal targets.
@@ -15,10 +15,10 @@ SHELL=/bin/bash
 $(if $(filter __%, $(MAKECMDGOALS)), $(error "Cannot use internal targets"))
 
 
-# The target variable is set to the target system, linux64 for 64 bit 
+# The target variable is set to the target system, linux for 64 bit 
 # Linux systems and win32 or win64 depending on the goal.
 
-TARGET := linux64
+TARGET := linux
 win32 : TARGET := win32
 win64 : TARGET := win64
 
@@ -27,15 +27,15 @@ win64 : TARGET := win64
 # the version file first, adding a number to the build and then setting
 # the version to it.
 
-VERSIONFILE := "version.conf"
+VERSIONFILE = "version.conf"
 VERSION := 
-TITLE_VERSION := $(shell echo "$(VERSION)" | tr -d '\\')
+TITLE_VERSION = $(shell echo "$(VERSION)" | tr -d '\\')
 
 
 # These are the filenames for the main function file, and the output name. 
 
-MAIN   := svm.c
-RESULT := svm
+MAIN   = svm.c
+RESULT = svm
 
 
 # Root folder of the makefile. Used in operations which require directory
@@ -52,14 +52,14 @@ ROOT = $(abspath .)
 # just want to compile using gcc, pass it as a parameter in the make 
 # command, like so: `make CC=gcc`.
 
-CC := clang
+CC = clang
 
 
 # The default location of Python 3 is in /usr/bin/python3, but we want to
 # fetch the latest version of Python from the users' computer. This is done
 # in the __fetch_python subroutine. 
 
-PYTHON3 := /usr/bin/python3
+PYTHON3 = /usr/bin/python3
 
 
 # compilers instead. We don't support windows clang yet! (I don't even know
@@ -75,7 +75,7 @@ win64 : CC := x86_64-w64-mingw32-gcc
 # work like that.
 
 CFLAGS = -Wall -Wextra -Wpedantic -Wno-unused-parameter -std=c2x \
-	      -fstack-protector-strong -O3 -Wno-unused-result
+	      -O3 -Wno-unused-result
 
 
 # Here are flags which only work if clang is the compiler of choice.
@@ -87,7 +87,7 @@ CLANG_FLAGS = -Wdocumentation
 # Remember to set different CFLAGS if we're compiling for debug mode.
 
 debug : CFLAGS := -Wall -Wextra -Wpedantic -Wno-unused-parameter -std=c2x \
-                  -fstack-protector-strong -Wno-unused-result -ggdb
+                  -Wno-unused-result -ggdb
 
 
 # Options for clang only.
@@ -144,8 +144,8 @@ clean:
 # $SALT_HOME/bin directory. This requires $SALT_HOME to be defined.
 
 install: 
-	@echo "Checking for built executable"
-	@if [ -x "build/$(RESULT)" ]; then \
+	echo "Checking for built executable"
+	if [ -x "build/$(RESULT)" ]; then \
 		echo "Found executable"; \
 		if [ -n "${SALT_HOME}" ]; then \
 			echo "Found salt home, moving executable"; \
@@ -156,7 +156,9 @@ install:
 	fi
 
 .PHONY : install
-
+ifneq ($(MAKE_DEBUG), 1)
+.SILENT : install
+endif
 
 # The test target only runs all tests and prints the results. 
 
@@ -186,7 +188,9 @@ __setup: __fetch_python
 	mkdir -p build/objects
 
 .PHONY  : __setup
+ifneq ($(MAKE_DEBUG), 1)
 .SILENT : __setup
+endif
 
 
 # This subroutine is responsible for finding the newest version of Python 3 
@@ -213,7 +217,9 @@ __fetch_python:
 	$(eval PYTHON3 := $(firstword $(T_PYTHON_3)))
 
 .PHONY  : __fetch_python
+ifneq ($(MAKE_DEBUG), 1)
 .SILENT : __fetch_python
+endif
 
 
 # The compile target is called compiling the source files into object files.
@@ -232,9 +238,13 @@ $(SOURCES):
 			echo "$(CFLAGS)"; \
 		fi \
 	))
-	@echo "Compiling $@"
-	@$(CC) $(CFLAGS) -D SVM_VERSION=\"$(VERSION)\" $(DFLAGS) $(UFLAGS) ${MAKE_CFLAGS} \
+	echo "Compiling $@"
+	$(CC) $(CFLAGS) -D SVM_VERSION=\"$(VERSION)\" $(DFLAGS) $(UFLAGS) ${MAKE_CFLAGS} \
 		-c -o build/objects/$@.o src/$@
+
+ifneq ($(MAKE_DEBUG), 1)
+.SILENT : $(SOURCES)
+endif
 
 
 # The link target is the final step in compilation. Note: if the MAKE_CFLAGS
@@ -242,10 +252,14 @@ $(SOURCES):
 # instruction.
 
 __link:
-	@echo "Linking objects with main"
-	@$(CC) $(CFLAGS) -D SVM_VERSION=\"$(VERSION)\" $(DFLAGS) -o build/$(RESULT) ${MAKE_CFLAGS} \
+	echo "Linking objects with main"
+	$(CC) $(CFLAGS) -D SVM_VERSION=\"$(VERSION)\" $(DFLAGS) -o build/$(RESULT) ${MAKE_CFLAGS} \
 		$(MAIN) $(OBJECTS)
-	@printf "\e[92mDone\e[0m\n"
+	printf "\e[92mDone\e[0m\n"
+
+ifneq ($(MAKE_DEBUG), 1)
+.SILENT : __link
+endif
 
 
 # -----------------------------------------------------------------------------
