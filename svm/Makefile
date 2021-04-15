@@ -172,19 +172,21 @@ test: __fetch_python
 # The setup target is called before every compilation target. It is 
 # responsible for creating directories and cleaning unwated old files.
 
-__setup:
-	@printf "Building Salt Virtual Machine $(TITLE_VERSION) for $(TARGET) [$(CC)]\n"
+__setup: __fetch_python
+	printf "Building Salt Virtual Machine $(TITLE_VERSION) for $(TARGET) [$(CC)]\n"
 	
-	$(eval VERSION := $(shell python3.9 build.py $(VERSIONFILE)))
+	$(eval VERSION := $(shell $(PYTHON3) build.py $(VERSIONFILE)))
 
-	@if [ "${MAKE_CFLAGS}" != "" ]; then \
+	if [ "${MAKE_CFLAGS}" != "" ]; then \
 		echo "Using enviromental MAKE_CFLAGS = ${MAKE_CFLAGS}"; \
 	fi
 
-	@echo "Creating directories"
-	@mkdir -p build
-	@mkdir -p build/objects
-.PHONY : __setup
+	echo "Creating directories"
+	mkdir -p build
+	mkdir -p build/objects
+
+.PHONY  : __setup
+.SILENT : __setup
 
 
 # This subroutine is responsible for finding the newest version of Python 3 
@@ -202,7 +204,7 @@ __fetch_python:
 	$(eval T_PYTHON_3 := $(findstring python3.10, $(T_RESULT)) $(findstring python3.9, $(T_RESULT))) 
 
 	if [ "$(findstring python, $(T_PYTHON_3))" != "python" ]; then \
-		printf "The python version you own is too old for building SVM\n"; \
+		printf "Build \& testing SVM requires Python \>= 3.9"; \
 		exit 1; \
 	else \
 		printf "Found $(firstword $(T_PYTHON_3))\n"; \
