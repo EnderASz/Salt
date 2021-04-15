@@ -10,6 +10,11 @@
 SHELL=/bin/bash
 
 
+# Stop users from executing internal targets.
+
+$(if $(filter __%, $(MAKECMDGOALS)), $(error "Cannot use internal targets"))
+
+
 # The target variable is set to the target system, linux64 for 64 bit 
 # Linux systems and win32 or win64 depending on the goal.
 
@@ -23,7 +28,7 @@ win64 : TARGET := win64
 # the version to it.
 
 VERSIONFILE := "version.conf"
-VERSION := $(shell python3.9 build.py $(VERSIONFILE))
+VERSION := 
 TITLE_VERSION := $(shell echo "$(VERSION)" | tr -d '\\')
 
 
@@ -31,6 +36,13 @@ TITLE_VERSION := $(shell echo "$(VERSION)" | tr -d '\\')
 
 MAIN   := svm.c
 RESULT := svm
+
+
+# Root folder of the makefile. Used in operations which require directory
+# changing. a cd to $(ROOT) will always return you to the initial area, 
+# where the Makefile is located.
+
+ROOT = $(abspath .)
 
 
 # This makefile supports both gcc and clang, so probably 99% of the used
@@ -43,7 +55,13 @@ RESULT := svm
 CC := clang
 
 
-# If the targets are win32 or win64, this automatically chooses the gcc-mingw 
+# The default location of Python 3 is in /usr/bin/python3, but we want to
+# fetch the latest version of Python from the users' computer. This is done
+# in the __fetch_python subroutine. 
+
+PYTHON3 := /usr/bin/python3
+
+
 # compilers instead. We don't support windows clang yet! (I don't even know
 # if there is a windows clang for linux for cross compiling)
 
@@ -107,7 +125,8 @@ OBJECTS := $(foreach var,$(SOURCES),build/objects/$(var).o)
 
 # The default target. This compiles and links the objects for a general
 # Linux 64 bit executable. Use this target if you just want to build and 
-# get on with your life.
+# get on with your life. Imporant note: this target has to be the first target,
+# because it is the default one.
 
 __all: __setup $(SOURCES) __link
 .PHONY : __all
@@ -139,12 +158,25 @@ install:
 .PHONY : install
 
 
+# The test target only runs all tests and prints the results. 
+
+test: __fetch_python
+	@cd ./tests; $(PYTHON3) ./svm_test.py
+.PHONY : test
+
+
+# -----------------------------------------------------------------------------
+# Internal subroutines
+# -----------------------------------------------------------------------------
+
 # The setup target is called before every compilation target. It is 
 # responsible for creating directories and cleaning unwated old files.
 
 __setup:
 	@printf "Building Salt Virtual Machine $(TITLE_VERSION) for $(TARGET) [$(CC)]\n"
 	
+	$(eval VERSION := $(shell python3.9 build.py $(VERSIONFILE)))
+
 	@if [ "${MAKE_CFLAGS}" != "" ]; then \
 		echo "Using enviromental MAKE_CFLAGS = ${MAKE_CFLAGS}"; \
 	fi
@@ -153,6 +185,33 @@ __setup:
 	@mkdir -p build
 	@mkdir -p build/objects
 .PHONY : __setup
+
+
+# This subroutine is responsible for finding the newest version of Python 3 
+# which is install on the user's computer.
+
+__fetch_python:
+	printf "Looking for newest Python 3 version\n"
+
+	$(eval T_ARRAY := $(shell echo $(PATH) | tr ':' '\n'))
+
+	$(eval T_RESULT := $(shell for i in $(T_ARRAY); do \
+		ls $${i}; \
+	done))
+
+	$(eval T_PYTHON_3 := $(findstring python3.10, $(T_RESULT)) $(findstring python3.9, $(T_RESULT))) 
+
+	if [ "$(findstring python, $(T_PYTHON_3))" != "python" ]; then \
+		printf "The python version you own is too old for building SVM\n"; \
+		exit 1; \
+	else \
+		printf "Found $(firstword $(T_PYTHON_3))\n"; \
+	fi
+
+	$(eval PYTHON3 := $(firstword $(T_PYTHON_3)))
+
+.PHONY  : __fetch_python
+.SILENT : __fetch_python
 
 
 # The compile target is called compiling the source files into object files.
