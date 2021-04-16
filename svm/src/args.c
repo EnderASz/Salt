@@ -18,13 +18,6 @@
  *
  * END OF COPYRIGHT NOTICE
  *
- * The Salt Virtual Machine is the interpreter for compiled Salt code generated
- * by saltc, the Salt compiler. It is written in C to have more control over 
- * the bytes and what is happening in the background, to achieve better 
- * execution speeds. This code is mostly written and handled by me (bellrise)
- * but there may be more people in the future wanting to contribute to the
- * project. 
- * 
  * args.h implementation
  *
  * @author  bellrise, 2021
@@ -62,6 +55,7 @@ static void help_page(SVMRuntime *_rt)
            "  -m, --mem-used            show the amount of memory used at the end\n"
            "  -d, --allow-debug         allow debug output from MLMAP & TRACE\n"
            "  -l, --limit-mem [KB]      limit the memory usage to a certain amount of kilobytes\n"
+           "  -D, --decompile           decompile the passed file\n"
     );
     core_exit(_rt);
 }
@@ -104,6 +98,10 @@ char *args_parse(SVMRuntime *_rt, i32 argc, char **argv) Nullable
 
         else if (arg(argv[i], "--version", "-v")) {
             version_page(_rt);
+        }
+
+        else if (arg(argv[i], "--decompile", "-D")) {
+            _rt->arg_decompile = 1;
         }
 
         else if (arg(argv[i], "--mem-used", "-m")) {

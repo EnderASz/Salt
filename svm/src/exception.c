@@ -18,13 +18,6 @@
  *
  * END OF COPYRIGHT NOTICE
  *
- * The Salt Virtual Machine is the interpreter for compiled Salt code generated
- * by saltc, the Salt compiler. It is written in C to have more control over 
- * the bytes and what is happening in the background, to achieve better 
- * execution speeds. This code is mostly written and handled by me (bellrise)
- * but there may be more people in the future wanting to contribute to the
- * project. 
- *
  * exception.h implementation
  *
  * @author bellrise, 2021
