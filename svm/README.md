@@ -6,7 +6,7 @@
 
 The Salt Virtual Machine is an interpreter for compiled Salt code (SCC). You can
 find more information about SCC in the doc/ section from
-![this](https://github.com/EnderASz/Salt) repository.
+[this](https://github.com/EnderASz/Salt) repository.
 
 
 #### Copyright
