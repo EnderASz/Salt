@@ -132,6 +132,39 @@ __all: __setup $(SOURCES) __link
 .PHONY : __all
 
 
+# The help target will list all current possible targets. Use this when you
+# don't know which target to use for your goal.
+
+help:
+	printf "\
+	SVM build system. To use one of these targets, just use 'make TARGETNAME'\n\n\
+	It is highly recommended to use clang instead of gcc, because of the additional\n\
+	functionality & static checking it provides. This Makefile is built around \n\
+	clang, but gcc is also supported\n\n\
+	Targets:\n\n\
+		[default] 	build the production version of SVM, for Linux\n\
+		debug		build the debug version for Linux\n\
+		win32		build for Windows 32-bit, requires mingw-gcc\n\
+		win64 		build for Windows 64-bit, requires mingw-gcc\n\
+		help		show this page and exit\n\
+		install		install the built binaries in SALT_HOME/bin\n\
+		clean		clean the build directory\n\
+		test		runs the svm_test app written in Python\n\
+	\n\
+	Variables:\n\n\
+		CC		the compiler used\n\
+		MAIN		.c file with the main fucntion\n\
+		RESULT 		name of the built result\n\
+		MAKE_CFLAGS 	additional flags for compilation\n\
+		MAKE_DEBUG	if this is set to 1, print debug information\n\
+	\n"
+	exit 0
+
+.PHONY  : help
+# Make help always silent, even if you specify the debug version.
+.SILENT : help
+
+
 # The clean target removes the build directory where all object files stay.
 
 clean:
@@ -239,7 +272,7 @@ $(SOURCES):
 		fi \
 	))
 	echo "Compiling $@"
-	$(CC) $(CFLAGS) -D SVM_VERSION=\"$(VERSION)\" $(DFLAGS) $(UFLAGS) ${MAKE_CFLAGS} \
+	$(CC) $(CFLAGS) -D SVM_VERSION=\"$(VERSION)\" $(DFLAGS) ${MAKE_CFLAGS} \
 		-c -o build/objects/$@.o src/$@
 
 ifneq ($(MAKE_DEBUG), 1)
