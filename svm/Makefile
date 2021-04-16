@@ -208,10 +208,10 @@ test: __fetch_python
 # responsible for creating directories and cleaning unwated old files.
 
 __setup: __fetch_python
+	$(eval VERSION := $(shell $(PYTHON3) build.py $(VERSIONFILE)))
+	
 	printf "Building Salt Virtual Machine $(TITLE_VERSION) for $(TARGET) [$(CC)]\n"
 	
-	$(eval VERSION := $(shell $(PYTHON3) build.py $(VERSIONFILE)))
-
 	if [ "${MAKE_CFLAGS}" != "" ]; then \
 		echo "Using enviromental MAKE_CFLAGS = ${MAKE_CFLAGS}"; \
 	fi
