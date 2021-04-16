@@ -1,0 +1,59 @@
+/**
+ * This is here to make the site not as plain as a raw HTML page.
+ * It's just some colours with table formatting, to keep a consitent
+ * style across all SVM documentation.
+ *
+ * @author bellrise
+ */
+
+body {
+    width: 50%;
+    margin: auto;
+    background-color: whitesmoke;
+}
+
+.svmcall, .label {
+    font-family: monospace;
+    background-color: wheat;
+    padding: 5px;
+    margin-top: 30px;
+}
+
+.label {
+    background-color: rgb(245, 200, 179);
+}
+
+.struct {
+    border-collapse: collapse;
+    width: 100%;
+    font-family: monospace;
+}
+
+.struct th, td {
+    border: 1px solid #000000;
+    padding: 8px;
+    text-align: left;
+}
+
+.struct tr:nth-child(even) {
+    background-color: rgb(236, 236, 236);
+}
+
+.struct tr:hover {
+    background-color: rgb(255, 255, 202);
+}
+
+.byte_list tr td:first-child, .byte_list tr th:first-child {
+    width: 10%;
+}
+
+.grey {
+    background-color: lightgray;
+    border-radius: 5px;
+    padding: 2px;
+}
+
+#svm_version {
+    color: grey;
+    font-size: 50%;
+}

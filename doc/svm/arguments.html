@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <title>SVM Documentation</title>
+        <link rel="stylesheet" href="svmdoc.css">
+    
+        <style>
+            /* Stop the text from wrapping */
+            #arg_table th:first-child {
+                width: 20%;
+            }
+        </style>
+    </head>
+    <body>
+        <h1>Command line arguments</h1>
+        <a href="root.html">Return home</a>
+        <hr>
+        <p>
+            The SVM binary comes with some command line arguments you can pass to change the 
+            functionality. 
+        </p>
+
+        <h2>Usage</h2>
+        <pre>svm [OPTION]... FILE</pre>
+
+        <h2>Arguments</h2>
+        <pre>
+FILE                      the compiled salt executable
+-h, --help                show this and exit
+-v, --version             show the version and exit
+-m, --mem-used            show the amount of memory used at the end
+-d, --allow-debug         allow debug output from MLMAP & TRACE
+-l, --limit-mem [KB]      limit the memory usage to a certain amount of kilobytes
+        </pre>
+
+        <p>
+            This will be updated as SVM gets more arguments. If a new version of SCC ever gets 
+            created, SVM will support older versions of SCC for a certain period of time before
+            they get deprecated. This will allow you to use the newest stable version of SVM 
+            without the need of downgrading to a more buggy version.
+        </p>
+
+        <h2>Example</h2>
+        <p>
+            Execute Program.scc, while limiting it to 16 KB of memory, also allowing debug output.
+        </p>
+        <pre>svm --limit-mem 16 -d Program.scc</pre>
+    </body>
+</html>
