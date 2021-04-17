@@ -1,6 +1,6 @@
 /**
  * Salt Virtual Machine
- * 
+ *
  * Copyright (C) 2021  The Salt Programming Language Developers
  *
  * This program is free software: you can redistribute it and/or modify
@@ -18,38 +18,33 @@
  *
  * END OF COPYRIGHT NOTICE
  *
- * The exec library is responsible for executing code. All exec functions and
- * register operations can be found here.
- *
- * @author  bellrise, 2021
+ * @author bellrise
  */
 #ifndef SVM_EXEC_H
 #define SVM_EXEC_H
 
-#include "svm.h"
-#include "module.h"
+/* Exec contains all the functionality for executing the code. All SVM calls
+   are implemented here. */
+
+#include <svm/svm.h>
+#include <svm/module.h>
 
 
 /* Because svmcalls are very long, I use this macro to automatically generate
-   a function declaration for me in the place of the call. */ 
+   a function declaration for me in the place of the call. */
 
 #define _svm_call_function(NAME) u32 exec_##NAME(SVMRuntime *_rt, \
         struct SaltModule *module, u8 *payload, u32 pos)
 
 /**
- * This structure is used for storing a single SVM instruction. An array of 
- * these is created in the exec.c source file called g_execs. 
- *
- * @a instruction   the 5 char opcode to the instruction
- * @a f_exec        pointer to function
- * @a pad           instruction padding
+ * This structure is used for storing a single SVM instruction. An array of
+ * these is created in the exec.c source file called g_execs.
  */
-struct SVMCall {
-
+struct SVMCall
+{
     char instruction[6];
     u32 (*f_exec) (SVMRuntime *_r, struct SaltModule *_m, u8 *_p, u32 _s);
     i32 pad;
-
 };
 
 /* Global table of SVM calls. */
@@ -67,7 +62,7 @@ extern const u32 g_exec_amount;
  * memory and safely exits the program.
  *
  * @param   main    main module, the first loaded module should be named __main__
- * @param   start   name of the function it should start executing from 
+ * @param   start   name of the function it should start executing from
  * @return  status of exec_ instructions.
  */
 i32 exec(SVMRuntime *_rt, struct SaltModule* main, const char *start);
@@ -76,15 +71,15 @@ i32 exec(SVMRuntime *_rt, struct SaltModule* main, const char *start);
  * Return the pointer to the svm call. This will return
  *
  * @param   title  string to the title
- * @return  pointer to the SVMCall struct 
+ * @return  pointer to the SVMCall struct
  */
 const struct SVMCall *lookup_exec(char *title);
 
 /**
  * Control the amount of registers currently allocated. This will allocate the
  * largest given value and will reallocate the g_registers array to fit the max.
- * This is called on every module load so it prepares the needed amount of 
- * registers for all modules, because registers are global. 
+ * This is called on every module load so it prepares the needed amount of
+ * registers for all modules, because registers are global.
  *
  * @param   size  amount of registers. max 255
  */
@@ -96,7 +91,7 @@ void register_control(SVMRuntime *_rt, u8 size);
 void register_clear(SVMRuntime *_rt);
 
 /**
- * These are all function definitions for SVM calls. 
+ * These are all function definitions for SVM calls.
  *
  * @param   module  pointer to the module. restricted
  * @param   payload the instruction payload
@@ -128,5 +123,5 @@ _svm_call_function (rpush);
 _svm_call_function (sleep);
 _svm_call_function (trace);
 
-#endif /* SVM_EXEC_H */
 
+#endif /* SVM_EXEC_H */

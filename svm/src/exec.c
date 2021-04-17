@@ -18,17 +18,13 @@
  *
  * END OF COPYRIGHT NOTICE
  *
- * exec.h implementation
- *
- * @author bellrise, 2021
+ * @author bellrise
  */
-#include "../include/svm.h"
-#include "../include/exec.h"
-#include "../include/exception.h"
-#include "../include/callstack.h"
-#include "../include/utils.h"
-#include "../include/module.h"
-#include "../include/loader.h"
+#include <svm/svm.h>
+#include <svm/exec.h>
+#include <svm/exception.h>
+#include <svm/callstack.h>
+#include <svm/loader.h>
 
 #include <stdio.h>
 #include <string.h>
@@ -486,7 +482,7 @@ _svm_call_function (mlmap) /* _rt, module, payload, pos */
     if (!_rt->arg_allow_debug)
         return ++pos;
 
-    struct SaltObjectNode *node = module->head;
+    struct SaltObjectNode *node = module->objects_head;
 
     while (node != NULL) {
         printf("SaltObjectNode[%d] %p : %p : %p\n", node->data.id, 
@@ -652,7 +648,7 @@ _svm_call_function (trace) /* _rt, module, payload, pos */
 
     for (u32 i = 0; i < _rt->callstack_size; i++) {
         printf("[%d](%d, %s, %s)\n", i, _rt->callstack[i].line, 
-                _rt->callstack[i].module->name, _rt->callstack[i].function);  
+                _rt->callstack[i].module_->name, _rt->callstack[i].function);
     }
 
     return ++pos;

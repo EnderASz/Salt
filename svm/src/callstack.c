@@ -22,13 +22,12 @@
  *
  * @author  bellrise, 2021
  */
-#include "../include/svm.h"
-#include "../include/callstack.h"
-#include "../include/exception.h"
-#include "../include/module.h"
+#include <svm/svm.h>
+#include <svm/callstack.h>
 
 #include <string.h>
 #include <stdio.h>
+
 
 void callstack_push(SVMRuntime *_rt, u32 line, struct SaltModule *module,
                     char *__restrict function)
@@ -50,7 +49,7 @@ void callstack_push(SVMRuntime *_rt, u32 line, struct SaltModule *module,
         sizeof(struct StackFrame) * (_rt->callstack_size + 1)
     );
     
-    _rt->callstack[_rt->callstack_size].module = module;
+    _rt->callstack[_rt->callstack_size].module_ = module;
     strncpy(_rt->callstack[_rt->callstack_size].function, function, 63);
     _rt->callstack[_rt->callstack_size].line = line;
 

@@ -18,16 +18,15 @@
  *
  * END OF COPYRIGHT NOTICE
  *
- * loader.h implementation
- *
- * @author bellrise, 2021
+ * @author bellrise
  */
-#include "../include/svm.h"
-#include "../include/loader.h"
-#include "../include/utils.h"
-#include "../include/exception.h"
-#include "../include/exec.h"
-#include "../include/scc.h"
+#include <svm/svm.h>
+#include <svm/loader.h>
+#include <svm/exception.h>
+#include <svm/exec.h>
+#include <svm/module.h>
+
+#include <scc/scc.h>
 
 #include <stdlib.h>
 #include <stdio.h>
@@ -36,10 +35,10 @@
 
 i32 loader_validate_scc3_header(struct SCC3_Header *header)
 {
-    if (header->header != SCC3_HEADER)
+    if (header->h_magic != SCC3_MAGIC)
         return 0;
 
-    if (header->version != SCC3_VERSION)
+    if (header->h_version != SCC3_VERSION)
         return 0;
 
     return 1;
@@ -185,12 +184,12 @@ struct SaltModule *load(SVMRuntime *_rt, char *name)
     name[strlen(name) - 4] = 0;
 
     struct SaltModule *module = module_create(_rt, name);
-    struct SCC3_Header instructions = loader_read_scc3_header(_rt, mod);
+    struct SCC3_Header header = loader_read_scc3_header(_rt, mod);
 
-    load_instructions(_rt, module, mod, instructions.instructions);
+    load_instructions(_rt, module, mod, header.m_ins);
     load_labels(_rt, module);
 
-    register_control(_rt, instructions.registers);
+    register_control(_rt, header.m_reg);
 
     dprintf("Loaded module %s", module->name);
 
@@ -246,16 +245,15 @@ struct SaltModule *ext_load(SVMRuntime *_rt, char *name)
     vmfree(path, sizeof(String));
 
     struct SaltModule *module = module_create(_rt, name);
-    struct SCC3_Header ins = loader_read_scc3_header(_rt, fp);
+    struct SCC3_Header header = loader_read_scc3_header(_rt, fp);
 
-    load_instructions(_rt, module, fp, ins.instructions);
+    load_instructions(_rt, module, fp, header.m_ins);
     load_labels(_rt, module);
 
-    register_control(_rt, ins.registers);
+    register_control(_rt, header.m_reg);
 
     dprintf("Loaded module '%s'", module->name);
 
     fclose(fp);
     return module;
 }
-

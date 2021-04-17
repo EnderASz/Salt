@@ -18,23 +18,21 @@
  *
  * END OF COPYRIGHT NOTICE
  *
- * args.h implementation
- *
- * @author  bellrise, 2021
+ * @author bellrise
  */
-#include "../include/svm.h"
-#include "../include/args.h"
-#include "../include/exception.h"
+#include <svm/svm.h>
+#include <svm/args.h>
 
 #include <string.h>
 #include <stdio.h>
 #include <stdlib.h>
 
+
 /* Argument parser errors */
 #define ARG_INVALID_VALUE   -1
 #define ARG_NO_ARGUMENT     -2
 
-/* This is defined in svm.c */
+/* This is defined in main.c */
 extern const char *svm_grep_string;
 
 
@@ -133,4 +131,3 @@ char *args_parse(SVMRuntime *_rt, i32 argc, char **argv) Nullable
     }
     return filename;
 }
-

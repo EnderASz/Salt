@@ -1,6 +1,6 @@
 /**
  * Salt Virtual Machine
- * 
+ *
  * Copyright (C) 2021  The Salt Programming Language Developers
  *
  * This program is free software: you can redistribute it and/or modify
@@ -18,54 +18,54 @@
  *
  * END OF COPYRIGHT NOTICE
  *
- * This module provides the SaltModule structure and the related functions
- * for creating and modifying such salt structure.
- *
- * @author  bellrise, 2021
+ * @author bellrise
  */
 #ifndef SVM_MODULE_H
 #define SVM_MODULE_H
 
-#include "svm.h"
+/* The module library provides the SaltModule structure and functions for
+   creation, modification & deletion of modules. */
+
+#include <svm/svm.h>
+
 
 /**
  * Objects in the SaltModule are stored in a linked list for greater efficiency
  * when removing objects, which do not require any data movement when stored in
- * a linked list. 
+ * a linked list.
  */
-struct SaltObjectNode {
-
+struct SaltObjectNode
+{
     struct SaltObjectNode *previous;
     struct SaltObjectNode *next;
 
     SaltObject data;
-
 };
 
-/** 
+/**
  * This container stores a single loaded salt module. One module translates
  * one compiled .scc file. The big difference between SCC format 1 and format 3
  * is the salt modules. Because there would be namespace clashes for externally
  * loaded modules, every module loaded with EXTLD is put into its own Salt
- * module, and then linked live during execution. 
+ * module, and then linked live during execution.
  */
-struct SaltModule {
-
-    /* Name of the module. Can only be 63 chars long: this should be controlled 
+struct SaltModule
+{
+    /* Name of the module. Can only be 63 chars long: this should be controlled
        by the compiler, and should throw an error if the user tries to compile
-       such a module. If the user renames the file to a name longer than 63 
+       such a module. If the user renames the file to a name longer than 63
        chars, SVM will just not find it. */
-    
+
     char    name[64];
 
     /* Pointer to the first object node in the dynamic linked object list. */
-    
-    struct  SaltObjectNode *head;
 
-    /* These are pointers to other modules, which are managed by the EXTLD 
-       instruction. There is only one global array of modules in the SVM 
+    struct  SaltObjectNode *objects_head;
+
+    /* These are pointers to other modules, which are managed by the EXTLD
+       instruction. There is only one global array of modules in the SVM
        runtime which are actually loaded, in order to minimize memory usage. */
-    
+
     u32     module_amount;
     struct  SaltModule **modules;
 
@@ -80,7 +80,6 @@ struct SaltModule {
 
     u32     label_amount;
     u32    *labels;
-
 };
 
 /**
@@ -126,5 +125,5 @@ void module_object_delete(SVMRuntime *_rt, struct SaltModule *module, u32 id);
  */
 void module_delete_all(SVMRuntime *_rt);
 
-#endif /* SVM_MODULE_H */
 
+#endif /* SVM_MODULE_H */

@@ -18,14 +18,12 @@
  *
  * END OF COPYRIGHT NOTICE
  *
- * exception.h implementation
- *
- * @author bellrise, 2021
+ * @author bellrise
  */
-#include "../include/svm.h"
-#include "../include/exception.h"
-#include "../include/callstack.h"
-#include "../include/module.h"
+#include <svm/svm.h>
+#include <svm/exception.h>
+#include <svm/callstack.h>
+#include <svm/module.h>
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -45,7 +43,7 @@ void exception_throw(SVMRuntime *_rt, const char *exception, const char *fmt, ..
 
     for (u64 i = 0; i < size; i++) {
         struct StackFrame *frame = callstack_peek(_rt);
-        fprintf(stderr, "  at %s.%s\n", frame->module->name,
+        fprintf(stderr, "  at %s.%s\n", frame->module_->name,
                 frame->function);
         callstack_pop(_rt);
     }
@@ -57,4 +55,3 @@ void exception_throw(SVMRuntime *_rt, const char *exception, const char *fmt, ..
     va_end(args);
     core_exit(_rt);
 }
-

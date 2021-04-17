@@ -23,10 +23,15 @@
  * like Nullable or just the interface SVM_VERSION, which is defined by the
  * compiler anyway.
  *
- * @author bellrise, 2021
+ * @author bellrise
  */
-#ifndef SVM_CORE_H
-#define SVM_CORE_H
+#ifndef SVM_H
+#define SVM_H
+
+/* The core library is used everywhere in SVM, so it is always the first
+   include at the top of the file. This provides definitions that are based
+   on system and compiler variables, the Rust language style integers, the
+   dprintf function and memory allocators. */
 
 #include <stdio.h>
 #include <string.h>
@@ -105,18 +110,18 @@
 
 #ifdef _WIN32
 /* Use _win_dprintf for Windows, you can check the implementation in the source
-   file, it looks kinda strage. Look, I'll be honest, programming in C kinda 
-   sucks on Windows. I hope my co-worker doesn't lose his mind working on Windows 
+   file, it looks kinda strage. Look, I'll be honest, programming in C kinda
+   sucks on Windows. I hope my co-worker doesn't lose his mind working on Windows
    compatibility problems hehe. */
 #define dprintf(...) _win_dprintf(__FILE__, __func__, __VA_ARGS__)
 
 #elif defined(__linux__)
 /* Use _linux_dprintf for Linux, you can check the implementation in the source
    file, it's much better than the Windows one for sure! */
-#define dprintf(...) _linux_dprintf(__FILE__, __func__, __VA_ARGS__);
+#define dprintf(...) _linux_dprintf(__FILE__, __func__, __VA_ARGS__)
 
 #endif
-#else
+#else /* DEBUG */
 
 /* If DEBUG is not defined, define dprintf as nothing, because we don't want
    to compile with useless code. */
@@ -145,8 +150,8 @@
 /* Read-only markers. These u8 flags are stored in an object and they mark if
    the object is constant or not. */
 
-#define READONLY_FALSE  (0x00)
-#define READONLY_TRUE   (0x01)
+#define SALT_READONLY_FALSE  (0x00)
+#define SALT_READONLY_TRUE   (0x01)
 
 /* Salt object types. */
 
@@ -177,8 +182,8 @@ typedef __UINT64_TYPE__     u64;
  * care of allocating the needed memory on the heap. Be sure to never build a
  * raw object yourself, instead use salt_object_create(...).
  */
-typedef struct _salt_object_st {
-
+typedef struct _salt_object_st
+{
     /* ID of the object. The virutal machine does not control if the created
        object has a unique ID or not, it's up to the compiler to not break
        anything. */
@@ -207,13 +212,13 @@ typedef struct _salt_object_st {
 
 } SaltObject;
 
-
 /**
  * The SVM Runtime container stores all the global runtime variables used
  * in the virtual machine. Only a single struct will most likely be created
  * in the main function.
  */
-typedef struct _svm_runtime_st {
+typedef struct _svm_runtime_st
+{
 
     /* Global register array. The amount of registers is defined in SCC
        headers, and is handled upon loading every module. */
@@ -225,9 +230,9 @@ typedef struct _svm_runtime_st {
 
     /* Argument flags. These are set by arg_parse, and different code is
        run depending on these flags. */
-     u8 arg_mem_used;
-     u8 arg_allow_debug;
-     u8 arg_decompile;
+    u8  arg_mem_used;
+    u8  arg_allow_debug;
+    u8  arg_decompile;
     i32 arg_limit_mem;
 
     /* Memory status variables. This keeps track of every allocation and the
@@ -249,12 +254,9 @@ typedef struct _svm_runtime_st {
 
 /**
  * This stores a null terminated string
- *
- * @a size     size of the char array (null included)
- * @a content  pointer to a heap allocated string array
  */
-typedef struct _string_st {
-
+typedef struct _string_st
+{
     u64 size;
     char *content;
 
@@ -371,5 +373,5 @@ void salt_object_print(SVMRuntime *_rt, SaltObject *obj);
 void salt_object_ctor(void *_rt, SaltObject *self);
 void salt_object_dtor(void *_rt, SaltObject *self);
 
-#endif /* SVM_CORE_H */
 
+#endif /* SVM_H */

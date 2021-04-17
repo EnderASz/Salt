@@ -18,13 +18,11 @@
  *
  * END OF COPYRIGHT NOTICE
  *
- * object.h implementation
- *
- * @author bellrise, 2021
+ * @author bellrise
  */
-#include "../include/svm.h"
-#include "../include/utils.h"
-#include "../include/exception.h"
+#include <svm/svm.h>
+#include <svm/exception.h>
+
 
 SaltObject *salt_object_create(SVMRuntime *_rt)
 {
@@ -120,7 +118,7 @@ static void render_value(SVMRuntime *_rt, SaltObject *obj, u8 *payload)
                     ((char *) obj->value)[i] = '\n';
             }
 
-            // Add null terminator in case of some wacky file reading
+            /* Add null terminator in case of some wacky file reading */
             ((char *) obj->value)[obj->size - 1] = 0;
             return;
 
@@ -160,4 +158,3 @@ void salt_object_dtor(void *_rt, SaltObject *self)
 {
     vmfree(self->value, self->size);
 }
-

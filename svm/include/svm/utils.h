@@ -1,6 +1,6 @@
 /**
  * Salt Virtual Machine
- * 
+ *
  * Copyright (C) 2021  The Salt Programming Language Developers
  *
  * This program is free software: you can redistribute it and/or modify
@@ -18,24 +18,30 @@
  *
  * END OF COPYRIGHT NOTICE
  *
- * This is the argument parser for the Salt Virtual Machine.
- *
  * @author bellrise
  */
-#ifndef SVM_ARGS_H
-#define SVM_ARGS_H
+#ifndef SVM_UTILS_H
+#define SVM_UTILS_H
 
-#include "svm.h"
+/* The utility library provides a couple of util_ functions. */
+
+#include <svm/svm.h>
+
 
 /**
- * Parse the given arguments of the program and set variables depending on
- * the parameters.
+ * Print n amount of bytes in hex format. Used for debugging.
  *
- * @param   argc  amount of arguments
- * @param   argv  string array of arguments
- * @return  returns the filename or NULL if filename not found
+ * @param   bytes   pointer to the bytes
+ * @param   amount  amount of bytes to print
  */
-char *args_parse(SVMRuntime *_rt, i32 argc, char **argv) Nullable;
+void util_hexdump(u8 *bytes, u32 amount);
 
-#endif /* SVM_ARGS_H */
+/**
+ * Print a single byte in the (hex bits) format. Used for debugging.
+ *
+ * @param   byte    byte to print
+ */
+void util_bitdump(u8 byte);
 
+
+#endif /* SVM_UTILS_H */

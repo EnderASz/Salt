@@ -69,6 +69,10 @@ win32 : CC := i686-w64-mingw32-gcc
 win64 : CC := x86_64-w64-mingw32-gcc
 
 
+# Include path for the SVM headers.
+
+INCLUDE_FLAGS = -I$(PWD)/include
+
 # The default CFLAGS are all set to all warnings, and the newest C version,
 # but we turn off unused parameters because it's just useless, and shows
 # the unused parameters in exec_ functions even if they are supposed to 
@@ -272,8 +276,8 @@ $(SOURCES):
 		fi \
 	))
 	echo "Compiling $@"
-	$(CC) $(CFLAGS) -D SVM_VERSION=\"$(VERSION)\" $(DFLAGS) ${MAKE_CFLAGS} \
-		-c -o build/objects/$@.o src/$@
+	$(CC) $(CFLAGS) -D SVM_VERSION=\"$(VERSION)\" $(INCLUDE_FLAGS) $(DFLAGS) \
+		${MAKE_CFLAGS} -c -o build/objects/$@.o src/$@
 
 ifneq ($(MAKE_DEBUG), 1)
 .SILENT : $(SOURCES)
@@ -286,8 +290,8 @@ endif
 
 __link:
 	echo "Linking objects with main"
-	$(CC) $(CFLAGS) -D SVM_VERSION=\"$(VERSION)\" $(DFLAGS) -o build/$(RESULT) ${MAKE_CFLAGS} \
-		$(MAIN) $(OBJECTS)
+	$(CC) $(CFLAGS) -D SVM_VERSION=\"$(VERSION)\" $(INCLUDE_FLAGS) $(DFLAGS) \
+		-o build/$(RESULT) ${MAKE_CFLAGS} $(MAIN) $(OBJECTS)
 	printf "\e[92mDone\e[0m\n"
 
 ifneq ($(MAKE_DEBUG), 1)

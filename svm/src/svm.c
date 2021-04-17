@@ -18,15 +18,12 @@
  *
  * END OF COPYRIGHT NOTICE
  *
- * svm.h implementation
- *
- * @author bellrise, 2021
+ * @author bellrise
  */
-#include "../include/svm.h"
-#include "../include/module.h"
-#include "../include/exception.h"
-#include "../include/exec.h"
-#include "../include/callstack.h"
+#include <svm/svm.h>
+#include <svm/callstack.h>
+#include <svm/module.h>
+#include <svm/exec.h>
 
 #include <stdlib.h>
 #include <stdarg.h>
@@ -36,6 +33,7 @@
    in order to call SetConsoleTextAttribute to make terminal colours. */
 #include <windows.h>
 #endif
+
 
 #ifndef SVM_DEBUG_ALLOCATIONS
 #define SVM_DEBUG_ALLOCATIONS 1
@@ -209,4 +207,3 @@ void vibe_check(SVMRuntime *_rt)
     }
     dprintf("\033[91m( %ld ) bytes are not free'd yet!\033[0m", _rt->m_used);
 }
-

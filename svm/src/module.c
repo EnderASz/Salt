@@ -18,14 +18,11 @@
  *
  * END OF COPYRIGHT NOTICE
  *
- * module.h implementation
- *
- * @author bellrise, 2021
+ * @author bellrise
  */
-#include "../include/svm.h"
-#include "../include/module.h"
-#include "../include/exception.h"
-#include "../include/utils.h"
+#include <svm/svm.h>
+#include <svm/module.h>
+#include <svm/exception.h>
 
 #include <string.h>
 
@@ -48,7 +45,7 @@ static void nodes_collapse(SVMRuntime *_rt, struct SaltModule *module)
 {
     dprintf("Collapsing nodes from the top");
 
-    struct SaltObjectNode *node = module->head;
+    struct SaltObjectNode *node = module->objects_head;
     struct SaltObjectNode *hook = NULL;
 
     if (node == NULL)
@@ -87,7 +84,7 @@ SaltObject *module_object_acquire(SVMRuntime *_rt, struct SaltModule *module)
 
     /* Setup the new node first to not get any casual segfaults. */
     
-    new_node->next = module->head;
+    new_node->next = module->objects_head;
     new_node->previous = NULL;
     
     new_node->data.ctor = salt_object_ctor;
@@ -101,14 +98,14 @@ SaltObject *module_object_acquire(SVMRuntime *_rt, struct SaltModule *module)
     /* Move the head pointer to the newly created node, "moving it back by 
        one element". */
 
-    module->head = new_node;
+    module->objects_head = new_node;
 
     return &new_node->data;
 }
 
 SaltObject *module_object_find(struct SaltModule *module, u32 id) Nullable
 {
-    struct SaltObjectNode *node = module->head;
+    struct SaltObjectNode *node = module->objects_head;
     while (node != NULL) {
         if (node->data.id == id)
             return &node->data;
@@ -122,7 +119,7 @@ void module_object_delete(SVMRuntime *_rt, struct SaltModule *module, u32 id)
     if (id == 0)
         exception_throw(_rt, EXCEPTION_RUNTIME, "Cannot remove object of ID 0");
 
-    struct SaltObjectNode *node = module->head;
+    struct SaltObjectNode *node = module->objects_head;
     i8 nf_flag = 1;
 
     while (1) {
@@ -137,9 +134,9 @@ void module_object_delete(SVMRuntime *_rt, struct SaltModule *module, u32 id)
 
             if (node->previous == NULL) {
                 dprintf("Removing {%d} at the beginning", node->data.id);
-                module->head = module->head->next;
-                if (module->head != NULL)
-                    module->head->previous = NULL;
+                module->objects_head = module->objects_head->next;
+                if (module->objects_head != NULL)
+                    module->objects_head->previous = NULL;
             }
             else if (node->next == NULL) {
                 dprintf("Removing {%d} at the end", node->data.id);
@@ -186,7 +183,7 @@ struct SaltModule* module_create(SVMRuntime *_rt, char *name)
     mod->label_amount = 0;
     mod->labels = NULL;
 
-    mod->head = NULL;
+    mod->objects_head = NULL;
 
     return mod;
 }
@@ -219,4 +216,3 @@ void module_delete_all(SVMRuntime *_rt)
 
     vmfree(_rt->modules, _rt->module_size * sizeof(struct SaltModule *));
 }
-

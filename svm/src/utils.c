@@ -18,12 +18,10 @@
  *
  * END OF COPYRIGHT NOTICE
  *
- * utils.h implementation
- *
- * @author bellrise, 2021
+ * @author bellrise
  */
-#include "../include/svm.h"
-#include "../include/utils.h"
+#include <svm/svm.h>
+#include <svm/utils.h>
 
 #include <stdio.h>
 
@@ -84,4 +82,3 @@ void util_bitdump(u8 value)
     }
     printf("\n");
 }
-
