@@ -30,6 +30,18 @@
 #include "module.h"
 
 /**
+ * This is a representation of the SCC3 Header 
+ */
+struct SCC3_Header {
+
+    u64 header;
+    u32 version;
+    u32 instructions;
+    u8 registers;
+
+};
+
+/**
  * Load the given compiled salt code into the global module list. Here is
  * a shortened version of the steps load() does:
  *  - read the module
@@ -57,6 +69,23 @@ struct SaltModule *load(SVMRuntime *_rt, char *name);
  * @returns pointer to acquired SaltModule
  */
 struct SaltModule *ext_load(SVMRuntime *_rt, char *name);
+
+/**
+ * This will validate the passed header which is a 64-char string which
+ * should end with a null byte.
+ *
+ * @param   header  null-terminated 64 char string
+ * @returns 1 if the header is valid, 0 otherwise
+ */
+i32 loader_validate_scc3_header(struct SCC3_Header *header);
+
+/**
+ * Load the header from the file and create a new Scc3Header.
+ *
+ * @param   fp  pointer to the file to read
+ * @returns brand new SCC3_Header struct
+ */
+struct SCC3_Header loader_read_scc3_header(SVMRuntime *_rt, FILE *fp);
 
 #endif /* SVM_LOADER_H */
 

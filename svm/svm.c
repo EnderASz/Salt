@@ -68,6 +68,7 @@
 #include "include/callstack.h"
 #include "include/loader.h"
 #include "include/exec.h"
+#include "include/decompiler.h"
 
 #include <stdlib.h>
 #include <string.h>
@@ -110,6 +111,8 @@ i32 main(i32 argc, char **argv)
 
         .arg_allow_debug = 0,
         .arg_limit_mem = 0,
+        .arg_decompile = 0,
+        .arg_mem_used = 0,
 
         .m_used = 0,
         .m_max_used = 0,
@@ -134,6 +137,14 @@ i32 main(i32 argc, char **argv)
     if (filename == NULL) {
         printf("Please provide a filename. See \"--help\" for more\n");
         goto end;
+    }
+
+    /* If the user chooses to decompile the program instead of running it, 
+       don't load the main module and run decompile(). */
+
+    if (runtime.arg_decompile) {
+        decompile(&runtime, filename);
+        core_exit(&runtime);
     }
 
     /* End of the preparation stage, load the main file and start executing it. 
