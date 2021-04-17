@@ -24,6 +24,7 @@
  */
 #include <svm/svm.h>
 #include <svm/callstack.h>
+#include <svm/module.h>
 
 #include <string.h>
 #include <stdio.h>

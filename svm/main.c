@@ -64,6 +64,7 @@
 #include <svm/exec.h>
 #include <svm/loader.h>
 #include <svm/module.h>
+#include <svm/callstack.h>
 
 #include <stdio.h>
 #include <stdlib.h>
