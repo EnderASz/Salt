@@ -111,7 +111,7 @@ def main():
 
     if args.only:
         if args.only in os.listdir():
-            test = TestSuite(args.only)
+            test = TestSuite(args.only, args.debug)
             test.test()
         else:
             print('Unknown test')

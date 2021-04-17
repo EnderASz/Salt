@@ -1,0 +1,10 @@
+{
+    "@version": 1,
+
+    "title": "Disassmembly print",
+    "about": "Disassmembly of the Printing test",
+    "args": "--disassemble",
+    "source": "print.scc",
+    "result": "result.txt"
+}
+

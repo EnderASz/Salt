@@ -1,0 +1,26 @@
+Disassembling dis_functions/functions.scc
+Header:
+	Version:	3
+	Registers:	8
+	Instructions:	17
+
+0000000000: private __load (...)
+     00001	 OBJMK		10 string (.)
+     00002	 RETRN		
+
+0000000003: public main (...)
+     00004	 OBJMK		20 int (0)
+     00005	 CALLF		'print_incremented'
+     00006	 CALLF		'print_incremented'
+     00007	 CALLF		'print_incremented'
+     00008	 RETRN		
+
+0000000009: public print_incremented (...)
+     00010	 CALLF		'increment'
+     00011	 PRINT		20
+     00012	 PRINT		10
+     00013	 RETRN		
+
+0000000014: public increment (...)
+     00015	 IVADD		20, (1)
+     00016	 RETRN		

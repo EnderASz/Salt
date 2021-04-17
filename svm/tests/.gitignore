@@ -2,6 +2,5 @@
 # accept the test.json files as configuration
 !test.json
 
-# Ignore the result files, because they can have a couple of thousand
-# lines sometimes.
-result.txt
+# Ignore the 8k line result file
+recursion/result.txt
