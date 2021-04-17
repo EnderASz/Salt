@@ -34,7 +34,7 @@ TITLE_VERSION = $(shell echo "$(VERSION)" | tr -d '\\')
 
 # These are the filenames for the main function file, and the output name. 
 
-MAIN   = svm.c
+MAIN   = main.c
 RESULT = svm
 
 
