@@ -27,19 +27,8 @@
 #define SVM_LOADER_H
 
 #include "svm.h"
+#include "scc.h"
 #include "module.h"
-
-/**
- * This is a representation of the SCC3 Header 
- */
-struct SCC3_Header {
-
-    u64 header;
-    u32 version;
-    u32 instructions;
-    u8 registers;
-
-};
 
 /**
  * Load the given compiled salt code into the global module list. Here is

@@ -27,21 +27,19 @@
 #include "../include/utils.h"
 #include "../include/exception.h"
 #include "../include/exec.h"
+#include "../include/scc.h"
 
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
 
-#define SVM_SCC_HEADER "\x7fSCC\xff\xee\0\0\0"
-#define SVM_SCC_VERSION 3
-
 
 i32 loader_validate_scc3_header(struct SCC3_Header *header)
 {
-    if (header->header != * (u64 *) SVM_SCC_HEADER)
+    if (header->header != SCC3_HEADER)
         return 0;
 
-    if (header->version != SVM_SCC_VERSION)
+    if (header->version != SCC3_VERSION)
         return 0;
 
     return 1;
@@ -53,17 +51,16 @@ struct SCC3_Header loader_read_scc3_header(SVMRuntime *_rt, FILE *fp)
     fread(header, 1, 64, fp);
 
     struct SCC3_Header data;
-    data.header       = * (u64 *) (header + 0);
-    data.version      = * (u32 *) (header + 8);
-    data.instructions = * (u32 *) (header + 16);
-    data.registers    = * (u8  *) (header + 24); 
+    /* We can cast straight to the header, because the header struct is exactly
+       64 bytes, same as the string. */
+    data = * (struct SCC3_Header *) header;
+    vmfree(header, sizeof(char) * 64);
 
     if (!loader_validate_scc3_header(&data)) {
         exception_throw(_rt, EXCEPTION_RUNTIME, "Cannot read Salt Module. It's "
                 "either the incorrect version or it's corrupted.");
     }
 
-    vmfree(header, 64);
     return data;
 }
 

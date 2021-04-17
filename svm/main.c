@@ -69,6 +69,7 @@
 #include "include/loader.h"
 #include "include/exec.h"
 #include "include/decompiler.h"
+#include "include/scc.h"
 
 #include <stdlib.h>
 #include <string.h>
@@ -173,6 +174,7 @@ static void size_check()
     dprintf("sizeof(SaltObjectNode) = %ld", sizeof(struct SaltObjectNode));
     dprintf("sizeof(StackFrame) = %ld", sizeof(struct StackFrame));
     dprintf("sizeof(String) = %ld", sizeof(String));
+    dprintf("sizeof(SCC3_Header) = %ld", sizeof(struct SCC3_Header)); 
 }
 
 static void interrupt_handler(i32 _sig)
