@@ -35,47 +35,35 @@
 #define SVM_SCC_HEADER "\x7fSCC\xff\xee\0\0\0"
 #define SVM_SCC_VERSION 3
 
-/**
- * The header data container stores all the meta data read from the SCC
- * header.
- *
- * @a instructions  amount of instructions
- * @a registers     amount of registers
- */
-struct LoaderHeaderData {
 
-    u32 instructions;
-    u8 registers;
-
-};
-
-
-static i32 validate_header(char *header)
+i32 loader_validate_scc3_header(struct SCC3_Header *header)
 {
-    if (strncmp(header, SVM_SCC_HEADER, 8) != 0)
+    if (header->header != * (u64 *) SVM_SCC_HEADER)
         return 0;
 
-    if (* (u32 *) (header + 8) != SVM_SCC_VERSION)
+    if (header->version != SVM_SCC_VERSION)
         return 0;
 
     return 1;
 }
 
-static struct LoaderHeaderData load_header(SVMRuntime *_rt, FILE *fp)
+struct SCC3_Header loader_read_scc3_header(SVMRuntime *_rt, FILE *fp)
 {
     char *header = vmalloc(sizeof(char) * 64);
     fread(header, 1, 64, fp);
 
-    if (!validate_header(header)) {
-        vmfree(header, sizeof(char) * 64);
-        exception_throw(_rt, EXCEPTION_RUNTIME, "Salt module is either invalid or corrupted");
-    }
-
-    struct LoaderHeaderData data;
+    struct SCC3_Header data;
+    data.header       = * (u64 *) (header + 0);
+    data.version      = * (u32 *) (header + 8);
     data.instructions = * (u32 *) (header + 16);
     data.registers    = * (u8  *) (header + 24); 
 
-    vmfree(header, sizeof(char) * 64);
+    if (!loader_validate_scc3_header(&data)) {
+        exception_throw(_rt, EXCEPTION_RUNTIME, "Cannot read Salt Module. It's "
+                "either the incorrect version or it's corrupted.");
+    }
+
+    vmfree(header, 64);
     return data;
 }
 
@@ -200,7 +188,7 @@ struct SaltModule *load(SVMRuntime *_rt, char *name)
     name[strlen(name) - 4] = 0;
 
     struct SaltModule *module = module_create(_rt, name);
-    struct LoaderHeaderData instructions = load_header(_rt, mod);
+    struct SCC3_Header instructions = loader_read_scc3_header(_rt, mod);
 
     load_instructions(_rt, module, mod, instructions.instructions);
     load_labels(_rt, module);
@@ -261,7 +249,7 @@ struct SaltModule *ext_load(SVMRuntime *_rt, char *name)
     vmfree(path, sizeof(String));
 
     struct SaltModule *module = module_create(_rt, name);
-    struct LoaderHeaderData ins = load_header(_rt, fp);
+    struct SCC3_Header ins = loader_read_scc3_header(_rt, fp);
 
     load_instructions(_rt, module, fp, ins.instructions);
     load_labels(_rt, module);
