@@ -34,10 +34,20 @@
 
 // CONST RULE TABLE
 
-static const u32 rule_amount = 2;
+static const u32 rule_amount = 12;
 static const struct DissasemblyRule rules[] = {
+    {"CALLF", dis_rule_str},
+    {"CXXEQ", dis_rule_id2},
+    {"CXXLT", dis_rule_id2},
+    {"EXTLD", dis_rule_str},
+    {"IVADD", dis_rule_ivadd},
+    {"IVSUB", dis_rule_ivadd},
+    {"JMPFL", dis_rule_str},
+    {"JMPNF", dis_rule_str},
+    {"JMPTO", dis_rule_str},
     {"OBJMK", dis_rule_objmk},
-    {"PRINT", dis_rule_print}
+    {"OBJDL", dis_rule_id},
+    {"PRINT", dis_rule_id}
 };
 
 // UTIL FUNCTIONS
@@ -91,7 +101,7 @@ static void parse_instruction(SVMRuntime *_rt, u32 pos, String *ins)
     // If a rule exists for this instruction, use it.
     for (u32 i = 0; i < rule_amount; i++) {
         if (strncmp(rules[i].instruction, ins->content, 5) == 0) {
-            info = rules[i].dis_rule(_rt, ins->content);
+            info = rules[i].dis_rule(_rt, ins->content + 5);
             break;
         }
     }
@@ -134,8 +144,7 @@ i32 disassemble(SVMRuntime *_rt, char *filename)
 
     /* Print some meta data onto the screen. */
 
-    printf("Disassembling %s.scc using built-in SCC disassembler v %s\n",
-            filename, SVM_DISASSEMBLER_VERSION);
+    printf("Disassembling %s.scc", filename);
 
     printf("\nHeader:\n");
 

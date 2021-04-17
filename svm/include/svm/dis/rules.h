@@ -45,7 +45,11 @@ struct DissasemblyRule
  * @param   payload  instruction payload
  */
 
+String dis_rule_str(SVMRuntime *_rt, char *payload);
+String dis_rule_id(SVMRuntime *_rt, char *payload);
+String dis_rule_id2(SVMRuntime *_rt, char *payload);
+String dis_rule_ivadd(SVMRuntime *_rt, char *payload);
 String dis_rule_objmk(SVMRuntime *_rt, char *payload);
-String dis_rule_print(SVMRuntime *_rt, char *payload);
+
 
 #endif /* SVM_DIS_RULES_H */

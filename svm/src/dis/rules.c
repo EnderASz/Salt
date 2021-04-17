@@ -46,24 +46,21 @@ static const char *get_type_name(u8 id)
     return type_map[id];
 }
 
-/* Rule functions */
-
-String dis_rule_objmk(SVMRuntime *_rt, char *data)
+static String render_value(SVMRuntime *_rt, u8 type, char *payload)
 {
-    String str = string_new(_rt, 64);
     String value = string_new(_rt, 16);
 
-    u8 type = * (u8 *) (data + 10);
+    dprintf("Trying to render value of type %s", get_type_name(type));
 
     switch (type) {
         case SALT_TYPE_INT:
         {
-            snprintf(value.content, 15, "%d", * (u32 *) (data + 11));
+            snprintf(value.content, 15, "%d", * (u32 *) payload);
             break;
         }
         case SALT_TYPE_FLOAT:
         {
-            snprintf(value.content, 15, "%f", * (float *) (data + 11));
+            snprintf(value.content, 15, "%f", * (float *) payload);
             break;
         }
         case SALT_TYPE_NULL:
@@ -71,21 +68,75 @@ String dis_rule_objmk(SVMRuntime *_rt, char *data)
             snprintf(value.content, 15, "null");
             break;
         }
+        case SALT_TYPE_STRING:
+        {
+            /* Replace newlines & \r */
+            for (u32 i = 0; i < strlen(payload); i++) {
+                if (payload[i] == '\n' || payload[i] == '\r')
+                    payload[i] = '.';
+            }
+
+            snprintf(value.content, 15, "%.11s...", payload);
+            break;
+        }
         default:
-            snprintf(value.content, 15, "...");
+            snprintf(value.content, 15, "?");
     }
 
-    snprintf(str.content, 63, "%u %s(%s)", * (u32 *) (data + 5),
+    return value;
+}
+
+/* Rule functions */
+
+String dis_rule_str(SVMRuntime *_rt, char *payload)
+{
+    String str = string_new(_rt, 64);
+    snprintf(str.content, 63, "'%s'", payload);
+    return str;
+}
+
+String dis_rule_id(SVMRuntime *_rt, char *payload)
+{
+    String str = string_new(_rt, 64);
+    snprintf(str.content, 63, "%u", * (u32 *) payload);
+    return str;
+}
+
+String dis_rule_id2(SVMRuntime *_rt, char *payload)
+{
+    String str = string_new(_rt, 64);
+    snprintf(str.content, 63, "%u, %u", * (u32 *) payload,
+            * (u32 *) (payload + 4));
+    return str;
+}
+
+String dis_rule_ivadd(SVMRuntime *_rt, char *payload)
+{
+    String str = string_new(_rt, 64);
+    String value = render_value(_rt, SALT_TYPE_INT, payload + 4);
+
+    snprintf(str.content, 63, "%u, (%s)", * (u32 *) payload, value.content);
+    vmfree(value.content, value.size);
+    return str;
+}
+
+String dis_rule_objmk(SVMRuntime *_rt, char *payload)
+{
+    u8 type = * (u8 *) (payload + 5);
+
+    String str = string_new(_rt, 64);
+    u32 offset = 6;
+
+    /* Omit the 4 length bytes if we're printing a string */
+    if (type == SALT_TYPE_STRING)
+        offset += 4;
+
+    String value = render_value(_rt, type, payload + offset);
+
+    snprintf(str.content, 63, "%u %s (%s)", * (u32 *) payload,
             get_type_name(type), value.content);
 
     vmfree(value.content, value.size);
 
-    return str;
-}
-
-String dis_rule_print(SVMRuntime *_rt, char *data)
-{
-    String str = string_new(_rt, 64);
-    snprintf(str.content, 63, "%u", * (u32 *) (data + 5));
     return str;
 }
