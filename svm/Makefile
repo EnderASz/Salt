@@ -223,6 +223,7 @@ __setup: __fetch_python
 	echo "Creating directories"
 	mkdir -p build
 	mkdir -p build/objects
+	mkdir -p build/objects/dis
 
 .PHONY  : __setup
 ifneq ($(MAKE_DEBUG), 1)

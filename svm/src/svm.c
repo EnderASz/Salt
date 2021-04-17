@@ -207,3 +207,13 @@ void vibe_check(SVMRuntime *_rt)
     }
     dprintf("\033[91m( %ld ) bytes are not free'd yet!\033[0m", _rt->m_used);
 }
+
+// STRING FUNCTIONS
+
+String string_new(SVMRuntime *_rt, u64 size)
+{
+    String str = {size, NULL};
+    str.content = vmalloc(sizeof(char) * size);
+    memset(str.content, 0, size);
+    return str;
+}

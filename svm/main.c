@@ -60,11 +60,12 @@
  */
 #include <svm/svm.h>
 #include <svm/args.h>
-#include <svm/decompiler.h>
 #include <svm/exec.h>
 #include <svm/loader.h>
 #include <svm/module.h>
 #include <svm/callstack.h>
+
+#include <svm/dis/dis.h>
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -106,7 +107,7 @@ i32 main(i32 argc, char **argv)
 
         .arg_allow_debug = 0,
         .arg_limit_mem = 0,
-        .arg_decompile = 0,
+        .arg_disassemble = 0,
         .arg_mem_used = 0,
 
         .m_used = 0,
@@ -134,11 +135,11 @@ i32 main(i32 argc, char **argv)
         goto end;
     }
 
-    /* If the user chooses to decompile the program instead of running it, 
-       don't load the main module and run decompile(). */
+    /* If the user chooses to disassemble the program instead of running it,
+       don't load the main module and run disassemble(). */
 
-    if (runtime.arg_decompile) {
-        decompile(&runtime, filename);
+    if (runtime.arg_disassemble) {
+        disassemble(&runtime, filename);
         core_exit(&runtime);
     }
 

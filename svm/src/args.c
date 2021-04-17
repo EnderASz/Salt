@@ -53,7 +53,7 @@ static void help_page(SVMRuntime *_rt)
            "  -m, --mem-used            show the amount of memory used at the end\n"
            "  -d, --allow-debug         allow debug output from MLMAP & TRACE\n"
            "  -l, --limit-mem [KB]      limit the memory usage to a certain amount of kilobytes\n"
-           "  -D, --decompile           decompile the passed file\n"
+           "  -D, --disassemble         disassemble the passed file\n"
     );
     core_exit(_rt);
 }
@@ -98,8 +98,8 @@ char *args_parse(SVMRuntime *_rt, i32 argc, char **argv) Nullable
             version_page(_rt);
         }
 
-        else if (arg(argv[i], "--decompile", "-D")) {
-            _rt->arg_decompile = 1;
+        else if (arg(argv[i], "--disassemble", "-D")) {
+            _rt->arg_disassemble = 1;
         }
 
         else if (arg(argv[i], "--mem-used", "-m")) {

@@ -232,7 +232,7 @@ typedef struct _svm_runtime_st
        run depending on these flags. */
     u8  arg_mem_used;
     u8  arg_allow_debug;
-    u8  arg_decompile;
+    u8  arg_disassemble;
     i32 arg_limit_mem;
 
     /* Memory status variables. This keeps track of every allocation and the
@@ -328,6 +328,17 @@ void _win_dprintf(char *file, const char *func, const char *fmt, ...);
  */
 void vibe_check(SVMRuntime *_rt);
 
+
+// ----------------------------------------------------------------------------
+// STRING FUNCTIONS
+// ----------------------------------------------------------------------------
+
+/**
+ * Create a new string and allocate the given amount of memory for it.
+ *
+ * @param   size    size of the string
+ */
+String string_new(SVMRuntime *_rt, u64 size);
 
 // ----------------------------------------------------------------------------
 // SALT OBJECT FUNCTIONS
