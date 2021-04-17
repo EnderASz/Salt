@@ -56,7 +56,7 @@
  * Every new set of functionality or bugfixes should get a new `minor` version,
  * and every major release should get a new `major` version. Simple as that.
  *
- * @version  Salt Virtual Machine; format 3 version 0.12  
+ * @version  Salt Virtual Machine; format 3 version 0.13
  */
 #include <svm/svm.h>
 #include <svm/args.h>
