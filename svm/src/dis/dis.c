@@ -34,7 +34,7 @@
 
 // CONST RULE TABLE
 
-static const u32 rule_amount = 12;
+static const u32 rule_amount = 14;
 static const struct DissasemblyRule rules[] = {
     {"CALLF", dis_rule_str},
     {"CXXEQ", dis_rule_id2},
@@ -47,7 +47,9 @@ static const struct DissasemblyRule rules[] = {
     {"JMPTO", dis_rule_str},
     {"OBJMK", dis_rule_objmk},
     {"OBJDL", dis_rule_id},
-    {"PRINT", dis_rule_id}
+    {"PRINT", dis_rule_id},
+    {"RGPOP", dis_rule_rg},
+    {"RPUSH", dis_rule_rg}
 };
 
 // UTIL FUNCTIONS

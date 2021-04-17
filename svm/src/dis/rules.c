@@ -148,3 +148,13 @@ String dis_rule_objmk(SVMRuntime *_rt, char *payload)
 
     return str;
 }
+
+String dis_rule_rg(SVMRuntime *_rt, char *payload)
+{
+    u8 reg = * (u8 *) payload;
+    u32 id = * (u32 *) (payload + 1);
+
+    String str = string_new(_rt, 16);
+    snprintf(str.content, 15, "%u, %u", reg, id);
+    return str;
+}
