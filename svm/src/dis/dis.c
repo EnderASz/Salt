@@ -52,12 +52,13 @@ static const struct DissasemblyRule rules[] = {
 
 // UTIL FUNCTIONS
 
-static void error(const char *fmt, ...)
+static void error(SVMRuntime *_rt, const char *fmt, ...)
 {
     va_list args;
     va_start(args, fmt);
     vfprintf(stderr, fmt, args);
     va_end(args);
+    core_exit(_rt);
 }
 
 
@@ -128,7 +129,7 @@ i32 disassemble(SVMRuntime *_rt, char *filename)
     vmfree(path, strlen(filename) + 4);
 
     if (!fp) {
-        error("Cannot open '%s.scc' for disassembling", filename);
+        error(_rt, "Cannot open '%s' for disassembling\n", filename);
     }
 
     /* If we manage to open the file, read & validate the SCC Header.
@@ -137,7 +138,7 @@ i32 disassemble(SVMRuntime *_rt, char *filename)
 
     struct SCC3_Header header = loader_read_scc3_header(_rt, fp);
     if (!loader_validate_scc3_header(&header)) {
-        error("Cannot load SCC file, it's either invalid or corrupted.");
+        error(_rt, "Cannot load SCC file, it's either invalid or corrupted\n");
     }
 
     struct SaltModule *module = load(_rt, filename);

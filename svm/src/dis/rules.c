@@ -68,15 +68,23 @@ static String render_value(SVMRuntime *_rt, u8 type, char *payload)
             snprintf(value.content, 15, "null");
             break;
         }
+        case SALT_TYPE_BOOL:
+        {
+            if (*payload)
+                snprintf(value.content, 15, "true");
+            else
+                snprintf(value.content, 15, "false");
+            break;
+        }
         case SALT_TYPE_STRING:
         {
-            /* Replace newlines & \r */
+            /* Replace unprintable with dots */
             for (u32 i = 0; i < strlen(payload); i++) {
-                if (payload[i] == '\n' || payload[i] == '\r')
+                if (payload[i] < 0x20 || payload[i] > 0x7e)
                     payload[i] = '.';
             }
 
-            snprintf(value.content, 15, "%.11s...", payload);
+            snprintf(value.content, 15, "%s", payload);
             break;
         }
         default:
