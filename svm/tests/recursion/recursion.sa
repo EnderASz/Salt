@@ -1,0 +1,27 @@
+; The recursion test is used for checking the recursion
+; limit set at 8192
+%%reg 8
+
+@%__load
+
+  ; Create const objects
+  OBJMK 10 [true] [string] "\n"
+  OBJMK 20 [false] [int] 0
+
+RETRN
+
+@print_objects
+  ; Call this function recursively
+
+  IVADD 20 1
+  PRINT 20
+  PRINT 10
+  CALLF (print_objects)
+
+RETRN
+
+@main
+
+  CALLF (print_objects)
+
+RETRN

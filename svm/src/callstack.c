@@ -18,32 +18,28 @@
  *
  * END OF COPYRIGHT NOTICE
  *
- * The Salt Virtual Machine is the interpreter for compiled Salt code generated
- * by saltc, the Salt compiler. It is written in C to have more control over 
- * the bytes and what is happening in the background, to achieve better 
- * execution speeds. This code is mostly written and handled by me (bellrise)
- * but there may be more people in the future wanting to contribute to the
- * project. 
- *
  * callstack.h implementation
  *
  * @author  bellrise, 2021
  */
-#include "../include/callstack.h"
-#include "../include/exception.h"
-#include "../include/core.h"
-#include "../include/module.h"
+#include <svm/svm.h>
+#include <svm/callstack.h>
+#include <svm/module.h>
 
 #include <string.h>
 #include <stdio.h>
 
+
 void callstack_push(SVMRuntime *_rt, u32 line, struct SaltModule *module,
                     char *__restrict function)
 {
-    dprintf("Pushing stack frame [%ld](%d, %s, %s)\n", _rt->callstack_size, 
+    dprintf("Pushing stack frame [%ld](%d, %s, %s)", _rt->callstack_size,
             line, module->name, function);
 
 #ifdef DEBUG_CALLSTACK
+    /* We want to give an option of "stepping" through the function calls if 
+       some recursion bug has to be fixed. */
+    
     printf("Confirm callstack push ");
     fgetc(stdin);
 #endif
@@ -54,16 +50,21 @@ void callstack_push(SVMRuntime *_rt, u32 line, struct SaltModule *module,
         sizeof(struct StackFrame) * (_rt->callstack_size + 1)
     );
     
-    _rt->callstack[_rt->callstack_size].module = module;
-    strncpy(_rt->callstack[_rt->callstack_size].function, function, 64);
+    _rt->callstack[_rt->callstack_size].module_ = module;
+    strncpy(_rt->callstack[_rt->callstack_size].function, function, 63);
     _rt->callstack[_rt->callstack_size].line = line;
 
     _rt->callstack_size++;
+
+    if (_rt->callstack_size > 8192) {
+        printf("fatal: Callstack is way too big, try using loops!\n");
+        core_exit(_rt);
+    }
 }
 
 struct StackFrame *callstack_peek(SVMRuntime *_rt) Nullable
 {
-    dprintf("Peeking at [%ld]\n", _rt->callstack_size - 1);
+    dprintf("Peeking at [%ld]", _rt->callstack_size - 1);
     if (_rt->callstack_size == 0)
         return NULL;
     return &_rt->callstack[_rt->callstack_size - 1];
@@ -71,7 +72,7 @@ struct StackFrame *callstack_peek(SVMRuntime *_rt) Nullable
 
 void callstack_pop(SVMRuntime *_rt)
 {
-    dprintf("Popping %ld -> %ld\n", _rt->callstack_size, 
+    dprintf("Popping %ld -> %ld", _rt->callstack_size,
             _rt->callstack_size - 1);
 
     if (_rt->callstack_size == 1) {
@@ -88,3 +89,4 @@ void callstack_pop(SVMRuntime *_rt)
     );
     _rt->callstack_size--;
 }
+

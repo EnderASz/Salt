@@ -7,7 +7,7 @@
 # and moves the compiled folders to ~/.local, creating a "salt home"
 # directory there.
 
-printf "Compiling saltc & saltvm\n"
+printf "Compiling saltc & svm\n"
 
 # Compile and clean both programs
 cd saltc

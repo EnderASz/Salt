@@ -1,0 +1,10 @@
+{
+    "@version": 1,
+
+    "title": "Disassembler error",
+    "args": "--disassemble",
+    "about": "The error message if a file is not found",
+    "source": "DOES_NOT_EXIST.scc",
+    "result": "result.txt"
+}
+

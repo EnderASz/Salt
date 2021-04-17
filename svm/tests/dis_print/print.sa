@@ -1,0 +1,34 @@
+; This is the print object & register test Salt Assembly file
+; Using the default 8 registers, create and print all the types
+; of objects & also while in registers
+%%reg 8
+
+; Create an empty load label
+@%__load
+RETRN
+
+@main
+
+; A newline character to print after every value
+OBJMK 10 [true] [string] "\n"
+
+OBJMK 101 [true] [int] 2
+OBJMK 102 [true] [float] 2.5
+OBJMK 103 [true] [bool] [false]
+OBJMK 104 [true] [string] "something"
+OBJMK 105 [true] [null] ^0
+
+PRINT 101
+PRINT 10
+PRINT 102
+PRINT 10
+PRINT 103
+PRINT 10
+PRINT 104
+PRINT 10
+PRINT 105
+PRINT 10
+
+RETRN
+
+

@@ -1,6 +1,6 @@
 /**
  * Salt Virtual Machine
- * 
+ *
  * Copyright (C) 2021  The Salt Programming Language Developers
  *
  * This program is free software: you can redistribute it and/or modify
@@ -18,28 +18,28 @@
  *
  * END OF COPYRIGHT NOTICE
  *
- * Utility library
- *
  * @author bellrise
  */
-#ifndef SVM_UTILS_H
-#define SVM_UTILS_H
+#ifndef SVM_DIS_H
+#define SVM_DIS_H
 
-#include "core.h"
+/* The built-in SVM disassembler is used for providing a readable version of the
+   compiled Salt code. All versions of SCC starting from SCC3 should be
+   supported, as long as they are not deprecated. */
+
+#include <svm/svm.h>
+
+
+/* The current version of the disassembler. This can only be changed here. */
+#define SVM_DISASSEMBLER_VERSION "0.1"
 
 /**
- * Print n amount of bytes in hex format. Used for debugging.
+ * Disassemble the given file into human readable instructions.
  *
- * @param   bytes   pointer to the bytes
- * @param   amount  amount of bytes to print
+ * @param   filename    name of the file to disassemble
+ * @return  0 if the compilation did not fail
  */
-void util_hexdump(u8 *bytes, u32 amount);
+i32 disassemble(SVMRuntime *_rt, char *filename);
 
-/**
- * Print a single byte in the (hex bits) format. Used for debugging. 
- *
- * @param   byte    byte to print
- */
-void util_bitdump(u8 byte);
 
-#endif // SVM_UTILS_H
+#endif /* SVM_DIS_H */

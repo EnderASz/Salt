@@ -1,6 +1,6 @@
 /**
  * Salt Virtual Machine
- * 
+ *
  * Copyright (C) 2021  The Salt Programming Language Developers
  *
  * This program is free software: you can redistribute it and/or modify
@@ -18,16 +18,19 @@
  *
  * END OF COPYRIGHT NOTICE
  *
- * The svm loader is responsible for loading a file and adding it to
- * the global module list.
- *
- * @author  bellrise
+ * @author bellrise
  */
 #ifndef SVM_LOADER_H
 #define SVM_LOADER_H
 
-#include "core.h"
-#include "module.h"
+/* The loader provides load and ext_load for loading modules and also API functions
+   for validating & loading SCC headers. */
+
+#include <svm/svm.h>
+#include <svm/module.h>
+
+#include <scc/scc.h>
+
 
 /**
  * Load the given compiled salt code into the global module list. Here is
@@ -44,18 +47,35 @@ struct SaltModule *load(SVMRuntime *_rt, char *name);
 
 /**
  * Load an external module from the salt home /ext directory OR the local
- * /etx directory. The local ext directory has priority over the latter.
- * If the module with the given name (without the .scc extension) cannot 
+ * /ext directory. The local ext directory has priority over the salt home.
+ * If the module with the given name (without the .scc extension) cannot
  * be found, it throws an runtime exception.
  *
  * This function automatically handles lookups in the runtime module array
  * and memory allocation for it. If it finds an already imported module with
- * the same name, it returns the pointer to that module, and does not load 
+ * the same name, it returns the pointer to that module, and does not load
  * a new one.
- * 
+ *
  * @param   name    name of the module to load
  * @returns pointer to acquired SaltModule
  */
 struct SaltModule *ext_load(SVMRuntime *_rt, char *name);
 
-#endif // SVM_LOADER_H
+/**
+ * This will validate the passed header which is a 64-char string which
+ * should end with a null byte.
+ *
+ * @param   header  null-terminated 64 char string
+ * @returns 1 if the header is valid, 0 otherwise
+ */
+i32 loader_validate_scc3_header(struct SCC3_Header *header);
+
+/**
+ * Load the header from the file and create a new SCC3 header.
+ *
+ * @param   fp  pointer to the file to read
+ * @returns brand new SCC3_Header struct
+ */
+struct SCC3_Header loader_read_scc3_header(SVMRuntime *_rt, FILE *fp);
+
+#endif /* SVM_LOADER_H */

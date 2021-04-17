@@ -1,0 +1,10 @@
+{
+    "@version": 1,
+
+    "title": "Disassembly of functions",
+    "about": "Disassembly of the Functions test",
+    "args": "--disassemble",
+    "source": "functions.scc",
+    "result": "result.txt"
+}
+

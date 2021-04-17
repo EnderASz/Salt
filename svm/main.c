@@ -56,24 +56,21 @@
  * Every new set of functionality or bugfixes should get a new `minor` version,
  * and every major release should get a new `major` version. Simple as that.
  *
- *
- *
- *
- *
- * @version  Salt Virtual Machine; format 3 version 0.12  
+ * @version  Salt Virtual Machine; format 3 version 0.13
  */
-#include "include/args.h"
-#include "include/core.h"
-#include "include/module.h"
-#include "include/callstack.h"
-#include "include/loader.h"
-#include "include/exec.h"
+#include <svm/svm.h>
+#include <svm/args.h>
+#include <svm/exec.h>
+#include <svm/loader.h>
+#include <svm/module.h>
+#include <svm/callstack.h>
 
-#include <stdlib.h>
-#include <string.h>
+#include <svm/dis/dis.h>
+
 #include <stdio.h>
+#include <stdlib.h>
 
-/* If we're in linux, add support for signalling */
+/* If we're in linux, add support for signalling. */
 #ifdef __linux__
 #include <signal.h>
 #include <unistd.h>
@@ -85,28 +82,32 @@
 #define SVM_GREP_STRING_DEBUG_FLAG ""
 #endif
 
+
 /* This string will show up in the compiled version of SVM which you can then
- grep to, checking the format. */
-const char *svm_grep_string = "SVM: f3 "SVM_VERSION" on "__TIMESTAMP__" ("
-            STRINGIFY(TARGET_ARCH)" bit for "TARGET_SYSTEM")"
-            SVM_GREP_STRING_DEBUG_FLAG;
+   grep to, checking the format. */
+
+const char *svm_grep_string = "SVM: f3 "SVM_VERSION" on "__TIMESTAMP__
+    " ("SVM_STRINGIFY(SVM_TARGET_ARCH)" bit for "SVM_TARGET_SYSTEM")"
+    SVM_GREP_STRING_DEBUG_FLAG;
 
 static void size_check();
 static void interrupt_handler(i32 _sig);
 
+
 i32 main(i32 argc, char **argv)
 {
-    dprintf("Starting %s\n", SVM_VERSION);
+    dprintf("Starting %s", SVM_VERSION);
 
-    /* The runtime variables have to be initalized early, and they are put on
-     the stack in order to keep it memory safe (without heap allocation). */
     SVMRuntime runtime = {
         
         .registers = NULL,
         .register_size = 0,
 
-        .flags = 0,
+        .flag_comparison = 0,
 
+        .arg_allow_debug = 0,
+        .arg_limit_mem = 0,
+        .arg_disassemble = 0,
         .arg_mem_used = 0,
 
         .m_used = 0,
@@ -122,15 +123,10 @@ i32 main(i32 argc, char **argv)
 
     };
 
-    /* Debug function. */
     size_check();
-
-    /* Parse the arguments and set some values in the runtime structure. */
     char *filename = args_parse(&runtime, argc, argv);
 
 #ifdef __linux__
-    /* If we're compiling for linux, include some signal support like catching 
-     SIGi32 when hitting Ctrl C. Subscribe to the kernel's signal handler. */
     signal(SIGINT, interrupt_handler);
 #endif
 
@@ -139,20 +135,26 @@ i32 main(i32 argc, char **argv)
         goto end;
     }
 
+    /* If the user chooses to disassemble the program instead of running it,
+       don't load the main module and run disassemble(). */
+
+    if (runtime.arg_disassemble) {
+        disassemble(&runtime, filename);
+        core_exit(&runtime);
+    }
+
     /* End of the preparation stage, load the main file and start executing it. 
-     The runtime variables have to be loaded before this, in order to pass it
-     to the program. */
+       The runtime variables have to be loaded before this, in order to pass it
+       to the program. */
 
     struct SaltModule *main = load(&runtime, filename);
     strcpy(main->name, "__main__");
 
-    /* Before executing from the main function, run the private __load function
-     first, if the user wanted to preload any globals. */
     exec(&runtime, main, "%__load");
     exec(&runtime, main, "main");
 
     if (runtime.arg_mem_used)
-        printf("Memory used: %ld\n", runtime.m_max_used);
+        printf("Memory used: %lu\n", runtime.m_max_used);
 
     core_exit(&runtime);
 end:
@@ -161,20 +163,23 @@ end:
 
 static void size_check()
 {
-    dprintf("sizeof(SVMRuntime) = %ld\n", sizeof(SVMRuntime));
-    dprintf("sizeof(SaltObject) = %ld\n", sizeof(SaltObject));
-    dprintf("sizeof(SaltModule) = %ld\n", sizeof(struct SaltModule));
-    dprintf("sizeof(SaltObjectNode) = %ld\n", sizeof(struct SaltObjectNode));
-    dprintf("sizeof(StackFrame) = %ld\n", sizeof(struct StackFrame));
-    dprintf("sizeof(String) = %ld\n", sizeof(String));
+    dprintf("sizeof(SVMRuntime) = %ld", sizeof(SVMRuntime));
+    dprintf("sizeof(SaltObject) = %ld", sizeof(SaltObject));
+    dprintf("sizeof(SaltModule) = %ld", sizeof(struct SaltModule));
+    dprintf("sizeof(SaltObjectNode) = %ld", sizeof(struct SaltObjectNode));
+    dprintf("sizeof(StackFrame) = %ld", sizeof(struct StackFrame));
+    dprintf("sizeof(String) = %ld", sizeof(String));
+    dprintf("sizeof(SCC3_Header) = %ld", sizeof(struct SCC3_Header)); 
 }
 
 static void interrupt_handler(i32 _sig)
 {
 #ifdef __linux__
+
     if (_sig != SIGINT)
         return;
     printf("Recieved interrupt\n");
     exit(1);
+
 #endif
 }

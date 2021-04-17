@@ -1,6 +1,6 @@
 /**
  * Salt Virtual Machine
- * 
+ *
  * Copyright (C) 2021  The Salt Programming Language Developers
  *
  * This program is free software: you can redistribute it and/or modify
@@ -18,28 +18,26 @@
  *
  * END OF COPYRIGHT NOTICE
  *
- * The callstack structure is a stack which stores the name and location
- * of all the previous calls.
- *
- * @author  bellrise
+ * @author bellrise
  */
 #ifndef SVM_CALLSTACK_H
 #define SVM_CALLSTACK_H
 
-#include "core.h"
+/* The callstack stores the location of all the calls so the virtual machine
+   can return back to the previous point when a return instruction is
+   executed. */
+
+#include <svm/svm.h>
+
 
 /**
  * The callstack is built out of single StackFrames. Because objects are stored
- * in the module scope, and there are no local variables, so the stack frame 
+ * in the module scope, and there are no local variables, so the stack frame
  * only points.
- *
- * @a module   pointer to the module
- * @a function name of the function 
- * @a line     the line the call was made on
  */
-struct StackFrame {
-
-    struct SaltModule *module;
+struct StackFrame
+{
+    struct SaltModule *module_;
     char function[64];
     u32  line;
 };
@@ -48,11 +46,11 @@ struct StackFrame {
  * Push one frame onto the callstack.
  *
  * @param   line     line number where the call happened
- * @param   module   title of module, is checked if it's shorter than 62 chars
+ * @param   module_  title of module, is checked if it's shorter than 62 chars
  * @param   function title of the function, is checked if it's shorter than 62
  *                   chars.
  */
-void callstack_push(SVMRuntime *_rt, u32 line, struct SaltModule *module,
+void callstack_push(SVMRuntime *_rt, u32 line, struct SaltModule *module_,
                     char *__restrict function);
 
 /**
@@ -68,4 +66,5 @@ struct StackFrame *callstack_peek(SVMRuntime *_rt) Nullable;
  */
 void callstack_pop(SVMRuntime *_rt);
 
-#endif // SVM_CALLSTACK_H
+
+#endif /* SVM_CALLSTACK_H */

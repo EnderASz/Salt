@@ -18,92 +18,69 @@
  *
  * END OF COPYRIGHT NOTICE
  *
- * The Salt Virtual Machine is the interpreter for compiled Salt code generated
- * by saltc, the Salt compiler. It is written in C to have more control over 
- * the bytes and what is happening in the background, to achieve better 
- * execution speeds. This code is mostly written and handled by me (bellrise)
- * but there may be more people in the future wanting to contribute to the
- * project. 
- *
- * loader.h implementation
- *
- * @author bellrise, 2021
+ * @author bellrise
  */
-#include "../include/core.h"
-#include "../include/loader.h"
-#include "../include/utils.h"
-#include "../include/exception.h"
-#include "../include/exec.h"
+#include <svm/svm.h>
+#include <svm/loader.h>
+#include <svm/exception.h>
+#include <svm/exec.h>
+#include <svm/module.h>
+
+#include <scc/scc.h>
 
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
 
-#define SCC_HEADER "\x7fSCC\xff\xee\0\0\0"
-#define SCC_VERSION 3
 
-/**
- * The header data container stores all the meta data read from the SCC
- * header.
- *
- * @a instructions  amount of instructions
- * @a registers     amount of registers
- */
-struct LoaderHeaderData {
-
-    u32 instructions;
-    u8 registers;
-
-};
-
-
-static i32 validate_header(char *header)
+i32 loader_validate_scc3_header(struct SCC3_Header *header)
 {
-    if (strncmp(header, SCC_HEADER, 8) != 0)
+    if (header->h_magic != SCC3_MAGIC)
         return 0;
 
-    if (* (u32 *) (header + 8) != SCC_VERSION)
+    if (header->h_version != SCC3_VERSION)
         return 0;
 
     return 1;
 }
 
-static struct LoaderHeaderData load_header(SVMRuntime *_rt, FILE *fp)
+struct SCC3_Header loader_read_scc3_header(SVMRuntime *_rt, FILE *fp)
 {
     char *header = vmalloc(sizeof(char) * 64);
     fread(header, 1, 64, fp);
 
-    if (!validate_header(header)) {
-        vmfree(header, sizeof(char) * 64);
-        exception_throw(_rt, EXCEPTION_RUNTIME, "Salt module is either invalid or corrupted");
+    struct SCC3_Header data;
+    /* We can cast straight to the header, because the header struct is exactly
+       64 bytes, same as the string. */
+    data = * (struct SCC3_Header *) header;
+    vmfree(header, sizeof(char) * 64);
+
+    if (!loader_validate_scc3_header(&data)) {
+        exception_throw(_rt, EXCEPTION_RUNTIME, "Cannot read Salt Module. It's "
+                "either the incorrect version or it's corrupted.");
     }
 
-    struct LoaderHeaderData data;
-    data.instructions = * (u32 *) (header + 16);
-    data.registers    = * (u8  *) (header + 24); 
-
-    vmfree(header, sizeof(char) * 64);
     return data;
 }
 
 static void read_instruction(SVMRuntime *_rt, String *ins, FILE *fp)
 {
-    // Check for label
     char label_char = fgetc(fp);
     i32 width = 0;
 
-    // If it's a label, do a normal read
+    /* If it's a label, consume the whole thing. */
     if (label_char == '@') {
         while (fgetc(fp) != '\n')
             width++;
         fseek(fp, -width - 2, SEEK_CUR);
         width += 1;
     }
-    // Else add the proper amount of initial padding, which it the amount
-    // of bytes that should be ignored when looking for the 0x0a byte,
-    // splitting instructions.
-    // Before doing anything, prepare a 5 byte buffer and move the FILE cursor
-    // back by one char.
+
+    /* Otherwise add the amount of initial padding, which it the amount
+       of bytes that should be ignored when looking for the 0x0a byte,
+       splitting instructions. Before doing anything, prepare a 5 byte 
+       buffer and move the FILE cursor back by one char. */
+
     else {
 
         fseek(fp, -1, SEEK_CUR);
@@ -122,7 +99,7 @@ static void read_instruction(SVMRuntime *_rt, String *ins, FILE *fp)
 
         width += 5;
 
-        // Read [pad] bytes before checking for the newline
+        /* Read pad amount of chars before checking for the newline. */
         for (i32 j = 0; j < g_execs[i].pad; j++) {
             fgetc(fp);
             width++;
@@ -139,14 +116,15 @@ static void read_instruction(SVMRuntime *_rt, String *ins, FILE *fp)
     ins->content[width] = 0;
     fread(ins->content, 1, width, fp);
 
-    dprintf("Read [%d+1]<%.5s...>\n", width, ins->content);
+    dprintf("Read [%d+1] %.5s", width, ins->content);
     fgetc(fp);
 }
+
 
 static void load_instructions(SVMRuntime *_rt, struct SaltModule *module, 
             FILE *fp, i32 instructions)
 {
-    dprintf("Loading instructions for '%s'\n", module->name);
+    dprintf("Loading instructions for '%s'", module->name);
 
     module->instructions = vmalloc(sizeof(String) * instructions);
     module->instruction_amount = instructions;
@@ -171,20 +149,30 @@ static void load_labels(SVMRuntime *_rt, struct SaltModule *module)
             curlabel++;
         }
     }
-    dprintf("Found %d labels in '%s'\n", module->label_amount, module->name);
+    dprintf("Found %d labels in '%s'", module->label_amount, module->name);
 }
 
 struct SaltModule *load(SVMRuntime *_rt, char *name)
 {
-    dprintf("Trying to load %s\n", name);
+    dprintf("Trying to load %s", name);
 
-    // File
     i32 size = sizeof(char) * (strlen(name) + 5);
     
     char *filename = vmalloc(size);
     memset(filename, 0, size);
 
-    strncpy(filename, name, strlen(name));
+#if !defined(__clang__)
+    /* I know strcpy is bad, but mingw will not shut up aboout it and it
+       doesn't trust me that the length of name will always be smaller 
+       than the filename string buffer. I decided to fix this by giving the
+       unsafe code just to mingw. */
+    strcpy(filename, name);
+
+#else
+    /* But we'll provide the safe version for gcc & clang... */
+    strncpy(filename, name, size - 5);
+
+#endif
 
     FILE *mod = fopen(filename, "rb");
     if (!mod) {
@@ -195,17 +183,15 @@ struct SaltModule *load(SVMRuntime *_rt, char *name)
     
     name[strlen(name) - 4] = 0;
 
-    // Module
-
     struct SaltModule *module = module_create(_rt, name);
-    struct LoaderHeaderData instructions = load_header(_rt, mod);
+    struct SCC3_Header header = loader_read_scc3_header(_rt, mod);
 
-    load_instructions(_rt, module, mod, instructions.instructions);
+    load_instructions(_rt, module, mod, header.m_ins);
     load_labels(_rt, module);
 
-    register_control(_rt, instructions.registers);
+    register_control(_rt, header.m_reg);
 
-    dprintf("Loaded module %s\n", module->name);
+    dprintf("Loaded module %s", module->name);
 
     fclose(mod);
     return module;
@@ -218,7 +204,7 @@ static String *get_module_path(SVMRuntime *_rt, char *name)
     str->content = vmalloc(sizeof(char) * 256);
     memset(str->content, 0, 256);
     
-    // Try local /ext
+    /* First, try finding the module in a local ext folder. */
 
     snprintf(str->content, 255, "ext/%s.scc", name);
     FILE *fp = fopen(str->content, "r");
@@ -227,8 +213,8 @@ static String *get_module_path(SVMRuntime *_rt, char *name)
         return str; 
     }
 
-    // Try salt home /ext
-    
+    /* Otherwise, find the module in the salt home directory ext. */
+
 #ifdef _WIN32
     const char *ext = getenv("SaltHome");
 #else
@@ -259,18 +245,15 @@ struct SaltModule *ext_load(SVMRuntime *_rt, char *name)
     vmfree(path, sizeof(String));
 
     struct SaltModule *module = module_create(_rt, name);
-    struct LoaderHeaderData ins = load_header(_rt, fp);
+    struct SCC3_Header header = loader_read_scc3_header(_rt, fp);
 
-    load_instructions(_rt, module, fp, ins.instructions);
+    load_instructions(_rt, module, fp, header.m_ins);
     load_labels(_rt, module);
 
-    register_control(_rt, ins.registers);
+    register_control(_rt, header.m_reg);
 
-    dprintf("Loaded module '%s'\n", module->name);
+    dprintf("Loaded module '%s'", module->name);
 
     fclose(fp);
     return module;
 }
-
-
-

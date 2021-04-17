@@ -50,7 +50,7 @@
 </head>
 <body>
     <h1>
-        The SCC3 Standard &nbsp; <a id="svm_version">for SVM 0.12</a>
+        The SCC3 Standard &nbsp; <a id="svm_version">for SVM 0.13</a>
     </h1>
 
     <hr>
@@ -353,11 +353,11 @@
         </table>
     </div>
 
-    <div id="s_cxxne">
-        <h2 class="svmcall">CXXNE left right</h2>
+    <div id="s_cxxlt">
+        <h2 class="svmcall">CXXLT left right</h2>
         <p>
-            Compare two object for an equal value, an compare bools, ints, floats 
-            and strings. If <b>false</b> sets the jump flag.
+            Compare 2 objects. Sets the compare flag to true if the left value is in some
+            way <i>lesser</i> than right.
         </p>
         <table class="struct">
             <tr>
@@ -614,13 +614,19 @@
         </table>
     </div>
 
+    <div id="s_passl">
+        <h2 class="svmcall">PASSL</h2>
+        <p>
+            Do nothing. This may be an area for a compiler comment, or for debugging tools.
+        </p>
+    </div>
 
     <div id="s_print">
         <h2 class="svmcall">PRINT id</h2>
         <p>
             Print the value of the object (without a newline). Most prints require a newline
             anyway, so it is a good idea for the compiler to create a readonly string with only
-            a newline character, and chain the <code>PRINT object</code> & <code>PRINT const_newline</code>.
+            a newline character, and chain the <code>PRINT object</code> &amp; <code>PRINT const_newline</code>.
         </p>
         <table class="struct">
             <tr>
