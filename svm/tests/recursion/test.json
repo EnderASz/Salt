@@ -1,8 +1,0 @@
-{
-    "@version": 1,
-
-    "title": "Recursion",
-    "about": "Check if the recursion limit works",
-    "source": "recursion.scc",
-    "result": "result.txt"
-}

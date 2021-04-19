@@ -1,9 +1,0 @@
-{
-    "@version": 1,
-
-    "title": "Printing",
-    "about": "Printing objects & registers",
-    "source": "print.scc",
-    "result": "result.txt"
-}
-

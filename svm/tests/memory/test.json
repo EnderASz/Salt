@@ -1,9 +1,0 @@
-{
-    "@version": 1,
-
-    "title": "Memory",
-    "args": "--limit-mem 2",
-    "about": "Check if memory limit works",
-    "source": "memory.scc",
-    "result": "result.txt"
-}

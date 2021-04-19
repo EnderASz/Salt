@@ -1,8 +1,0 @@
-{
-    "@version": 1,
-
-    "title": "Comparisons",
-    "about": "Comparing different values using CXXEQ & CXXLT",
-    "source": "comparisons.scc",
-    "result": "result.txt"
-}
