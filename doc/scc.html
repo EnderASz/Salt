@@ -417,7 +417,8 @@
     <div id="s_ivadd">
         <h2 class="svmcall">IVADD id value</h2>
         <p>
-            Add the value to the object of type int.
+            Add the value to the given object of type int. The value has to be of type
+            <code>int</code>.
         </p>
         <table class="struct">
             <tr>
@@ -444,7 +445,8 @@
     <div id="s_ivsub">
         <h2 class="svmcall">IVSUB id value</h2>
         <p>
-            Subtract a given value from the object of type int.
+            Subtract the value from the given object of type int. The value has to be
+            of type <code>int</code>.
         </p>
         <table class="struct">
             <tr>
@@ -464,6 +466,122 @@
                 <td>4</td>
                 <td>int</td>
                 <td>Value to subtract</td>
+            </tr>
+        </table>
+    </div>
+
+    <div id="s_ixadd">
+        <h2 class="svmcall">IXADD id id</h2>
+        <p>
+            Add both objects, and store the value in the first object. The first
+            object has to be of type <code>int</code>, but the second one can be of type
+            <code>int</code> or <code>float</code>.
+        </p>
+        <table class="struct">
+            <tr>
+                <th>Offset</th>
+                <th>Width</th>
+                <th>Type</th>
+                <th>What</th>
+            </tr>
+            <tr>
+                <td>0</td>
+                <td>4</td>
+                <td>uint</td>
+                <td>ID of the object</td>
+            </tr>
+            <tr>
+                <td>4</td>
+                <td>4</td>
+                <td>uint</td>
+                <td>ID of the second object</td>
+            </tr>
+        </table>
+    </div>
+
+    <div id="s_ixsub">
+        <h2 class="svmcall">IXSUB id id</h2>
+        <p>
+            Subtract the second object from the first object, and store the value in the
+            first object. The first object has to be of type <code>int</code>, but the
+            second one can be of type <code>int</code> or <code>float</code>.
+        </p>
+        <table class="struct">
+            <tr>
+                <th>Offset</th>
+                <th>Width</th>
+                <th>Type</th>
+                <th>What</th>
+            </tr>
+            <tr>
+                <td>0</td>
+                <td>4</td>
+                <td>uint</td>
+                <td>ID of the object</td>
+            </tr>
+            <tr>
+                <td>4</td>
+                <td>4</td>
+                <td>uint</td>
+                <td>ID of the second object</td>
+            </tr>
+        </table>
+    </div>
+
+    <div id="s_ixmul">
+        <h2 class="svmcall">IXMUL id id</h2>
+        <p>
+            Multiply both objects, and store the value in the first object. The first
+            object has to be of type <code>int</code>, but the second one can be of type
+            <code>int</code> or <code>float</code>.
+        </p>
+        <table class="struct">
+            <tr>
+                <th>Offset</th>
+                <th>Width</th>
+                <th>Type</th>
+                <th>What</th>
+            </tr>
+            <tr>
+                <td>0</td>
+                <td>4</td>
+                <td>uint</td>
+                <td>ID of the object</td>
+            </tr>
+            <tr>
+                <td>4</td>
+                <td>4</td>
+                <td>uint</td>
+                <td>ID of the second object</td>
+            </tr>
+        </table>
+    </div>
+
+    <div id="s_ixdiv">
+        <h2 class="svmcall">IXDIV id id</h2>
+        <p>
+            Divide the first object by the second object, and store the value in the first object.
+            The first object has to be of type <code>int</code>, but the second one can be of type
+            <code>int</code> or <code>float</code>.
+        </p>
+        <table class="struct">
+            <tr>
+                <th>Offset</th>
+                <th>Width</th>
+                <th>Type</th>
+                <th>What</th>
+            </tr>
+            <tr>
+                <td>0</td>
+                <td>4</td>
+                <td>uint</td>
+                <td>ID of the object</td>
+            </tr>
+            <tr>
+                <td>4</td>
+                <td>4</td>
+                <td>uint</td>
+                <td>ID of the second object</td>
             </tr>
         </table>
     </div>
