@@ -14,7 +14,6 @@ Directories:
 - `doc` - md, txt & html documentation
 - `saltc` - salt compiler 
 - `svm` - salt virtual machine 
-- `sasm` - salt assembler
 
 <br>
 
