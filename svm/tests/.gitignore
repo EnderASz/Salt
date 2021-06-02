@@ -1,3 +1,0 @@
-# Because all test.* files are ignored in the top level gitignore, 
-# accept the test.json files as configuration
-!test.json

@@ -2,9 +2,9 @@
  * tokenizer/token.h implementation
  *
  */
-#include "../../include/tokenizer/token.h"
+#include "../include/token.h"
 
-#include "../../include/utils.h"
+#include "../include/utils.h"
 
 namespace salt
 {
@@ -70,11 +70,11 @@ std::map<char, TokenType> single_symbol_token_types {
     {';', OP_SEMIC},
     {',', OP_COMMA},
     {'.', OP_DOT},
+    {'!', MULTOP_NOT}
 };
 
 std::map<TokenType, string> token_names = {
-    {TOK_0,         "nothing"},
-    {TOK_UNKNOWN,   "unknown"},
+    {TOK_0,         "TOK_0"},
 
     // Access keywords
     {KW_PUBLIC,     "KW_PUBLIC"},
@@ -182,7 +182,6 @@ std::map<TokenType, string> token_names = {
 };
 
 bool Token::isNothing() const {return type == TOK_0;}
-bool Token::isUnknown() const {return type == TOK_UNKNOWN;}
 
 /* Create a new token from the given parameters. This doesn't really
  * do anything, it's just a shorthand.

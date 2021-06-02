@@ -12,7 +12,7 @@ import struct
 import re
 
 __author__  = 'bellrise'
-__version__ = '0.3'
+__version__ = '0.5'
 
 # This SCC magic value is placed right at the beginning of the header,
 # which lets SVM know that this indeed a Salt compiled code file.
@@ -65,6 +65,16 @@ class Assembler:
     __debug: bool = False
 
     __signature = b'\x7f\x7a\x7b\x7c\x32\x31\x00\x0a'
+    
+    replace_map = [
+        ('\\n', '\x11'),
+        ('\\r', '\r'),
+        ('\\0', '\0'),
+        ('\\t', '\t'),
+        ('\\"', '"'),
+        ('\\b', '\b')
+    ]
+
 
     def __init__(self, code: str, *, debug: bool = False):
         """ Assembler constructor, prepares values for use. """
@@ -176,16 +186,16 @@ class Assembler:
         data = self.split_args(line)[1:]
         buffer = bytes(line[:5], 'ascii')
         for elm in data:
-            
+
             # Add an int onto the buffer
-            if elm.isdigit():
+            if re.match(r'^-{0,1}[0-9]+$', elm):
                 value = int(elm)
                 if value < -2147483647 or value > 2147483647:
                     fatal(f'int out of bounds on line {index}')
                 buffer += struct.pack('i', value)
 
             # Add a float value
-            elif re.match(r'[0-9]+\.[0-9]+', elm):
+            elif re.match(r'^-{0,1}[0-9]+\.[0-9]+$', elm):
                 value = float(elm)
                 buffer += struct.pack('f', value)
 
@@ -202,27 +212,15 @@ class Assembler:
                     fatal(f'unknown const value on line {index}')
                 buffer += const_table[elm[1:-1]]
 
-            # Symbol
+            # Raw string
             elif re.match(r'\(.+\)', elm):
-                string = elm[1:-1]
-                buffer += bytes(string, 'ascii')
+                buffer += bytes(elm[1:-1], 'ascii')
+                buffer += b'\0'
 
             # String
             elif re.match(r'".*"', elm):
-                string = elm[1:-1] 
 
-                replace_map = [
-                    ('\\n', '\x11'),
-                    ('\\r', '\r'),
-                    ('\\0', '\0'),
-                    ('\\t', '\t'),
-                    ('\\"', '"'),
-                    ('\\b', '\b')
-                ]
-
-                # Replacing special chars
-                for source, dest in replace_map:
-                    string = string.replace(source, dest)
+                string = self.handle_string(elm)
 
                 buffer += struct.pack('i', len(string) + 1)
                 buffer += bytes(string, 'ascii') + b'\x00'
@@ -234,12 +232,22 @@ class Assembler:
         self.__instructions.append(buffer)
 
 
+    def handle_string(self, string: str):
+        """ This will return a SCC string representation from the SA one. """ 
+        
+        string = string[1:-1]
+        for source, dest in self.replace_map:
+            string = string.replace(source, dest)
+
+        return string
+
     def add_label(self, index: int, line: str):
         """ This will add a label to the instruction list. """
 
         self.print(f'Adding label \'{line[1:]}\'')
            
         self.__instructions.append(bytes(line, 'ascii'))
+
 
 def main():
     """ If not imported, this will execute parsing the arguments and calling

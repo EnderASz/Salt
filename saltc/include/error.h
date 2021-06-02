@@ -10,7 +10,7 @@
 
 #include "utils.h"
 #include "source_file.h"
-#include "tokenizer/token.h"
+#include "token.h"
 #include <string>
 
 using std::string;
@@ -152,8 +152,8 @@ private:
     TokenType token_type;
 
     /** Sets token string */
-    void setToken(string token, TokenType type = TOK_UNKNOWN);
-    void setToken(Token token);
+    void setToken(string token, TokenType type = TOK_0);
+    void setToken(Token token = null_token);
 public:
     /** Unexpected Token Error constructors */
     UnexpectedTokenError(

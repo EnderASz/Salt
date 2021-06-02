@@ -6,7 +6,7 @@
 #ifndef TOKENIZER_H_
 #define TOKENIZER_H_
 
-#include "tokenizer/token.h"
+#include "token.h"
 #include "source_file.h"
 #include <string>
 #include <vector>
@@ -87,6 +87,12 @@ private:
 
     bool isInRange() const;
     bool isInRange(string::iterator iterator) const;
+
+    /**
+     * Returns true if character on current iterator is
+     * equal to passed argument
+     */
+    bool isChar(char character);
 
     /**
      * Returns true if current is not last character and next character is

@@ -50,7 +50,7 @@
 </head>
 <body>
     <h1>
-        The SCC3 Standard &nbsp; <a id="svm_version">for SVM 0.11</a>
+        The SCC3 Standard &nbsp; <a id="svm_version">for SVM 0.13</a>
     </h1>
 
     <hr>
@@ -279,7 +279,7 @@
     </p>
 
     <div id="s_callf">
-        <h2 class="svmcall">CALLF strl ...</h2>
+        <h2 class="svmcall">CALLF ...</h2>
         <p>
             Call a function and push the current position and call onto the stack pointer.
             Note that this only works for local functions in the same module, and should be
@@ -295,18 +295,35 @@
             </tr>
             <tr>
                 <td>0</td>
-                <td>4</td>
-                <td>uint</td>
-                <td>string length</td>
-            </tr>
-            <tr>
-                <td>4</td>
                 <td>...</td>
                 <td>string</td>
-                <td>null terminated string</td>
+                <td>function name</td>
             </tr>
         </table>
     </div>
+
+    <div id="s_callx">
+        <h2 class="svmcall">CALLX ... ...</h2>
+        <p>
+            Call an external function from another module loaded with 
+            <code><a href="#s_extld">EXTLD</a></code>.
+        </p>
+        <table class="struct">
+            <tr>
+                <td>0</td>
+                <td>...</td>
+                <td>string</td>
+                <td>module name string</td>
+            </tr>
+            <tr>
+                <td>x</td>
+                <td>...</td>
+                <td>string</td>
+                <td>function name string</td>
+            </tr>
+        </table>
+    </div>
+
 
     <div id="s_cxxeq">
         <h2 class="svmcall">CXXEQ left right</h2>
@@ -336,11 +353,11 @@
         </table>
     </div>
 
-    <div id="s_cxxne">
-        <h2 class="svmcall">CXXNE left right</h2>
+    <div id="s_cxxlt">
+        <h2 class="svmcall">CXXLT left right</h2>
         <p>
-            Compare two object for an equal value, an compare bools, ints, floats 
-            and strings. If <b>false</b> sets the jump flag.
+            Compare 2 objects. Sets the compare flag to true if the left value is in some
+            way <i>lesser</i> than right.
         </p>
         <table class="struct">
             <tr>
@@ -376,7 +393,7 @@
     </div>
 
     <div id="s_extld">
-        <h2 class="svmcall">EXTLD string</h2>
+        <h2 class="svmcall">EXTLD ...</h2>
         <p>
             Load an external SCC file and add it to the global module register.
         </p>
@@ -390,7 +407,7 @@
             <tr>
                 <td>0</td>
                 <td>n</td>
-                <td><a href="#s_payload">payload</a>[string]</td>
+                <td>string</td>
                 <td>Name of the external library. Cannot have the <code>.scc</code> extension
                 because it is added later in the SVM when actually reading the file.</td>
             </tr>
@@ -400,7 +417,8 @@
     <div id="s_ivadd">
         <h2 class="svmcall">IVADD id value</h2>
         <p>
-            Add the value to the object of type int.
+            Add the value to the given object of type int. The value has to be of type
+            <code>int</code>.
         </p>
         <table class="struct">
             <tr>
@@ -427,7 +445,8 @@
     <div id="s_ivsub">
         <h2 class="svmcall">IVSUB id value</h2>
         <p>
-            Subtract a given value from the object of type int.
+            Subtract the value from the given object of type int. The value has to be
+            of type <code>int</code>.
         </p>
         <table class="struct">
             <tr>
@@ -451,8 +470,124 @@
         </table>
     </div>
 
+    <div id="s_ixadd">
+        <h2 class="svmcall">IXADD id id</h2>
+        <p>
+            Add both objects, and store the value in the first object. The first
+            object has to be of type <code>int</code>, but the second one can be of type
+            <code>int</code> or <code>float</code>.
+        </p>
+        <table class="struct">
+            <tr>
+                <th>Offset</th>
+                <th>Width</th>
+                <th>Type</th>
+                <th>What</th>
+            </tr>
+            <tr>
+                <td>0</td>
+                <td>4</td>
+                <td>uint</td>
+                <td>ID of the object</td>
+            </tr>
+            <tr>
+                <td>4</td>
+                <td>4</td>
+                <td>uint</td>
+                <td>ID of the second object</td>
+            </tr>
+        </table>
+    </div>
+
+    <div id="s_ixsub">
+        <h2 class="svmcall">IXSUB id id</h2>
+        <p>
+            Subtract the second object from the first object, and store the value in the
+            first object. The first object has to be of type <code>int</code>, but the
+            second one can be of type <code>int</code> or <code>float</code>.
+        </p>
+        <table class="struct">
+            <tr>
+                <th>Offset</th>
+                <th>Width</th>
+                <th>Type</th>
+                <th>What</th>
+            </tr>
+            <tr>
+                <td>0</td>
+                <td>4</td>
+                <td>uint</td>
+                <td>ID of the object</td>
+            </tr>
+            <tr>
+                <td>4</td>
+                <td>4</td>
+                <td>uint</td>
+                <td>ID of the second object</td>
+            </tr>
+        </table>
+    </div>
+
+    <div id="s_ixmul">
+        <h2 class="svmcall">IXMUL id id</h2>
+        <p>
+            Multiply both objects, and store the value in the first object. The first
+            object has to be of type <code>int</code>, but the second one can be of type
+            <code>int</code> or <code>float</code>.
+        </p>
+        <table class="struct">
+            <tr>
+                <th>Offset</th>
+                <th>Width</th>
+                <th>Type</th>
+                <th>What</th>
+            </tr>
+            <tr>
+                <td>0</td>
+                <td>4</td>
+                <td>uint</td>
+                <td>ID of the object</td>
+            </tr>
+            <tr>
+                <td>4</td>
+                <td>4</td>
+                <td>uint</td>
+                <td>ID of the second object</td>
+            </tr>
+        </table>
+    </div>
+
+    <div id="s_ixdiv">
+        <h2 class="svmcall">IXDIV id id</h2>
+        <p>
+            Divide the first object by the second object, and store the value in the first object.
+            The first object has to be of type <code>int</code>, but the second one can be of type
+            <code>int</code> or <code>float</code>.
+        </p>
+        <table class="struct">
+            <tr>
+                <th>Offset</th>
+                <th>Width</th>
+                <th>Type</th>
+                <th>What</th>
+            </tr>
+            <tr>
+                <td>0</td>
+                <td>4</td>
+                <td>uint</td>
+                <td>ID of the object</td>
+            </tr>
+            <tr>
+                <td>4</td>
+                <td>4</td>
+                <td>uint</td>
+                <td>ID of the second object</td>
+            </tr>
+        </table>
+    </div>
+
     <div id="s_jmpfl">
-        <h2 class="svmcall">JMPFL strl ...</h2>
+        <h2 class="svmcall">JMPFL ...</h2>
         <p>
             Jump to the given symbol only if the jump flag is set.
         </p>
@@ -465,12 +600,6 @@
             </tr>
             <tr>
                 <td>0</td>
-                <td>4</td>
-                <td>uint</td>
-                <td>string length</td>
-            </tr>
-            <tr>
-                <td>4</td>
                 <td>...</td>
                 <td>string</td>
                 <td>null terminated string</td>
@@ -479,7 +608,7 @@
     </div>
 
     <div id="s_jmpnf">
-        <h2 class="svmcall">JMPNF strl ...</h2>
+        <h2 class="svmcall">JMPNF ...</h2>
         <p>
             Jump to the given symbol only if the jump flag is <b>NOT</b> set.
         </p>
@@ -492,12 +621,6 @@
             </tr>
             <tr>
                 <td>0</td>
-                <td>4</td>
-                <td>uint</td>
-                <td>string length</td>
-            </tr>
-            <tr>
-                <td>4</td>
                 <td>...</td>
                 <td>string</td>
                 <td>null terminated string</td>
@@ -506,7 +629,7 @@
     </div>
 
     <div id="s_jmpto">
-        <h2 class="svmcall">JMPTO strl ...</h2>
+        <h2 class="svmcall">JMPTO ...</h2>
         <p>
             Jump to the passed label without creating a new entry on the callstack. This may 
             be used in loops, because calling a label and putting it on the callstack costs
@@ -521,41 +644,12 @@
             </tr>
             <tr>
                 <td>0</td>
-                <td>4</td>
-                <td>uint</td>
-                <td>string length</td>
-            </tr>
-            <tr>
-                <td>4</td>
                 <td>...</td>
                 <td>string</td>
                 <td>null terminated string</td>
             </tr>
         </table>
     </div>
-
-    <div id="s_extld">
-        <h2 class="svmcall">EXTLD string</h2>
-        <p>
-            Load an external SCC file and add it to the global module register.
-        </p>
-        <table class="struct">
-            <tr>
-                <th>Offset</th>
-                <th>Width</th>
-                <th>Type</th>
-                <th>What</th>
-            </tr>
-            <tr>
-                <td>0</td>
-                <td>n</td>
-                <td><a href="#s_payload">payload</a>[string]</td>
-                <td>Name of the external library. Cannot have the <code>.scc</code> extension
-                because it is added later in the SVM when actually reading the file.</td>
-            </tr>
-        </table>
-    </div>
-
 
     <div id="s_killx">
         <h2 class="svmcall">KILLX</h2>
@@ -638,13 +732,19 @@
         </table>
     </div>
 
+    <div id="s_passl">
+        <h2 class="svmcall">PASSL</h2>
+        <p>
+            Do nothing. This may be an area for a compiler comment, or for debugging tools.
+        </p>
+    </div>
 
     <div id="s_print">
         <h2 class="svmcall">PRINT id</h2>
         <p>
             Print the value of the object (without a newline). Most prints require a newline
             anyway, so it is a good idea for the compiler to create a readonly string with only
-            a newline character, and chain the <code>PRINT object</code> & <code>PRINT const_newline</code>.
+            a newline character, and chain the <code>PRINT object</code> &amp; <code>PRINT const_newline</code>.
         </p>
         <table class="struct">
             <tr>
@@ -759,6 +859,13 @@
                 <td>Object ID</td>
             </tr>
         </table>
+    </div>
+
+    <div id="s_trace">
+        <h2 class="svmcall">TRACE</h2>
+        <p>
+            Print the current callstack to standard out. Used for debugging.
+        </p>
     </div>
 
     <footer style="height: 100px;"></footer>

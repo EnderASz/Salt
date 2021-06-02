@@ -1,55 +1,57 @@
-#[ 
-  
+#[
+
     Copyright (C) 2021  The Salt Programming Language Developers
- 
+
     This program is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
     the Free Software Foundation, either version 3 of the License, or
     (at your option) any later version.
- 
+
     This program is distributed in the hope that it will be useful,
     but WITHOUT ANY WARRANTY; without even the implied warranty of
     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
     GNU General Public License for more details.
- 
+
     You should have received a copy of the GNU General Public License
     along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
     END OF COPYRIGHT NOTICE
 
-    The built-in library provides top-level functions that get included in the 
-    in the main module that gets compiled. 
+    The built-in library provides top-level functions that get included in the
+    in the main module that gets compiled.
 
     Because this is the core module of the whole standard library, it defines
     a couple of imporant code style rules for all the modules located in the
     official release of the Salt Programming Language.
 
-    @author bellrise, 2021 
+    @author bellrise, 2021
 
 ]#
 
-# This is the current version of the standard library, which you can then
-# print using print(__std_version);
-const int __std_version = 1;
+# All functions here are native functions implemented in the Salt langauge
+# runtime written in C. This style is required because the virtual machine
+# doesn't provide a lot of functionality by itself, so all the bells and
+# jingles of Salt need to be implemented using the SVML (Salt Virtual Machine
+# Library) framework the virtual machine provides, which allows use to call
+# C functions from Salt by marking the functions as 'native'. Even if some
+# functions would be possible to implement in Salt, like the __builtin_version
+# function for example, we can achieve lower execution times by executing
+# C code that interacts with the registers.
 
-#[ Userspace functions ]#
+#
+# This will exit the program, without any user prompt.
+#
+native public exit() [null] {}
 
-# This will exit the program. Calling EXITE it the safest way to stop 
-# execution, because it clears all the memory before exiting and clears
-# the callstack.
-public exit() -> null 
-{
-    __svm("EXITE");
-}
+#
+# Print any amount of passed objects to standard out, splitting each object
+# using the `sep` string. The `end` variable is placed on the end of the
+# whole print output, by default it is a newline.
+#
+native public print(variadic ref objects, string sep = ' ', string end = '\n')
+[null] {}
 
-# Print the passed object with a newline by default. If the second parameter
-# is specified, if prints whatever the string is at the end of the first line.
-# In order to keep memory usage low, the reference of the object is passed
-# by reference and the whole function is made inline. Normally it would use 
-# around 7 instructions and time consuming memory copying. The inline version
-# uses only 2 instructions.
-public print(ref __obj: null, __end: string = "\n") -> null
-{
-    __svm("PRINT", *__obj);
-    __svm("PRINT", *__end);
-}
+#
+# Returns the current version of the Salt standard library.
+#
+native public __stdlib_version() [const int] {}
