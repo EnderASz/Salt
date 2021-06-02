@@ -12,6 +12,10 @@
     #include "utils.h"
     #include "error.h"
 
+    #ifndef __FILENAME__
+        #define __FILENAME__ __FILE__
+    #endif
+
     #if defined(_WIN32)
         #include <winbase.h>
         #include <wincon.h>
