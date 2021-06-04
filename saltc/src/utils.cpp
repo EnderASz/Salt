@@ -11,13 +11,15 @@
 #include <cctype>
 #include <cmath>
 #include <vector>
+#include "../include/logging.h"
+#include "../include/error.h"
 
 using std::string;
 
 string load_file(string filepath) {
     std::ifstream file(filepath.c_str());
     if(!file.good()) {
-        // TODO: Throw opening init file exception   
+        eprint(new salt::FileOpenError("filepath")); 
     }
     std::stringstream buffer;
     buffer << file.rdbuf();

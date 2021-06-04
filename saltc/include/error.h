@@ -27,6 +27,7 @@ public:
     virtual ~BaseError();
 };
 
+
 class CustomError : public BaseError {
 private:
     /** Custom error message */
@@ -38,6 +39,22 @@ public:
 
     /** Inherited: Returns an error message */
     string getMessage();
+};
+
+
+class FileOpenError : public BaseError {
+private:
+    /** Path where the error occurred */
+    string path;
+public:
+    FileOpenError(const char path[]);
+    FileOpenError(string path);
+
+    /** Returns path where the error occurred */
+    string getPath();
+
+    /** Inherited: Returns an error message */
+    virtual string getMessage();
 };
 
 

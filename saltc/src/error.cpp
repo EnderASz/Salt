@@ -25,7 +25,19 @@ string CustomError::getMessage() {return message;}
 #pragma endregion CustomError
 
 
-#pragma region sourceError
+#pragma region FileOpenError
+FileOpenError::FileOpenError(const char path[]): path(path) {}
+FileOpenError::FileOpenError(string path): path(path) {}
+
+string FileOpenError::getPath() {return path;}
+
+string FileOpenError::getMessage() {
+    return "An error occurred when tried to open a '" + getPath() + "' file.";
+}
+#pragma endregion FileOpenError
+
+
+#pragma region SourceError
 SourceError::SourceError(const SourceFile& source_file)
     :source_file(const_cast<SourceFile*>(&source_file)) {}
 
@@ -36,7 +48,7 @@ string SourceError::getMessage() {
         getSource()->getFilePath() +
         "' source.";
 }
-#pragma endregion sourceError
+#pragma endregion SourceError
 
 #pragma region CommandLineError
 string CommandLineError::getMessage() {
