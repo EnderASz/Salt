@@ -41,25 +41,27 @@ InStringPosition::InStringPosition(
 
 uint parse_oct(string str) {
     std::vector<uint> oct;
-    for(uint i = 0; i < (str.size() < 8 ? str.size() : 8); i++) {
+    size_t max_literal_lenght = str.size() < 8 ? str.size() : 8;
+    for(size_t i = 0; i < max_literal_lenght; i++) {
         if(!isodigit(str[i])) break;
         oct.push_back(str[i] - 48);
     }
     uint result = 0;
-    for(uint i = 0; i < oct.size(); i++)
+    for(size_t i = 0; i < oct.size(); i++)
         result += oct[oct.size() - 1 - i] * pow(8, i);
     return result;
 }
 
 uint parse_hex(string str) {
     std::vector<uint> hex;
-    for(uint i = 0; i < (str.size() < 8 ? str.size() : 8); i++) {
+    size_t max_literal_lenght = str.size() < 8 ? str.size() : 8;
+    for(size_t i = 0; i < max_literal_lenght; i++) {
         if(!isxdigit(str[i])) break;
         if(isdigit(str[i])) hex.push_back(str[i] - 48);
         else hex.push_back((str[i] - 55) % 32);
     }
     uint result = 0;
-    for(uint i = 0; i < hex.size(); i++)
+    for(size_t i = 0; i < hex.size(); i++)
         result += hex[hex.size() - 1 - i] * pow(16, i);
     return result;
 }
