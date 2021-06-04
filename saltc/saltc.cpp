@@ -19,6 +19,7 @@ using namespace salt;
  * precompilation, parser, tokenizer, validator and synthesizer.
  */
 int main(int argc, char* argv[]) {
+    setup_windows_logging();
     dprint("Parsing parameters");
     Params parameters((uint) argc, argv);
     dprint("Parameters parsed");
