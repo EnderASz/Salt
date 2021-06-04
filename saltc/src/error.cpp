@@ -15,8 +15,6 @@ using std::to_string;
 namespace salt
 {
 
-BaseError::~BaseError() {}
-
 #pragma region CustomError
 CustomError::CustomError(const char message[]): message(message) {}
 CustomError::CustomError(string message): message(message) {}
@@ -32,7 +30,7 @@ FileOpenError::FileOpenError(string path): path(path) {}
 string FileOpenError::getPath() {return path;}
 
 string FileOpenError::getMessage() {
-    return "An error occurred when tried to open a '" + getPath() + "' file.";
+    return "An error occurred when tried to open '" + getPath() + "' file.";
 }
 #pragma endregion FileOpenError
 

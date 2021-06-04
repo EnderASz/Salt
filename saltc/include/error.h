@@ -24,7 +24,7 @@ public:
     virtual string getMessage() = 0;
 
     /** Base Error deconstructor */
-    virtual ~BaseError();
+    virtual ~BaseError() = default;
 };
 
 
@@ -54,7 +54,7 @@ public:
     string getPath();
 
     /** Inherited: Returns an error message */
-    virtual string getMessage();
+    string getMessage();
 };
 
 
