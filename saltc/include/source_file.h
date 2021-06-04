@@ -20,9 +20,6 @@ private:
     const string filepath;
     struct {
         bool include_builtins = false;
-        uint32_t instructions = 0;
-        //uint32_t string_literals = 0; ??
-        uint32_t max_instruction_width = 0;
     } meta;
 
 public:
@@ -40,12 +37,6 @@ public:
 
     /* Toogle global import 'init' standard library on */
     void includeBuiltins();
-
-    /* Returns SCC file header for this source file */
-    std::array<byte, 64> makeSCCHeader();
-
-    /* Return SCC file body for this source file */
-    std::vector<byte> makeSCCBody();
 
 }; // salt::SourceFile
 
