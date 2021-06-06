@@ -28,7 +28,9 @@ FileOpenError::FileOpenError(const string& filepath): filepath(filepath) {}
 string FileOpenError::getFilepath() {return filepath;}
 
 string FileOpenError::getMessage() {
-    return "An error occurred when tried to open '" + getFilepath() + "' file.";
+    return "An error occurred when tried to open '" +
+        getFilepath() +
+        "' file.";
 }
 #pragma endregion FileOpenError
 
