@@ -19,7 +19,7 @@ using std::string;
 string load_file(string filepath) {
     std::ifstream file(filepath.c_str());
     if(!file.good()) {
-        eprint(new salt::FileOpenError("filepath")); 
+        eprint(new salt::FileOpenError(filepath));
     }
     std::stringstream buffer;
     buffer << file.rdbuf();

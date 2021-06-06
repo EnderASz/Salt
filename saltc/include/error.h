@@ -35,7 +35,7 @@ private:
 public:
     /** Custom error constructor */
     CustomError(const char message[]);
-    CustomError(string message);
+    CustomError(const string& message);
 
     /** Inherited: Returns an error message */
     string getMessage();
@@ -48,7 +48,7 @@ private:
     string path;
 public:
     FileOpenError(const char path[]);
-    FileOpenError(string path);
+    FileOpenError(const string& path);
 
     /** Returns path where the error occurred */
     string getPath();
@@ -79,7 +79,7 @@ private:
     string option;
 public:
     /** Unrecognized Option Error constructor */
-    UnrecognizedOptionError(string option);
+    UnrecognizedOptionError(const string& option);
 
     /** Inherited: Returns an error message */
     virtual string getMessage();
@@ -112,7 +112,7 @@ protected:
 
 public:
     InSourceError(
-        const InStringPosition position,
+        const InStringPosition& position,
         const SourceFile& source_file
     );
 
@@ -140,7 +140,7 @@ class UnclosedCommentError : public InSourceError {
 public:
     /** Unclosed Comment Error constructor */
     UnclosedCommentError(
-        const InStringPosition position,
+        const InStringPosition& position,
         const SourceFile& source_file
     );
 
@@ -153,7 +153,7 @@ class UnclosedStringError : public InSourceError {
 public:
     /** Unclosed String Literal Error constructor */
     UnclosedStringError(
-        const InStringPosition position,
+        const InStringPosition& position,
         const SourceFile& source_file
     );
 
@@ -169,19 +169,19 @@ private:
     TokenType token_type;
 
     /** Sets token string */
-    void setToken(string token, TokenType type = TOK_0);
+    void setToken(const string& token, TokenType type = TOK_0);
     void setToken(Token token = null_token);
 public:
     /** Unexpected Token Error constructors */
     UnexpectedTokenError(
-        const InStringPosition position,
+        const InStringPosition& position,
         const SourceFile& source_file,
-        const string str,
+        const string& str,
         const TokenType type
     );
     UnexpectedTokenError(
         const SourceFile& source_file,
-        const Token token
+        const Token& token
     );
 
     /** Returns token value string */
@@ -205,9 +205,9 @@ private:
 
 public:
     UnknownTokenError(
-        const InStringPosition position,
+        const InStringPosition& position,
         const SourceFile& source_file,
-        const string str
+        const string& str
     );
 
     /** Returns unrecognized token string */
@@ -224,9 +224,9 @@ protected:
 public:
     /** Invalid Literal Error constructors */
     InvalidLiteralError(
-        const InStringPosition position,
+        const InStringPosition& position,
         const SourceFile& source_file,
-        const string literal_type_name);
+        const string& literal_type_name);
 
     /** Returns literal name */
     string getLiteralName();
@@ -242,9 +242,9 @@ private:
 public:
     /** Too Long Literal Error constructor */
     TooLongLiteralError(
-        const InStringPosition position,
+        const InStringPosition& position,
         const SourceFile& source_file,
-        const string literal_type_name,
+        const string& literal_type_name,
         const int max_lenght);
 
     /** Returns max literal lenght */

@@ -17,7 +17,7 @@ namespace salt
 
 #pragma region CustomError
 CustomError::CustomError(const char message[]): message(message) {}
-CustomError::CustomError(string message): message(message) {}
+CustomError::CustomError(const string& message): message(message) {}
 
 string CustomError::getMessage() {return message;}
 #pragma endregion CustomError
@@ -25,7 +25,7 @@ string CustomError::getMessage() {return message;}
 
 #pragma region FileOpenError
 FileOpenError::FileOpenError(const char path[]): path(path) {}
-FileOpenError::FileOpenError(string path): path(path) {}
+FileOpenError::FileOpenError(const string& path): path(path) {}
 
 string FileOpenError::getPath() {return path;}
 
@@ -67,7 +67,7 @@ string UnspecifiedMainError::getMessage() {
 #pragma endregion UnspecifiedMainError
 
 #pragma region UnrecognizedOptionError
-UnrecognizedOptionError::UnrecognizedOptionError(string option)
+UnrecognizedOptionError::UnrecognizedOptionError(const string& option)
     :option(option) {}
 
 string UnrecognizedOptionError::getMessage() {
@@ -82,7 +82,7 @@ string UnrecognizedOptionError::getOption() {return option;}
 
 #pragma region InSourceError
 InSourceError::InSourceError(
-    const InStringPosition position,
+    const InStringPosition& position,
     const SourceFile& source_file)
         :SourceError(source_file),
         position(position) {}
@@ -123,7 +123,7 @@ string OutOfSourceRangeError::getMessage() {
 
 #pragma region UnclosedCommentError
 UnclosedCommentError::UnclosedCommentError(
-    const InStringPosition position,
+    const InStringPosition& position,
     const SourceFile& source_file)
         :InSourceError(position, source_file) {}
 
@@ -136,7 +136,7 @@ string UnclosedCommentError::getMessage() {
 
 #pragma region UnclosedStringError
 UnclosedStringError::UnclosedStringError(
-    const InStringPosition position,
+    const InStringPosition& position,
     const SourceFile& source_file)
         :InSourceError(position, source_file) {}
 
@@ -149,9 +149,9 @@ string UnclosedStringError::getMessage() {
 
 #pragma region UnexpectedTokenError
 UnexpectedTokenError::UnexpectedTokenError(
-        const InStringPosition position,
+        const InStringPosition& position,
         const SourceFile& source_file,
-        const string str,
+        const string& str,
         const TokenType type)
             :InSourceError(position, source_file),
             token_str(str),
@@ -159,7 +159,7 @@ UnexpectedTokenError::UnexpectedTokenError(
 
 UnexpectedTokenError::UnexpectedTokenError(
         const SourceFile& source_file,
-        const Token token)
+        const Token& token)
             :InSourceError(token.position, source_file),
             token_str(token.value),
             token_type(token.type) {}
@@ -181,9 +181,9 @@ string UnexpectedTokenError::getMessage() {
 
 #pragma region UnknownTokenError
 UnknownTokenError::UnknownTokenError(
-    const InStringPosition position,
+    const InStringPosition& position,
     const SourceFile& source_file,
-    const string str)
+    const string& str)
         :InSourceError(position, source_file),
         token_str(str) {}
 
@@ -200,9 +200,9 @@ string UnknownTokenError::getMessage() {
 
 #pragma region InvalidLiteralError
 InvalidLiteralError::InvalidLiteralError(
-    const InStringPosition position,
+    const InStringPosition& position,
     const SourceFile& source_file,
-    const string literal_name)
+    const string& literal_name)
         :InSourceError(position, source_file),
         literal_name(literal_name) {}
 
@@ -219,9 +219,9 @@ string InvalidLiteralError::getMessage() {
 
 #pragma region TooLongLiteralError
 TooLongLiteralError::TooLongLiteralError(
-    const InStringPosition position,
+    const InStringPosition& position,
     const SourceFile& source_file,
-    const string literal_type_name,
+    const string& literal_type_name,
     const int max_lenght)
         :InvalidLiteralError(position, source_file, literal_type_name),
         max_lenght(max_lenght) {}
