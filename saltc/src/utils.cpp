@@ -17,7 +17,7 @@
 using std::string;
 
 string load_file(string filepath) {
-    std::ifstream file(filepath.c_str());
+    std::ifstream file(filepath);
     if(!file.good()) {
         eprint(new salt::FileOpenError(filepath));
     }
