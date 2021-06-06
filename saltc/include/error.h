@@ -34,7 +34,6 @@ private:
     string message;
 public:
     /** Custom error constructor */
-    CustomError(const char message[]);
     CustomError(const string& message);
 
     /** Inherited: Returns an error message */
@@ -45,13 +44,12 @@ public:
 class FileOpenError : public BaseError {
 private:
     /** Path where the error occurred */
-    string path;
+    string filepath;
 public:
-    FileOpenError(const char path[]);
-    FileOpenError(const string& path);
+    FileOpenError(const string& filepath);
 
     /** Returns path where the error occurred */
-    string getPath();
+    string getFilepath();
 
     /** Inherited: Returns an error message */
     string getMessage();

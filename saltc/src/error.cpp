@@ -16,7 +16,6 @@ namespace salt
 {
 
 #pragma region CustomError
-CustomError::CustomError(const char message[]): message(message) {}
 CustomError::CustomError(const string& message): message(message) {}
 
 string CustomError::getMessage() {return message;}
@@ -24,13 +23,12 @@ string CustomError::getMessage() {return message;}
 
 
 #pragma region FileOpenError
-FileOpenError::FileOpenError(const char path[]): path(path) {}
-FileOpenError::FileOpenError(const string& path): path(path) {}
+FileOpenError::FileOpenError(const string& filepath): filepath(filepath) {}
 
-string FileOpenError::getPath() {return path;}
+string FileOpenError::getFilepath() {return filepath;}
 
 string FileOpenError::getMessage() {
-    return "An error occurred when tried to open '" + getPath() + "' file.";
+    return "An error occurred when tried to open '" + getFilepath() + "' file.";
 }
 #pragma endregion FileOpenError
 
