@@ -11,6 +11,6 @@ Returns given via [`salt::FileOpenError` class](README.md) [`constructor`](const
 String path of file which opening failed.
 
 ## See also
-+ [SaltC errors](../../errors.md)
++ [SaltC errors](../README.md)
 + [`salt::FileOpenError` class](README.md)
 + [`salt::FileOpenError` constructor](constructor.md)

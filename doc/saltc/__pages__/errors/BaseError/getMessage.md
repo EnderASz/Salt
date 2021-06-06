@@ -21,6 +21,6 @@ ValueError::getMessage() {
 ```
 
 ## See also
-+ [SaltC errors](../../errors.md)
++ [SaltC errors](../README.md)
 + [`salt::BaseError` class](../../errors/BaseError/README.md)
 + [`eprint` logging macro](<eprint-link-placeholder>)

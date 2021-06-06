@@ -32,6 +32,6 @@ public:
 <br>
 
 ## See also:
-+ [SaltC errors](../../errors.md)
++ [SaltC errors](../README.md)
 + [`getMessage` public member virtual function](getMessage.md)
 + [`eprint` logging module macro](<eprint-link-placeholder>)

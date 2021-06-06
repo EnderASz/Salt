@@ -18,6 +18,6 @@ if(!file.good()) {
 ```
 
 ## See also
-+ [SaltC errors](../../errors.md)
++ [SaltC errors](../README.md)
 + [`salt::FileOpenError` class](README.md)
 + [`eprint` logging module macro](<eprint-link-placeholder>)

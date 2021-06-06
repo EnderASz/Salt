@@ -23,6 +23,6 @@ eprint(new salt::FileOpenError('path/to/failed/open/file.txt'));
 <br>
 
 ## See also:
-+ [SaltC errors](../../errors.md)
++ [SaltC errors](../README.md)
 + [`salt::BaseError` class](../BaseError/README.md)
 + [`eprint` logging module macro](<eprint-link-placeholder>)

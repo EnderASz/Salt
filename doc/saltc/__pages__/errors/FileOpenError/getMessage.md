@@ -13,6 +13,6 @@ String error message according to the pattern:<br>
     "An error occurred when tried to open '<filepath>' file."
 
 ## See also
-+ [SaltC errors](../../errors.md)
++ [SaltC errors](../README.md)
 + [`salt::BaseError::getMessage` method](../../errors/BaseError/getMessage.md)
 + [`salt::FileOpenError` class](README.md)

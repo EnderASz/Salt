@@ -20,7 +20,7 @@ How you can see it's needed to pass **pointer to error class object** to throw i
 
 
 ## Error classes
-![Error classes diagram](../__assets__/errors/errors.drawio.svg)
+![Error classes diagram](../../__assets__/errors/errors.drawio.svg)
 
 ### **Index**
 + [BaseError](./errors/BaseError/README.md)
