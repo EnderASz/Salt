@@ -16,7 +16,7 @@ Always when instance of child of this class is passes to [`eprint`](<eprint-link
 ## Member functions
 | Method | Description | Member type |
 |--------|-------------|------------------|
-| `(default destructor)` | Destructs the error | Public Virtual Method |
+| `(destructor)` | Destructs the error instance | Public Virtual default deconstructor |
 | [`getMessage`](BaseError/getMessage.md) | Returns the error message | Public Pure Virtual Method |
 <br>
 
