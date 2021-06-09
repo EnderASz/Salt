@@ -37,7 +37,7 @@ public:
     CustomError(const string& message);
 
     /** Inherited: Returns an error message */
-    string getMessage();
+    string getMessage() override;
 };
 
 
@@ -52,14 +52,14 @@ public:
     string getFilepath();
 
     /** Inherited: Returns an error message */
-    string getMessage();
+    string getMessage() override;
 };
 
 
 class CommandLineError : public BaseError {
 public:
     /** Inherited: Returns an error message */
-    virtual string getMessage();
+    virtual string getMessage() override;
 
     /** Returns string hint to use --help */
     string getHelpRecomendation();
@@ -68,7 +68,7 @@ public:
 
 class UnspecifiedMainError : public CommandLineError {
     /** Inherited: Returns an error message */
-    string getMessage();
+    string getMessage() override;
 };
 
 
@@ -80,7 +80,7 @@ public:
     UnrecognizedOptionError(const string& option);
 
     /** Inherited: Returns an error message */
-    virtual string getMessage();
+    virtual string getMessage() override;
 
     /** Returns unrecognized option */
     string getOption();
@@ -96,7 +96,7 @@ public:
     SourceError(const SourceFile& source_file);
 
     /** Inherited: Returns an error message */
-    virtual string getMessage();
+    virtual string getMessage() override;
 
     /** Returns pointer to source file where the error occurred */
     SourceFile* getSource();
@@ -115,7 +115,7 @@ public:
     );
 
     /** Inherited: Returns an error message */
-    virtual string getMessage();
+    virtual string getMessage() override;
 
     /** Returns position where the error occured */
     InStringPosition getPosition();
@@ -130,7 +130,7 @@ public:
     OutOfSourceRangeError(const SourceFile& source_file);
 
     /** Inherited: Returns an error message */
-    virtual string getMessage();
+    virtual string getMessage() override;
 };
 
 
@@ -143,7 +143,7 @@ public:
     );
 
     /** Inherited: Returns an error message */
-    string getMessage();
+    string getMessage() override;
 };
 
 
@@ -156,7 +156,7 @@ public:
     );
 
     /** Inherited: Returns an error message */
-    string getMessage();
+    string getMessage() override;
 };
 
 
@@ -189,7 +189,7 @@ public:
     TokenType getTokenType();
 
     /** Inherited: Returns an error message */
-    string getMessage();
+    string getMessage() override;
 };
 
 
@@ -212,7 +212,7 @@ public:
     string getTokenStr();
 
     /** Inherited: Returns an error message */
-    string getMessage();
+    string getMessage() override;
 };
 
 
@@ -230,7 +230,7 @@ public:
     string getLiteralName();
     
     /** Inherited: Returns an error message */
-    string getMessage();
+    string getMessage() override;
 };
 
 
@@ -249,7 +249,7 @@ public:
     int getMaxLenght();
 
     /** Inherited: Returns an error message */
-    string getMessage();
+    string getMessage() override;
 };
 
 };
