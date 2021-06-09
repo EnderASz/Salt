@@ -7,7 +7,7 @@
 </p>
 
 
-This is the Salt programming language. This is a compiled, interpreted language in a virtual machine.
+Welcome to Salt. Salt is a compiled, interpreted programing language running in a virtual machine enviroment.
 
 Directories:
 - `lib` - standard library of Salt
@@ -31,8 +31,8 @@ public main() {
 As you can see, all functions either start with `public` or `private`, showing their avaibility for other modules.
 The main function is always `public`. The `print` function is a global function always imported into your module.
 
-Next, to run the program you need to compile it first. This can be done using `saltc` (or whatever other compiler
-you are using). The `-o` flag defines the output of the compiler. After that, run it using `svm`.
+To run a Salt program you need to compile it first. This can be done using `saltc` (or whatever other compiler
+you are using). The `-o` flag defines the output of the compiler. To run a compiled program use `svm`.
 
 ```bash
 $ saltc ./hello.salt -o hello.scc
@@ -46,12 +46,12 @@ Hello world
 
 ### Types
 
-Salt is a **strongly typed language**, meaning type-correctness is enforced by the compiler. To create a variable
+Salt is a **strongly typed language** thus type-correctness is enforced by the compiler. To create a variable
 which has the number value of 123, you can use an int.
 ```java
 int x = 123;
 ```
-As you can see, it's very simmilar to other typed programming languages, and that's the goal of Salt - to be understandable.
+As you can see, the syntax is very simmilar to other typed programming languages, and that's the goal of Salt - to be understandable.
 
 The base types in Salt are: 
 
@@ -70,7 +70,7 @@ The base types in Salt are:
 
 ### Linux
 
-Just run this:
+Clone the repository and run:
 ```
 $ ./install.sh
 ```
@@ -84,4 +84,4 @@ This script:
 
 ### Windows
 
-Good luck
+WIP, for now you can use SWL
