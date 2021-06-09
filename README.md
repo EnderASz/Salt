@@ -55,13 +55,13 @@ As you can see, the syntax is very simmilar to other typed programming languages
 
 The base types in Salt are: 
 
-| Type     | Description                                    |
-|----------|------------------------------------------------|
-| `int`    | integer value (−2,147,483,647, +2,147,483,647) |
-| `float`  | floating point value                           |
-| `string` | dynamic length string                          |
-| `bool`   | can be `true` or `false`                       |
-| `null`   | no value                                       |
+| Type     | Description                                                             |
+|----------|-------------------------------------------------------------------------|
+| `int`    | integer value (−9,223,372,036,854,775,807 to 9,223,372,036,854,775,808) |
+| `float`  | floating point value                                                    |
+| `string` | dynamic length string                                                   |
+| `bool`   | can be `true` or `false`                                                |
+| `null`   | no value                                                                |
 
 
 <!-- Installation section -->
@@ -85,3 +85,15 @@ This script:
 ### Windows
 
 WIP, for now you can use WSL
+
+
+## Contributing
+
+If you want to contribute, you must always follow these rules:
+
+* Keep the style the same as the code around you
+* Everything must be atleast in English
+* Each source code file must contain the copyright header
+* Don't step on other's people toes - make your own branch
+* When changing something in an existing file, add your name to the copyright header
+* Keep the same format of commit messages (`subject: change`)
