@@ -1,6 +1,6 @@
 # salt::FileOpenError::getMessage method
 ```cpp
-std::string salt::FileOpenError::getMessage();
+std::string salt::FileOpenError::getMessage() override;
 ```
 Returns string error message about failed opening filepath given via [`constructor`](constructor.md) of [`salt::FileOpenError` class](README.md).
 
