@@ -10,7 +10,7 @@ FileOpenError class is a represantation of an error occured when SaltC tried ope
 ## Member functions
 | Method | Description | Member type |
 |--------|-------------|------------------|
-| [`(constructor)`](constructor.md) | Constructs the error instance | Public Method |
+| [`(constructor)`](constructor.md) | Constructs the error instance | Public default constructor |
 | `(deconstructor)` | Deconstructs the error instance | Public default deconstructor |
 | [`getMessage`](getMessage.md) | Returns the error message | Public Method |
 | [`getPath`](getPath.md) | Returns the path of file where error occured | Public Method |
