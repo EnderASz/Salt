@@ -7,7 +7,7 @@
 </p>
 
 
-Welcome to Salt. Salt is a compiled, interpreted programing language running in a virtual machine enviroment.
+Welcome to Salt. This is a compiled, interpreted programing language running in a virtual machine enviroment.
 
 Directories:
 - `lib` - standard library of Salt
