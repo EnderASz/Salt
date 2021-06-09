@@ -84,4 +84,4 @@ This script:
 
 ### Windows
 
-WIP, for now you can use SWL
+WIP, for now you can use WSL
