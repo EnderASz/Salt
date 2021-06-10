@@ -11,9 +11,13 @@ FileOpenError class is a represantation of an error occured when SaltC tried ope
 | Method | Description | Member type |
 |--------|-------------|------------------|
 | [`(constructor)`](constructor.md) | Constructs the error instance | Public default constructor |
-| `(deconstructor)` | Deconstructs the error instance | Public default deconstructor |
-| [`getMessage`](getMessage.md) | Returns the error message | Public Method |
 | [`getPath`](getPath.md) | Returns the path of file where error occured | Public Method |
+_______________________________________________________________________________
+## Inherited from [`salt::BaseError`](../BaseError/README.md)
+| Method | Description | Member type |
+|--------|-------------|------------------|
+| `(deconstructor)` | Deconstructs the error instance | Public Virtual default deconstructor |
+| [`getMessage`](getMessage.md) <sub><sup>(overridden)</sup></sub> | Returns the error message | Public Virtual Method |
 <br>
 
 ## Example of use

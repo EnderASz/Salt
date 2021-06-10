@@ -11,9 +11,12 @@ UnspecifiedMainError class is a represantation of an error occured because main 
 | Method | Description | Member type |
 |--------|-------------|------------------|
 | [`(constructor)`](constructor.md) | Constructs the error instance | Public default constructor |
-| `(deconstructor)` | Deconstructs the error instance | Public default deconstructor |
-| [`getMessage`](getMessage.md) | Returns the error message | Public Method |
-| [`getHelpRecomendation`](getHelpRecomendation.md) | Returns the string recommendation to look into SaltC help page | Public Method |
+## Inherited from [`salt::CommandLineError`](../CommandLineError/README.md)
+| Method | Description | Member type |
+|--------|-------------|------------------|
+| `(deconstructor)` | Deconstructs the error instance | Public Virtual default deconstructor |
+| [`getMessage`](getMessage.md) <sub><sup>(overridden)</sup></sub> | Returns the error message | Public Method |
+| [`getHelpRecommendation`](../CommandLineError/getHelpRecommendation.md) | Returns the string recommendation to look into SaltC command line help page. | Public Method |
 <br>
 
 ## Example of use
