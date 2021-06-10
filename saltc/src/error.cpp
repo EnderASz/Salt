@@ -18,7 +18,7 @@ namespace salt
 #pragma region CustomError
 CustomError::CustomError(const string& message): message(message) {}
 
-string CustomError::getMessage() override {return message;}
+string CustomError::getMessage() {return message;}
 #pragma endregion CustomError
 
 
@@ -27,7 +27,7 @@ FileOpenError::FileOpenError(const string& filepath): filepath(filepath) {}
 
 string FileOpenError::getFilepath() {return filepath;}
 
-string FileOpenError::getMessage() override {
+string FileOpenError::getMessage() {
     return "An error occurred when tried to open '" +
         getFilepath() +
         "' file.";
@@ -41,7 +41,7 @@ SourceError::SourceError(const SourceFile& source_file)
 
 SourceFile* SourceError::getSource() {return source_file;}
 
-string SourceError::getMessage() override {
+string SourceError::getMessage() {
     return "An error occured in '" +
         getSource()->getFilePath() +
         "' source.";
@@ -49,7 +49,7 @@ string SourceError::getMessage() override {
 #pragma endregion SourceError
 
 #pragma region CommandLineError
-string CommandLineError::getMessage() override {
+string CommandLineError::getMessage() {
     return "An error occured in command line. " +
         getHelpRecomendation();
 }
@@ -60,7 +60,7 @@ string CommandLineError::getHelpRecomendation() {
 #pragma endregion CommandLineError
 
 #pragma region UnspecifiedMainError
-string UnspecifiedMainError::getMessage() override {
+string UnspecifiedMainError::getMessage() {
     return "Main file to compile is unspecified. Please specify it. " +
         getHelpRecomendation();
 }
@@ -70,7 +70,7 @@ string UnspecifiedMainError::getMessage() override {
 UnrecognizedOptionError::UnrecognizedOptionError(const string& option)
     :option(option) {}
 
-string UnrecognizedOptionError::getMessage() override {
+string UnrecognizedOptionError::getMessage() {
     return "Unrecognized command line option '" +
         getOption() +
         "'. " +
@@ -87,7 +87,7 @@ InSourceError::InSourceError(
         :SourceError(source_file),
         position(position) {}
 
-string InSourceError::getMessage() override {
+string InSourceError::getMessage() {
     return "An error occured in '" +
         getSource()->getFilePath() +
         "' at line " +
@@ -114,7 +114,7 @@ string InSourceError::getLocationString() {
 OutOfSourceRangeError::OutOfSourceRangeError(const SourceFile& source_file)
     :SourceError(source_file) {}
 
-string OutOfSourceRangeError::getMessage() override {
+string OutOfSourceRangeError::getMessage() {
     return "Tried to get token out of range '" +
         getSource()->getFilePath() +
         "' source.";
@@ -127,7 +127,7 @@ UnclosedCommentError::UnclosedCommentError(
     const SourceFile& source_file)
         :InSourceError(position, source_file) {}
 
-string UnclosedCommentError::getMessage() override {
+string UnclosedCommentError::getMessage() {
     return "Unclosed comment " +
         getLocationString() +
         ".";
@@ -140,7 +140,7 @@ UnclosedStringError::UnclosedStringError(
     const SourceFile& source_file)
         :InSourceError(position, source_file) {}
 
-string UnclosedStringError::getMessage() override {
+string UnclosedStringError::getMessage() {
     return "Unclosed string literal " +
         getLocationString() +
         ".";
@@ -168,7 +168,7 @@ string UnexpectedTokenError::getTokenStr() {return token_str;}
 
 TokenType UnexpectedTokenError::getTokenType() {return token_type;}
 
-string UnexpectedTokenError::getMessage() override {
+string UnexpectedTokenError::getMessage() {
     return "Unexpected token " +
         getTokenStr() +
         " of type " +
@@ -189,7 +189,7 @@ UnknownTokenError::UnknownTokenError(
 
 string UnknownTokenError::getTokenStr() {return token_str;}
 
-string UnknownTokenError::getMessage() override {
+string UnknownTokenError::getMessage() {
     return "Unknown token " +
         getTokenStr() +
         " " +
@@ -208,7 +208,7 @@ InvalidLiteralError::InvalidLiteralError(
 
 string InvalidLiteralError::getLiteralName() {return literal_name;}
 
-string InvalidLiteralError::getMessage() override {
+string InvalidLiteralError::getMessage() {
     return "Invalid " +
         getLiteralName() +
         " literal " +
@@ -228,7 +228,7 @@ TooLongLiteralError::TooLongLiteralError(
 
 int TooLongLiteralError::getMaxLenght() {return max_lenght;}
 
-string TooLongLiteralError::getMessage() override {
+string TooLongLiteralError::getMessage() {
     return "Max lenght of " +
         getLiteralName() +
         " literal (" +
