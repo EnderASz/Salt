@@ -10,7 +10,10 @@ Returns string error message about failed interpreting command line options and/
 ## Return Value
 Concatenated below string error message and return of [`getHelpRecommendation`](getHelpRecommendation.md) member method.<br>
     
-    "An error occured in command line. "
+    "Main file to compile is unspecified. Please specify it. "
+
+## Notes
+It's an overridden version of [`getMessage`](../CommandLineError/getMessage.md) method inherited from [`salt::CommandLineError`](../CommandLineError/README.md) virtual method.
 
 ## See also
 + [SaltC errors](../README.md)
