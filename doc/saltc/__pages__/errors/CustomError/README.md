@@ -1,17 +1,16 @@
-# salt::FileOpenError class
+# salt::CustomError class
 ```cpp
-class FileOpenError;
+class CustomError;
 ```
-![FileOpenError Inheritance](../../../__assets__/errors/FileOpenError/inheritance.drawio.svg)
+![CustomError Inheritance](../../../__assets__/errors/CustomError/inheritance.drawio.svg)
 
-FileOpenError class is a represantation of an error occured when SaltC tried open a file at given path to the constructor.
+CustomError class is a represantation of an any error with custom message given via [`constructor`](constructor.md).
 <br>
 
 ## Member functions
 | Method | Description | Member type |
 |--------|-------------|------------------|
 | [`(constructor)`](constructor.md) | Constructs the error instance | Public constructor |
-| [`getPath`](getPath.md) | Returns the path of file where error occured | Public method |
 _______________________________________________________________________________
 ## Inherited from [`salt::BaseError`](../BaseError/README.md)
 | Method | Description | Member type (override) |
@@ -21,9 +20,9 @@ _______________________________________________________________________________
 <br>
 
 ## Example of use
-That example prints out the error message about failed opening file at the path passed into constructor of `FileOpenError` class.
+Below example prints out the error with `'An error occurred when xxx in zzz!'` message and exits the program.
 ```cpp
-eprint(new salt::FileOpenError('path/to/failed/open/file.txt'));
+eprint(new salt::CustomError("An error occurred when xxx in zzz!"));
 ```
 <br>
 

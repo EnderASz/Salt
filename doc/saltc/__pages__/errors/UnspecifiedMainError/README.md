@@ -10,7 +10,7 @@ UnspecifiedMainError class is a represantation of an error occured because main 
 ## Member functions
 | Method | Description | Member type |
 |--------|-------------|------------------|
-| [`(constructor)`](constructor.md) | Constructs the error instance | Public default constructor |
+| `(constructor)` | Constructs the error instance | Public default constructor |
 _______________________________________________________________________________
 ## Inherited from [`salt::CommandLineError`](../CommandLineError/README.md)
 | Method | Description | Member type (override) |

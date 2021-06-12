@@ -10,7 +10,7 @@ CommandLineError class is a represantation of an error occured when SaltC cannot
 ## Member functions
 | Method | Description | Member type |
 |--------|-------------|------------------|
-| [`(constructor)`](constructor.md) | Constructs the error instance | Public default constructor |
+| `(constructor)` | Constructs the error instance | Public default constructor |
 | [`getHelpRecomendation`](getHelpRecommendation.md) | Returns the string recommendation to look into SaltC command line help page. | Public Method |
 _______________________________________________________________________________
 ## Inherited from [`salt::BaseError`](../BaseError/README.md)
