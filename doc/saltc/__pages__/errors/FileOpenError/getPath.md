@@ -1,6 +1,6 @@
 # salt::FileOpenError::getPath method
 ```cpp
-std::string salt::FileOpenError::getMessage();
+std::string salt::FileOpenError::getPath();
 ```
 Returns given via [`salt::FileOpenError` class](README.md) [`constructor`](constructor.md) string path of file which opening failed.
 

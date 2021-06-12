@@ -1,6 +1,6 @@
 # salt::FileOpenError constructor
 ```cpp
-std::string salt::FileOpenError::FileOpenError(std::string filepath);
+std::string salt::FileOpenError::FileOpenError(const std::string& filepath);
 ```
 Constructs a failed open file error pointing to the given filepath.
 

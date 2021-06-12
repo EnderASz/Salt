@@ -8,7 +8,7 @@ Returns string error message about failed interpreting command line options and/
 (None)
 
 ## Return Value
-Concatenated below string error message and return of [`getHelpRecommendation`](getHelpRecommendation.md) member method.<br>
+Concatenated below string error message and return of [`getHelpRecommendation`](../CommandLineError/getHelpRecommendation.md) member method.<br>
     
     "Main file to compile is unspecified. Please specify it. "
 
