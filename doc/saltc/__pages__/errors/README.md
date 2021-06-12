@@ -24,6 +24,7 @@ How you can see it's needed to pass **pointer to error class object** to throw i
 
 ### **Index**
 + [BaseError](BaseError/README.md)
++ [CustomError](CustomError/README.md)
 + [FileOpenError](FileOpenError/README.md)
 + [CommandLineError](CommandLineError/README.md)
 + [UnspecifiedMainError](UnspecifiedMainError/README.md)
