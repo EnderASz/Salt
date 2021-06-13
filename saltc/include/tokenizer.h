@@ -35,7 +35,7 @@ private:
         string str;
     } curr_token = {{0, 0, 0}, ""};
 
-    Token parseToken(TokenType type = TOK_0);
+    Token parseToken(const TokenType& type = TOK_0);
 
     bool skipComment();
 
@@ -43,13 +43,13 @@ private:
 
     void jumpToEnd();
 
-    void jumpTo(size_t idx);
+    void jumpTo(const size_t& idx);
 
     /**
      * Moves current iterator by 'move' value and returns true if current is
      * in range, otherwise false.
      */
-    bool moveCurrent(size_t move = 1);
+    bool moveCurrent(const size_t& move = 1);
 
     /**
      * Pushes current iterator character to curr_token, moves iterator
@@ -74,25 +74,25 @@ private:
      */
     size_t leftToEnd() const;
 
-    string::iterator findFirst(string value) const;
+    string::iterator findFirst(const string& value) const;
 
     bool isTokenBreakChar(char chr) const;
 
     bool isCommentChar() const;
-    bool isCommentChar(string::iterator iterator) const;
-    bool isCommentChar(const char chr) const;
+    bool isCommentChar(const string::iterator& iterator) const;
+    bool isCommentChar(const char& chr) const;
 
     bool isLastChar() const;
-    bool isLastChar(string::iterator iterator) const;
+    bool isLastChar(const string::iterator& iterator) const;
 
     bool isInRange() const;
-    bool isInRange(string::iterator iterator) const;
+    bool isInRange(const string::iterator& iterator) const;
 
     /**
      * Returns true if character on current iterator is
      * equal to passed argument
      */
-    bool isChar(char character);
+    bool isChar(const char& character);
 
     /**
      * Returns true if current is not last character and next character is
@@ -136,10 +136,10 @@ private:
     Token pushFloatDecDigit();
     Token pushOctDigit(
                        size_t* digits_counter = nullptr,
-                       size_t max_digits = 1);
+                       const size_t& max_digits = 1);
     Token pushHexDigit(
                        size_t* digits_counter = nullptr,
-                       size_t max_digits = 1);
+                       const size_t& max_digits = 1);
 
     /** 
      * Returns a token based on static lowercase alpha word or
@@ -153,7 +153,7 @@ private:
     /* Returns index of current iterator in source code */
     size_t getIdx() const;
     /* Returns index of iterator in source code */
-    size_t getIdx(string::iterator iterator) const;
+    size_t getIdx(const string::iterator& iterator) const;
 
     std::array<std::function<Token(void)>, 4> token_getters = {
         std::bind(&Tokenizer::getStringLiteral, this),

@@ -48,7 +48,7 @@ std::vector<Token> Tokenizer::render() {
         while(skipComment() || skipBlank()) {}
         if(!isInRange()) break;
 
-        curr_token.position = InStringPosition(source->code, current);
+        curr_token.position = getCurrentPosition();
         
         for(auto i = token_getters.begin(); i!=token_getters.end(); i++) {
             resetCurrentToken();
@@ -74,7 +74,7 @@ std::vector<Token> Tokenizer::getTokens() {
     return tokens;
 }
 
-Token Tokenizer::parseToken(TokenType type) {
+Token Tokenizer::parseToken(const TokenType& type) {
     if(type == TOK_0) return null_token;
     return token_create(type, curr_token.position, curr_token.str);
 }
@@ -109,10 +109,10 @@ bool Tokenizer::skipBlank(){
 
 void Tokenizer::jumpToEnd() {current = sourceEnd();}
 
-void Tokenizer::jumpTo(size_t idx) {current = sourceBegin()+idx;}
+void Tokenizer::jumpTo(const size_t& idx) {current = sourceBegin()+idx;}
 
 /* move default: 1 */
-bool Tokenizer::moveCurrent(size_t move) {
+bool Tokenizer::moveCurrent(const size_t& move) {
     current += move;
     return isInRange();
 }
@@ -142,7 +142,7 @@ size_t Tokenizer::leftToEnd() const {
     return distance(current, sourceEnd())-1;
 }
 
-string::iterator Tokenizer::findFirst(string value) const {
+string::iterator Tokenizer::findFirst(const string& value) const {
     size_t current_idx = getIdx();
     size_t found = source->code.find(value, current_idx);
     if(found == string::npos) return sourceEnd();
@@ -150,22 +150,22 @@ string::iterator Tokenizer::findFirst(string value) const {
 }
 
 bool Tokenizer::isCommentChar() const {return isCommentChar(current);}
-bool Tokenizer::isCommentChar(string::iterator iterator) const {
+bool Tokenizer::isCommentChar(const string::iterator& iterator) const {
     return isCommentChar(*iterator);
 }
-bool Tokenizer::isCommentChar(const char chr) const {return chr == '#';}
+bool Tokenizer::isCommentChar(const char& chr) const {return chr == '#';}
 
 bool Tokenizer::isLastChar() const {return isLastChar(current);}
-bool Tokenizer::isLastChar(string::iterator iterator) const {
+bool Tokenizer::isLastChar(const string::iterator& iterator) const {
     return distance(iterator, sourceEnd()-1) == 0;
 }
 
 bool Tokenizer::isInRange() const {return isInRange(current);}
-bool Tokenizer::isInRange(string::iterator iterator) const {
+bool Tokenizer::isInRange(const string::iterator& iterator) const {
     return distance(iterator, sourceEnd()-1) >= 0;
 }
 
-bool Tokenizer::isChar(char character) {return *current == character;}
+bool Tokenizer::isChar(const char& character) {return *current == character;}
 
 bool Tokenizer::nextIsDigit() const {
     return !isLastChar() && isdigit(*(current+1));
@@ -307,7 +307,7 @@ Token Tokenizer::pushFloatDecDigit() {
  * digits_counter default: nullptr
  * max_digits default: 1
  */
-Token Tokenizer::pushOctDigit(size_t* digits_counter, size_t max_digits) {
+Token Tokenizer::pushOctDigit(size_t* digits_counter, const size_t& max_digits) {
     if(!isInRange() || current_num_literal != OCT)
         throw "#TODO: Method pushOctDigit can not be called now.";
     if(!isodigit(*current)) {
@@ -334,7 +334,7 @@ Token Tokenizer::pushOctDigit(size_t* digits_counter, size_t max_digits) {
  * digits_counter default: nullptr
  * max_digits default: 1
  */
-Token Tokenizer::pushHexDigit(size_t* digits_counter, size_t max_digits) {
+Token Tokenizer::pushHexDigit(size_t* digits_counter, const size_t& max_digits) {
     if(!isInRange() || current_num_literal != HEX)
         throw "#TODO: Method pushHexDigit can not be called now.";
     if(!isxdigit(*current)) {
@@ -514,7 +514,7 @@ Token Tokenizer::getSymbolToken() {
 }
 
 size_t Tokenizer::getIdx() const {return getIdx(current);}
-size_t Tokenizer::getIdx(string::iterator iterator) const {
+size_t Tokenizer::getIdx(const string::iterator& iterator) const {
     return distance(sourceBegin(), iterator);
 } // salt::Tokenizer
 
