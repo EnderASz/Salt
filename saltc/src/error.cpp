@@ -34,20 +34,6 @@ string FileOpenError::getMessage() {
 }
 #pragma endregion FileOpenError
 
-
-#pragma region SourceError
-SourceError::SourceError(const SourceFile& source_file)
-    :source_file(const_cast<SourceFile*>(&source_file)) {}
-
-SourceFile* SourceError::getSource() {return source_file;}
-
-string SourceError::getMessage() {
-    return "An error occured in '" +
-        getSource()->getFilePath() +
-        "' source.";
-}
-#pragma endregion SourceError
-
 #pragma region CommandLineError
 string CommandLineError::getMessage() {
     return "An error occured in command line. " +
@@ -66,9 +52,23 @@ string UnspecifiedMainError::getMessage() {
 }
 #pragma endregion UnspecifiedMainError
 
+#pragma region CommandLineOptionError
+CommandLineOptionError::CommandLineOptionError(const string& option)
+    :option(option) {}
+
+string CommandLineOptionError::getMessage() {
+    return "A command line option '" +
+        getOption() +
+        "' cannot be interpreted correctly. " +
+        getHelpRecomendation();
+}
+
+string CommandLineOptionError::getOption() {return option;}
+#pragma endregion CommandLineOptionError
+
 #pragma region UnrecognizedOptionError
 UnrecognizedOptionError::UnrecognizedOptionError(const string& option)
-    :option(option) {}
+    :CommandLineOptionError(option) {}
 
 string UnrecognizedOptionError::getMessage() {
     return "Unrecognized command line option '" +
@@ -76,9 +76,32 @@ string UnrecognizedOptionError::getMessage() {
         "'. " +
         getHelpRecomendation();
 }
-
-string UnrecognizedOptionError::getOption() {return option;}
 #pragma endregion UnrecognizedOptionError
+
+#pragma region MissingOptionArgumentError
+MissingOptionArgumentError::MissingOptionArgumentError(const string& option)
+    :CommandLineOptionError(option) {}
+
+string MissingOptionArgumentError::getMessage() {
+    return "Missing argument of an option '" +
+        getOption() +
+        "'. " +
+        getHelpRecomendation();
+}
+#pragma endregion MissingOptionArgumentError
+
+#pragma region SourceError
+SourceError::SourceError(const SourceFile& source_file)
+    :source_file(const_cast<SourceFile*>(&source_file)) {}
+
+SourceFile* SourceError::getSource() {return source_file;}
+
+string SourceError::getMessage() {
+    return "An error occured in '" +
+        getSource()->getFilePath() +
+        "' source.";
+}
+#pragma endregion SourceError
 
 #pragma region InSourceError
 InSourceError::InSourceError(

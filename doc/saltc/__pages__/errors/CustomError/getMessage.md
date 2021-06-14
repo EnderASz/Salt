@@ -1,6 +1,7 @@
 # salt::CustomError::getMessage method
+##### Defined by "error.h" 
 ```cpp
-std::string salt::CustomError::getMessage() override;
+virtual std::string salt::CustomError::getMessage() override;
 ```
 Returns string custom error message given via [`constructor`](constructor.md) of [`salt::CustomError` class](README.md).
 
@@ -11,7 +12,7 @@ Returns string custom error message given via [`constructor`](constructor.md) of
 String error message given via [`constructor`](constructor.md) of [`salt::CustomError` class](README.md).
 
 ## Notes
-It's an overridden version of [`getMessage`](../BaseError/getMessage.md) method inherited from [`salt::BaseError`](../BaseError/README.md) virtual method.
+It's an overridden version of [`getMessage`](../BaseError/getMessage.md) virtual method inherited from [`salt::BaseError`](../BaseError/README.md).
 
 ## See also
 + [SaltC errors](../README.md)

@@ -1,4 +1,5 @@
 # salt::FileOpenError::getPath method
+##### Defined by "error.h" 
 ```cpp
 std::string salt::FileOpenError::getPath();
 ```

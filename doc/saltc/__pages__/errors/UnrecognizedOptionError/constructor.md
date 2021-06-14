@@ -1,4 +1,5 @@
 # salt::UnrecognizedOptionError constructor
+##### Defined by "error.h" 
 ```cpp
 std::string salt::UnrecognizedOptionError::UnrecognizedOptionError(const string& option);
 ```
@@ -16,7 +17,7 @@ while(!args.empty()) {
     }
     // ...
     else {
-        eprint(new UnrecognizedOptionError(arg));
+        eprint(UnrecognizedOptionError, arg);
     }
 }
 ```

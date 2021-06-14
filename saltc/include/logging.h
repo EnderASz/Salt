@@ -8,6 +8,7 @@
 #if (defined(_WIN32) || defined(__linux__))
     #include <map>
     #include <string>
+    #include <memory>
     #include "utils.h"
     #include "error.h"
 
@@ -127,11 +128,16 @@
         printf(__VA_ARGS__);                                                  \
         printf("\n");                                                         \
     }
-    void _eprint(
-        salt::BaseError* error,
-        const char* file,
-        const char* location);
-    #define eprint(ERR) _eprint(ERR, __FILENAME__, __FUNCTION__)
+    #define eprint(ERR_CLASS, ...)                                            \
+    {                                                                         \
+        std::unique_ptr<salt::BaseError> error(                               \
+            new salt::ERR_CLASS(__VA_ARGS__));                                \
+        print_log_location(__FILENAME__, __FUNCTION__);                       \
+        print_log_prefix(ERROR);                                              \
+        printf(error->getMessage().c_str());                                  \
+        printf("\n");                                                         \
+        exit(EXIT_FAILURE);                                                   \
+    }
 #endif
 
 #ifndef setup_windows_logging

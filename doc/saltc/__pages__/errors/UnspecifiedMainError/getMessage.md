@@ -1,6 +1,7 @@
 # salt::UnspecifiedMainError::getMessage method
+##### Defined by "error.h" 
 ```cpp
-std::string salt::UnspecifiedMainError::getMessage() override;
+virtual std::string salt::UnspecifiedMainError::getMessage() override;
 ```
 Returns string error message about failed interpreting command line options and/or arguments.
 
@@ -13,7 +14,7 @@ Concatenated below string error message and return of [`getHelpRecommendation`](
     "Main file to compile is unspecified. Please specify it. "
 
 ## Notes
-It's an overridden version of [`getMessage`](../CommandLineError/getMessage.md) method inherited from [`salt::CommandLineError`](../CommandLineError/README.md) virtual method.
+It's an overridden version of [`getMessage`](../BaseError/getMessage.md) virtual method inherited from [`salt::CommandLineError`](../CommandLineError/README.md).
 
 ## See also
 + [SaltC errors](../README.md)

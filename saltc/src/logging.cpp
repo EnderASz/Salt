@@ -90,19 +90,4 @@ using std::string;
         print_max_right = location_len;
     }
 
-    
-
-    void _eprint(
-        salt::BaseError* error,
-        const char* file,
-        const char* location
-    ) {
-        print_log_location(file, location);
-        print_log_prefix(ERROR);
-        printf(error->getMessage().c_str());
-        delete error;
-        printf("\n");
-        exit(EXIT_FAILURE);   
-    }
-
 #endif

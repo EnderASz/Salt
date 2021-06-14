@@ -43,14 +43,17 @@ void Params::initObject(std::queue<string> args) {
         }
         else if (Params::arg_comp(arg, "--output", "-o")) {
             dprint("Setting up output file path");
+            if(args.empty()) {
+                eprint(MissingOptionArgumentError, arg);
+            }
             output_path = pop<string>(args);
             dprint(
                 "Output file path setted up at: %s",
                 output_path.c_str());
         }
-        else if (arg[0] == '-')
-            eprint(new UnrecognizedOptionError(arg));
-        else { // Nameless arguments
+        else if (arg[0] == '-') {
+            eprint(UnrecognizedOptionError, arg);
+        } else { // Nameless arguments
             if (input_path.empty()) {
                 dprint("Setting up input file path");
                 input_path = arg;
@@ -68,7 +71,7 @@ void Params::initObject(std::queue<string> args) {
     }
 
     if (input_path.empty()) {
-        eprint(new UnspecifiedMainError());
+        eprint(UnspecifiedMainError);
     }
 }
 

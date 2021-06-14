@@ -1,4 +1,5 @@
 # salt::BaseError::getMessage Pure Virtual method
+##### Defined by "error.h" 
 ```cpp
 virtual std::string salt::BaseError::getMessage();
 ```

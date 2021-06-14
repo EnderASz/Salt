@@ -1,4 +1,5 @@
 # salt::CommandLineError::getMessage method
+##### Defined by "error.h" 
 ```cpp
 std::string salt::CommandLineError::getHelpRecommendation();
 ```

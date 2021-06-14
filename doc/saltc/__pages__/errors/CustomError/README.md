@@ -1,4 +1,5 @@
 # salt::CustomError class
+##### Defined by "error.h" 
 ```cpp
 class CustomError;
 ```
@@ -16,13 +17,13 @@ _______________________________________________________________________________
 | Method | Description | Member type (override) |
 |--------|-------------|------------------|
 | `(deconstructor)` | Deconstructs the error instance | Public Virtual default deconstructor |
-| [`getMessage`](../BaseError/getMessage.md) <sub><sup>[(override)](getMessage.md)</sup></sub> | Returns the error message | Public Pure Virtual method (Public method) |
+| [`getMessage`](../BaseError/getMessage.md) <sub><sup>[(override)](getMessage.md)</sup></sub> | Returns the error message | Public Pure Virtual method (Public Virtual method) |
 <br>
 
 ## Example of use
 Below example prints out the error with `'An error occurred when xxx in zzz!'` message and exits the program.
 ```cpp
-eprint(new salt::CustomError("An error occurred when xxx in zzz!"));
+eprint(CustomError, "An error occurred when xxx in zzz!");
 ```
 <br>
 

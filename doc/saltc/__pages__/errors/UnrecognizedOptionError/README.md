@@ -1,4 +1,5 @@
 # salt::UnrecognizedOptionError class
+##### Defined by "error.h" 
 ```cpp
 class UnrecognizedOptionError;
 ```
@@ -11,20 +12,20 @@ UnrecognizedOptionError class is a represantation of an error occured because an
 | Method | Description | Member type |
 |--------|-------------|------------------|
 | [`(constructor)`](constructor.md) | Constructs the error instance | Public constructor |
-| [`getOption`](getOption.md) | Returns unrecognized command line option string | Public method |
 _______________________________________________________________________________
 ## Inherited from [`salt::CommandLineError`](../CommandLineError/README.md)
-| Method | Description | Member type (override) |
+| Method | Description | Member type |
 |--------|-------------|------------------|
 | `(deconstructor)` | Deconstructs the error instance | Public Virtual default deconstructor |
-| [`getMessage`](../BaseError/getMessage.md) <sub><sup>[(override)](getMessage.md)</sup></sub> | Returns the error message | Public Virtual method (Public method) |
+| [`getMessage`](../BaseError/getMessage.md) <sub><sup>[(override)](getMessage.md)</sup></sub> | Returns the error message | Public Virtual method |
 | [`getHelpRecommendation`](../CommandLineError/getHelpRecommendation.md) | Returns the string recommendation to look into SaltC command line help page. | Public method |
+| [`getOption`](../CommandLineOptionError/getOption.md) | Returns string command line option which cannot be recognized | Public method |
 <br>
 
 ## Example of use
 That example prints out the error message about unrecognized command line option `'--IAmNotValidOption'`.
 ```cpp
-eprint(new salt::UnrecognizedOptionError("--IAmNotValidOption"));
+eprint(UnrecognizedOptionError, "--IAmNotValidOption");
 ```
 <br>
 

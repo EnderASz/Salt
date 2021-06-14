@@ -1,25 +1,21 @@
 # SaltC errors
-##### Implemented by "error.h" 
 
 ## Basic usage of errors
 SaltC errors classes were created to use with [`eprint`](<eprint-link-placeholder>) macro provided by
     [logging module](<logging-module-link-placeholder>) which prints out an error message based on provided parameters and choosen class of error and than closing compiler after it in most safety and easy-to-use possible way.
 
-To use error with logging module you will need to include two saltc header files:
-+ [`logging.h`](<logging-module-link-placeholder>)
-+ `error.h`
+To use error with logging module you will need to include only one saltc header file: [`logging.h`](<logging-module-link-placeholder>).
 
 ### **Example usage of eprint and any error class.**
 ```cpp
-eprint(new AnyErrorClass(error_parameters...));
+eprint(AnyErrorClassName, error_parameters...);
 ```
 
-How you can see it's needed to pass **pointer to error class object** to throw it,
-    but it's fully safe because when you calling [`eprint`](<eprint-link-placeholder>) it's cleans that pointer at the moment before closing program.<br>
-    So you may not carry about pointer passed to [`eprint`](<eprint-link-placeholder>) and storing it. That's why I used `new` C++ keyword here.
+How you can see it's needed to pass only error class name and their constructor parameters to throw it. Everything is safe in this beacause eprint macro takes responsibility to create an error object from pointed class name and given parameters.
 
 
 ## Error classes
+##### Defined by "error.h"
 ![Error classes diagram](../../__assets__/errors/errors.drawio.svg)
 
 ### **Index**
@@ -28,6 +24,7 @@ How you can see it's needed to pass **pointer to error class object** to throw i
 + [FileOpenError](FileOpenError/README.md)
 + [CommandLineError](CommandLineError/README.md)
 + [UnspecifiedMainError](UnspecifiedMainError/README.md)
++ [CommandLineOptionError](CommandLineOptionError/README.md)
 + [UnrecognizedOptionError](UnrecognizedOptionError/README.md)
 + [SourceError](SourceError/README.md)
 + [OutOfSourceRangeError](OutOfSourceRangeError/README.md)

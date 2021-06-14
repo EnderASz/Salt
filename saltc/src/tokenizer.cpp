@@ -56,10 +56,11 @@ std::vector<Token> Tokenizer::render() {
             if(!parsed_token.isNothing()) break;
         }
         if(parsed_token.isNothing())
-            eprint(new UnknownTokenError(
+            eprint(
+                UnknownTokenError,
                 curr_token.position,
                 *source,
-                curr_token.str));
+                curr_token.str);
         tokens.push_back(parsed_token);
         dprint(
             "%s parsed to %s token",
@@ -86,9 +87,10 @@ bool Tokenizer::skipComment() {
         if(isLastChar()) jumpToEnd();
         if(*(current+1) == '[') {
             string::iterator close = findFirst("]#");
-            if(!isInRange(close)) eprint(new UnclosedCommentError(
+            if(!isInRange(close)) eprint(
+                UnclosedCommentError,
                 InStringPosition(source->code, current),
-                *source));
+                *source);
             current = close+2;
         }
         else current = findFirst("\n")+1;
@@ -176,7 +178,7 @@ bool Tokenizer::nextIsXDigit() const {
 }
 
 Token Tokenizer::getStringLiteral() {
-    if(!isInRange()) eprint(new OutOfSourceRangeError(*source));
+    if(!isInRange()) eprint(OutOfSourceRangeError, *source);
     resetCurrentToken();
     if(isChar('r')) {
         if(isLastChar()) return null_token;
@@ -197,12 +199,12 @@ Token Tokenizer::getStringLiteral() {
             pushCurrentCharacter();
         pushCurrentCharacter();
     }
-    if(!closed) eprint(new UnclosedStringError(curr_token.position, *source));
+    if(!closed) eprint(UnclosedStringError, curr_token.position, *source);
     return token_create(TOKL_STRING, curr_token.position, curr_token.str);
 }
 
 Token Tokenizer::getNumLiteral() {
-    if(!isInRange()) eprint(new OutOfSourceRangeError(*source));
+    if(!isInRange()) eprint(OutOfSourceRangeError, *source);
     if(!isdigit(*current)) return null_token;
     resetCurrentToken();
 
@@ -214,10 +216,11 @@ Token Tokenizer::getNumLiteral() {
             return token_create(TOKL_INT, curr_token.position, curr_token.str);
         if(isChar('x') || isChar('X')) {
             if(!nextIsXDigit())
-                eprint(new InvalidLiteralError(
+                eprint(
+                    InvalidLiteralError,
                     curr_token.position,
                     *source,
-                    "hexadecimal number"));
+                    "hexadecimal number");
             pushCurrentCharacter();
             current_num_literal = HEX;
         } else {
@@ -272,10 +275,11 @@ Token Tokenizer::pushDecDigit() {
     }
     else if(!isdigit(*current)) {
         if(curr_token.str.empty())
-            eprint(new InvalidLiteralError(
+            eprint(
+                InvalidLiteralError,
                 curr_token.position,
                 *source,
-                "decimal number"));
+                "decimal number");
         return token_create(
                 TOKL_INT,
                 curr_token.position,
@@ -290,10 +294,11 @@ Token Tokenizer::pushFloatDecDigit() {
         throw "#TODO: Method pushFloatDecDigit can not be called now.";
     if(!isdigit(*current)) {
         if(curr_token.str.empty())
-            eprint(new InvalidLiteralError(
+            eprint(
+                InvalidLiteralError,
                 curr_token.position,
                 *source,
-                "decimal float number"));
+                "decimal float number");
         return token_create(
             TOKL_FLOAT,
             curr_token.position,
@@ -312,10 +317,11 @@ Token Tokenizer::pushOctDigit(size_t* digits_counter, const size_t& max_digits) 
         throw "#TODO: Method pushOctDigit can not be called now.";
     if(!isodigit(*current)) {
         if(curr_token.str.empty())
-            eprint(new InvalidLiteralError(
+            eprint(
+                InvalidLiteralError,
                 curr_token.position,
                 *source,
-                "octal number"));
+                "octal number");
         return token_create(
             TOKL_INT,
             curr_token.position,
@@ -339,10 +345,11 @@ Token Tokenizer::pushHexDigit(size_t* digits_counter, const size_t& max_digits) 
         throw "#TODO: Method pushHexDigit can not be called now.";
     if(!isxdigit(*current)) {
         if(curr_token.str.empty())
-            eprint(new InvalidLiteralError(
+            eprint(
+                InvalidLiteralError,
                 curr_token.position,
                 *source,
-                "hexadecimal number"));
+                "hexadecimal number");
         return token_create(
             TOKL_INT,
             curr_token.position,
@@ -358,7 +365,7 @@ Token Tokenizer::pushHexDigit(size_t* digits_counter, const size_t& max_digits) 
 }
 
 Token Tokenizer::getWordToken() {
-    if(!isInRange()) eprint(new OutOfSourceRangeError(*source));
+    if(!isInRange()) eprint(OutOfSourceRangeError, *source);
     if(!(isalpha(*current) || isChar('_'))) return null_token;
     resetCurrentToken();
     pushCurrentCharacter();
@@ -373,7 +380,7 @@ Token Tokenizer::getWordToken() {
 }
 
 Token Tokenizer::getSymbolToken() {
-    if(!isInRange()) eprint(new OutOfSourceRangeError(*source));
+    if(!isInRange()) eprint(OutOfSourceRangeError, *source);
     if(!ispunct(*current)) return null_token;
     resetCurrentToken();
     

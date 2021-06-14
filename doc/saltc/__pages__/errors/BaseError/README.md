@@ -1,4 +1,5 @@
 # salt::BaseError class
+##### Defined by "error.h" 
 ```cpp
 class BaseError;
 ```
@@ -24,7 +25,7 @@ Always when instance of child of this class is passes to [`eprint`](<eprint-link
 ```cpp
 class NewError : salt::BaseError {
 public:
-    std::string getMessage() {
+    virtual std::string getMessage() {
         return "An error message."
     }
 }

@@ -1,4 +1,5 @@
 # salt::CommandLineError class
+##### Defined by "error.h" 
 ```cpp
 class CommandLineError;
 ```
@@ -21,9 +22,9 @@ _______________________________________________________________________________
 <br>
 
 ## Example of use
-That example prints out the error message about a mistake in command line.
+That example prints out the error message about a command line interpretation problem.
 ```cpp
-eprint(new salt::CommandLineError());
+eprint(CommandLineError);
 ```
 <br>
 

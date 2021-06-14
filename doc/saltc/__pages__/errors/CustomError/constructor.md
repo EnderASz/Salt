@@ -1,4 +1,5 @@
 # salt::CustomError constructor
+##### Defined by "error.h" 
 ```cpp
 std::string salt::CustomError::CustomError(const string& message);
 ```
@@ -10,7 +11,7 @@ Constructs an error with given message.
 ## Example of use
 Below example prints out the error with `'An error occurred when xxx in zzz!'` message and exits the program.
 ```cpp
-eprint(new salt::CustomError("An error occurred when xxx in zzz!"));
+eprint(CustomError, "An error occurred when xxx in zzz!");
 ```
 
 ## See also

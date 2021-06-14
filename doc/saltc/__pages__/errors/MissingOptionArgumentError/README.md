@@ -1,30 +1,31 @@
-# salt::UnspecifiedMainError class
+# salt::MissingOptionArgumentError class
 ##### Defined by "error.h" 
 ```cpp
-class UnspecifiedMainError;
+class MissingOptionArgumentError;
 ```
-![UnspecifiedMainError Inheritance](../../../__assets__/errors/UnspecifiedMainError/inheritance.drawio.svg)
+![MissingOptionArgumentError Inheritance](../../../__assets__/errors/MissingOptionArgumentError/inheritance.drawio.svg)
 
-UnspecifiedMainError class is a represantation of an error occured because main source file was not specified via command line argument.
+MissingOptionArgumentError class is a represantation of an error occured because any command line option which needs an additional argument didn't receive it.
 <br>
 
 ## Member functions
 | Method | Description | Member type |
 |--------|-------------|------------------|
-| `(constructor)` | Constructs the error instance | Public default constructor |
+| [`(constructor)`](constructor.md) | Constructs the error instance | Public constructor |
 _______________________________________________________________________________
-## Inherited from [`salt::CommandLineError`](../CommandLineError/README.md)
+## Inherited from [`salt::UnrecognizedOptionError`](../CommandLineError/README.md)
 | Method | Description | Member type |
 |--------|-------------|------------------|
 | `(deconstructor)` | Deconstructs the error instance | Public Virtual default deconstructor |
 | [`getMessage`](../BaseError/getMessage.md) <sub><sup>[(override)](getMessage.md)</sup></sub> | Returns the error message | Public Virtual method |
 | [`getHelpRecommendation`](../CommandLineError/getHelpRecommendation.md) | Returns the string recommendation to look into SaltC command line help page. | Public method |
+| [`getOption`](../CommandLineOptionError/getOption.md) | Returns string command line option for which argument is missing | Public method |
 <br>
 
 ## Example of use
-That example prints out the error message about not passed main source file path into command line.
+That example prints out the error message about missing argument for `--output` command line option.
 ```cpp
-eprint(UnspecifiedMainError);
+eprint(MissingOptionArgumentError, "--output");
 ```
 <br>
 

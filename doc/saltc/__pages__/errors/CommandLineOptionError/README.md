@@ -1,17 +1,18 @@
-# salt::UnspecifiedMainError class
+# salt::CommandLineOptionError class
 ##### Defined by "error.h" 
 ```cpp
-class UnspecifiedMainError;
+class CommandLineOptionError;
 ```
-![UnspecifiedMainError Inheritance](../../../__assets__/errors/UnspecifiedMainError/inheritance.drawio.svg)
+![CommandLineOptionError Inheritance](../../../__assets__/errors/CommandLineOptionError/inheritance.drawio.svg)
 
-UnspecifiedMainError class is a represantation of an error occured because main source file was not specified via command line argument.
+CommandLineOptionError class is a represantation of an error occured when tried to interpret any command line option.
 <br>
 
 ## Member functions
 | Method | Description | Member type |
 |--------|-------------|------------------|
-| `(constructor)` | Constructs the error instance | Public default constructor |
+| [`(constructor)`](constructor.md) | Constructs the error instance | Public constructor |
+| [`getOption`](getOption.md) | Returns string command line option than cannot be interpreted successfull | Public method |
 _______________________________________________________________________________
 ## Inherited from [`salt::CommandLineError`](../CommandLineError/README.md)
 | Method | Description | Member type |
@@ -22,9 +23,9 @@ _______________________________________________________________________________
 <br>
 
 ## Example of use
-That example prints out the error message about not passed main source file path into command line.
+That example prints out the error message about unrecognized command line option `'--IAmNotValidOption'`.
 ```cpp
-eprint(UnspecifiedMainError);
+eprint(UnrecognizedOptionError, "--IAmNotValidOption");
 ```
 <br>
 

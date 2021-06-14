@@ -37,7 +37,7 @@ public:
     CustomError(const string& message);
 
     /** Inherited: Returns an error message */
-    string getMessage() override;
+    virtual string getMessage() override;
 };
 
 
@@ -52,7 +52,7 @@ public:
     string getFilepath();
 
     /** Inherited: Returns an error message */
-    string getMessage() override;
+    virtual string getMessage() override;
 };
 
 
@@ -68,12 +68,25 @@ public:
 
 class UnspecifiedMainError : public CommandLineError {
     /** Inherited: Returns an error message */
-    string getMessage() override;
+    virtual string getMessage() override;
 };
 
+class CommandLineOptionError : public CommandLineError {
+protected:
+    string option;
+public:
+    /** Unrecognized Option Error constructor */
+    CommandLineOptionError(const string& option);
 
-class UnrecognizedOptionError : public CommandLineError {
-private:
+    /** Inherited: Returns an error message */
+    virtual string getMessage() override;
+
+    /** Returns unrecognized option */
+    string getOption();
+};
+
+class UnrecognizedOptionError : public CommandLineOptionError {
+protected:
     string option;
 public:
     /** Unrecognized Option Error constructor */
@@ -81,9 +94,13 @@ public:
 
     /** Inherited: Returns an error message */
     virtual string getMessage() override;
+};
 
-    /** Returns unrecognized option */
-    string getOption();
+
+class MissingOptionArgumentError : public CommandLineOptionError {
+public:
+    MissingOptionArgumentError(const string& option);
+    virtual string getMessage() override;
 };
 
 
@@ -143,7 +160,7 @@ public:
     );
 
     /** Inherited: Returns an error message */
-    string getMessage() override;
+    virtual string getMessage() override;
 };
 
 
@@ -156,7 +173,7 @@ public:
     );
 
     /** Inherited: Returns an error message */
-    string getMessage() override;
+    virtual string getMessage() override;
 };
 
 
@@ -189,7 +206,7 @@ public:
     TokenType getTokenType();
 
     /** Inherited: Returns an error message */
-    string getMessage() override;
+    virtual string getMessage() override;
 };
 
 
@@ -212,7 +229,7 @@ public:
     string getTokenStr();
 
     /** Inherited: Returns an error message */
-    string getMessage() override;
+    virtual string getMessage() override;
 };
 
 
@@ -230,7 +247,7 @@ public:
     string getLiteralName();
     
     /** Inherited: Returns an error message */
-    string getMessage() override;
+    virtual string getMessage() override;
 };
 
 
@@ -249,7 +266,7 @@ public:
     int getMaxLenght();
 
     /** Inherited: Returns an error message */
-    string getMessage() override;
+    virtual string getMessage() override;
 };
 
 };

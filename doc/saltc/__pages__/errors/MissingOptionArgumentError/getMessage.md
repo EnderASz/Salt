@@ -14,7 +14,7 @@ Concatenated string error message according to the below pattern and return of [
     "Unrecognized command line option '<given via constructor option/argument>'. "
 
 ## Notes
-It's an overridden version of [`getMessage`](../BaseError/getMessage.md) virtual method inherited from [`salt::CommandLineError`](../CommandLineOptionError/README.md).
+It's an overridden version of [`getMessage`](../BaseError/getMessage.md) virtual method inherited from [`salt::CommandLineOptionError`](../CommandLineOptionError/README.md).
 
 ## See also
 + [SaltC errors](../README.md)

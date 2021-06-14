@@ -1,4 +1,5 @@
 # salt::FileOpenError class
+##### Defined by "error.h" 
 ```cpp
 class FileOpenError;
 ```
@@ -17,13 +18,13 @@ _______________________________________________________________________________
 | Method | Description | Member type (override) |
 |--------|-------------|------------------|
 | `(deconstructor)` | Deconstructs the error instance | Public Virtual default deconstructor |
-| [`getMessage`](../BaseError/getMessage.md) <sub><sup>[(override)](getMessage.md)</sup></sub> | Returns the error message | Public Pure Virtual method (Public method) |
+| [`getMessage`](../BaseError/getMessage.md) <sub><sup>[(override)](getMessage.md)</sup></sub> | Returns the error message | Public Pure Virtual method (Public Virtual method) |
 <br>
 
 ## Example of use
 That example prints out the error message about failed opening file at the path passed into constructor of `FileOpenError` class.
 ```cpp
-eprint(new salt::FileOpenError('path/to/failed/open/file.txt'));
+eprint(FileOpenError, "path/to/failed/open/file.txt");
 ```
 <br>
 
