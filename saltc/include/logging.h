@@ -98,7 +98,7 @@
         WARNING,
         ERROR
     };
-    extern std::map<LogLevel, LogLevelPrefix> log_level_prefix;
+    extern const std::map<LogLevel, LogLevelPrefix> log_level_prefix;
     void print_log_prefix(LogLevel log_level);
 
 

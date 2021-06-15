@@ -175,7 +175,7 @@ public:
      * there so the length of the list can be easily returned. Internally it 
      * uses a std::vector<Token> or a Token*, depending on the implementation.
      */
-    std::vector<Token> render();
+    const std::vector<Token>& render();
 
     std::vector<Token> getTokens();
 

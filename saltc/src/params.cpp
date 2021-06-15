@@ -58,12 +58,12 @@ void Params::initObject(std::queue<string> args) {
                 dprint("Setting up input file path");
                 input_path = arg;
                 dprint(
-                    "Output file path setted up at: %s",
+                    "Input file path set up at: %s",
                     input_path.c_str());
             }
             else {
                 wprint(
-                    "Argument '%s' can not be parsed now. "
+                    "Argument '%s' cannot be parsed now. "
                     "This will be implemented in a future",
                     arg.c_str());
             }

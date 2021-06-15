@@ -9,10 +9,7 @@
 namespace salt
 {
 
-std::map<string, TokenType> static_word_token_types {
-    // Access keywords
-    {"public", KW_PUBLIC},
-    {"private", KW_PRIVATE},
+const std::map<string, TokenType> static_word_token_types {
 
     // Flow control keywords
     {"if", KW_IF},
@@ -56,24 +53,24 @@ std::map<string, TokenType> static_word_token_types {
     {"null", TOKL_NULL}
 };
 
-std::map<char, TokenType> bracket_token_types {
-    {'(', BKT_ROUNDL},
-    {')', BKT_ROUNDR},
-    {'{', BKT_CULRL},
-    {'}', BKT_CULRR},
-    {'[', BKT_SQUAREL},
-    {']', BKT_SQUARER},
+const std::map<char, TokenType> bracket_token_types {
+    {'(',           BKT_ROUNDL},
+    {')',           BKT_ROUNDR},
+    {'{',           BKT_CULRL},
+    {'}',           BKT_CULRR},
+    {'[',           BKT_SQUAREL},
+    {']',           BKT_SQUARER},
 };
 
-std::map<char, TokenType> single_symbol_token_types {
-    {':', OP_COLON},
-    {';', OP_SEMIC},
-    {',', OP_COMMA},
-    {'.', OP_DOT},
-    {'!', MULTOP_NOT}
+const std::map<char, TokenType> single_symbol_token_types {
+    {':',           OP_COLON},
+    {';',           OP_SEMIC},
+    {',',           OP_COMMA},
+    {'.',           OP_DOT},
+    {'!',           MULTOP_NOT}
 };
 
-std::map<TokenType, string> token_names = {
+const std::map<TokenType, string> token_names {
     {TOK_0,         "TOK_0"},
 
     // Access keywords

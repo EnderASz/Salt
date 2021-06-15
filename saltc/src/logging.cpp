@@ -58,7 +58,7 @@ using std::string;
         const char* LIGHT_WHITE =   "\e[107m";
     };
 
-    std::map<LogLevel, LogLevelPrefix> log_level_prefix = {
+    const std::map<LogLevel, LogLevelPrefix> log_level_prefix {
         {DEBUG, {"Debug", font_styles::YELLOW}},
         {INFO, {"Info", font_styles::LIGHT_CYAN}},
         {WARNING, {"Warning", font_styles::MAGENTA}},

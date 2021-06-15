@@ -124,11 +124,11 @@ enum TokenType
 
 }; // salt::tokenizer::TokenType
 
-extern std::map<string, TokenType> static_word_token_types;
-extern std::map<char, TokenType> bracket_token_types;
-extern std::map<char, TokenType> single_symbol_token_types;
+extern const std::map<string, TokenType> static_word_token_types;
+extern const std::map<char, TokenType> bracket_token_types;
+extern const std::map<char, TokenType> single_symbol_token_types;
 
-extern std::map<TokenType, string> token_names;
+extern const std::map<TokenType, string> token_names;
  
 /**
  * The token type stores a single token, which can than be turned

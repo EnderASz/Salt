@@ -195,7 +195,7 @@ string UnexpectedTokenError::getMessage() {
     return "Unexpected token " +
         getTokenStr() +
         " of type " +
-        token_names[getTokenType()] +
+        token_names.at(getTokenType()) +
         " " +
         getLocationString() +
         ".";

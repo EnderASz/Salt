@@ -6,7 +6,6 @@
 
 #include "../include/source_file.h"
 #include "../include/utils.h"
-#include "../include/special_char.h"
 #include "../include/logging.h"
 #include "../include/error.h"
 
@@ -40,7 +39,7 @@ Tokenizer::Tokenizer(SourceFile& source_file): source(&source_file) {
  * there so the length of the list can be easily returned. Internally it 
  * uses a std::vector<Token> or a Token*, depending on the implementation.
  */
-std::vector<Token> Tokenizer::render() {
+const std::vector<Token>& Tokenizer::render() {
     current = sourceBegin();
 
     while(isInRange(current)) {
@@ -65,7 +64,7 @@ std::vector<Token> Tokenizer::render() {
         dprint(
             "%s parsed to %s token",
             tokens.rbegin()->value.c_str(),
-            token_names[tokens.rbegin()->type].c_str());
+            token_names.at(tokens.rbegin()->type).c_str());
     }
     
     return tokens;
