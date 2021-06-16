@@ -1,0 +1,5 @@
+-xc++
+-I
+/usr/include/c++/11.1.0
+-I
+/mnt/c/Users/fiedo/Downloads/Salt/saltc/include
