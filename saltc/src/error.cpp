@@ -138,7 +138,7 @@ OutOfSourceRangeError::OutOfSourceRangeError(const SourceFile& source_file)
     :SourceError(source_file) {}
 
 string OutOfSourceRangeError::getMessage() {
-    return "Tried to get token out of range '" +
+    return "Tried to get data out of range '" +
         getSource()->getFilePath() +
         "' source.";
 }

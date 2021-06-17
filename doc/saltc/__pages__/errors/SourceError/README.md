@@ -15,10 +15,10 @@ SourceError class is a represantation of an error occured for non specified reas
 | [`getSource`](getSource.md) | Returns a pointer to the Salt source file object affected by this error | Public method |
 _______________________________________________________________________________
 ## Inherited from [`salt::BaseError`](../BaseError/README.md)
-| Method | Description | Member type |
+| Method | Description | Member type (override) |
 |--------|-------------|------------------|
 | `(deconstructor)` | Deconstructs the error instance | Public Virtual default deconstructor |
-| [`getMessage`](../BaseError/getMessage.md) <sub><sup>[(override)](getMessage.md)</sup></sub> | Returns the error message | Public Pure Virtual method |
+| [`getMessage`](../BaseError/getMessage.md) <sub><sup>[(override)](getMessage.md)</sup></sub> | Returns the error message | Public Pure Virtual method (Public Virtual method) |
 <br>
 
 ## Example of use

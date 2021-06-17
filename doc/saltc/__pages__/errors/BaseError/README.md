@@ -23,7 +23,7 @@ Always when instance of child of this class is passes to [`eprint`](<eprint-link
 
 ## Example of use
 ```cpp
-class NewError : salt::BaseError {
+class NewError : public salt::BaseError {
 public:
     virtual std::string getMessage() {
         return "An error message."
