@@ -23,6 +23,24 @@ namespace salt
  */
 class Tokenizer
 {
+
+public:
+    /**
+     * Tokenzizer constructor. A new instance is supposed to be created for
+     * every new string that should be parsed. After initializing the object,
+     * you can then call Tokenizer::render().
+     */
+    Tokenizer(SourceFile& source_file);
+    
+    /**
+     * Returns the array of tokens in a list object. The list object is just 
+     * there so the length of the list can be easily returned. Internally it 
+     * uses a std::vector<Token> or a Token*, depending on the implementation.
+     */
+    const std::vector<Token>& render();
+
+    std::vector<Token> getTokens();
+
 private:
     /* Source file from the constructor. */
     SourceFile* source;
@@ -161,24 +179,7 @@ private:
         std::bind(&Tokenizer::getWordToken, this),
         std::bind(&Tokenizer::getSymbolToken, this),
     };
-
-public:
-    /**
-     * Tokenzizer constructor. A new instance is supposed to be created for
-     * every new string that should be parsed. After initializing the object,
-     * you can then call Tokenizer::render().
-     */
-    Tokenizer(SourceFile& source_file);
     
-    /**
-     * Returns the array of tokens in a list object. The list object is just 
-     * there so the length of the list can be easily returned. Internally it 
-     * uses a std::vector<Token> or a Token*, depending on the implementation.
-     */
-    const std::vector<Token>& render();
-
-    std::vector<Token> getTokens();
-
 }; //salt::Tokenizer
 
 

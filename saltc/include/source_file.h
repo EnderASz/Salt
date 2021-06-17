@@ -14,17 +14,8 @@ namespace salt
 
 class SourceFile
 {
-private:
-
-    const string filename;
-    const string filepath;
-    struct {
-        bool include_builtins = false;
-    } meta;
 
 public:
-
-
     SourceFile(string filepath);
 
     string code;
@@ -37,6 +28,13 @@ public:
 
     /* Toogle global import 'init' standard library on */
     void includeBuiltins();
+
+private:
+    const string filename;
+    const string filepath;
+    struct {
+        bool include_builtins = false;
+    } meta;
 
 }; // salt::SourceFile
 

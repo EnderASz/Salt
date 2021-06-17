@@ -29,22 +29,23 @@ public:
 
 
 class CustomError : public BaseError {
-private:
-    /** Custom error message */
-    string message;
+
 public:
     /** Custom error constructor */
     CustomError(const string& message);
 
     /** Inherited: Returns an error message */
     virtual string getMessage() override;
+
+private:
+    /** Custom error message */
+    string message;
+
 };
 
 
 class FileOpenError : public BaseError {
-private:
-    /** Path where the error occurred */
-    string filepath;
+
 public:
     FileOpenError(const string& filepath);
 
@@ -53,6 +54,11 @@ public:
 
     /** Inherited: Returns an error message */
     virtual string getMessage() override;
+
+protected:
+    /** Path where the error occurred */
+    string filepath;
+
 };
 
 
@@ -67,13 +73,13 @@ public:
 
 
 class UnspecifiedMainError : public CommandLineError {
+public:
     /** Inherited: Returns an error message */
     virtual string getMessage() override;
 };
 
 class CommandLineOptionError : public CommandLineError {
-protected:
-    string option;
+
 public:
     /** Unrecognized Option Error constructor */
     CommandLineOptionError(const string& option);
@@ -83,31 +89,38 @@ public:
 
     /** Returns unrecognized option */
     string getOption();
+
+protected:
+    string option;
+
 };
 
 class UnrecognizedOptionError : public CommandLineOptionError {
-protected:
-    string option;
+
 public:
     /** Unrecognized Option Error constructor */
     UnrecognizedOptionError(const string& option);
 
     /** Inherited: Returns an error message */
     virtual string getMessage() override;
+
+protected:
+    string option;
+
 };
 
 
 class MissingOptionArgumentError : public CommandLineOptionError {
+
 public:
     MissingOptionArgumentError(const string& option);
     virtual string getMessage() override;
+
 };
 
 
 class SourceError : public BaseError {
-protected:
-    /** Source file where the error occurred */
-    SourceFile* source_file;
+
 public:
     /** Source Error constructor */
     SourceError(const SourceFile& source_file);
@@ -117,13 +130,15 @@ public:
 
     /** Returns pointer to source file where the error occurred */
     SourceFile* getSource();
+
+protected:
+    /** Source file where the error occurred */
+    SourceFile* source_file;
+
 };
 
 
 class InSourceError : public SourceError {
-protected:
-    /** Position where the error occurred */
-    InStringPosition position;
 
 public:
     InSourceError(
@@ -138,6 +153,11 @@ public:
     InStringPosition getPosition();
 
     string getLocationString();
+
+protected:
+    /** Position where the error occurred */
+    InStringPosition position;
+
 };
 
 
@@ -178,14 +198,7 @@ public:
 
 
 class UnexpectedTokenError : public InSourceError {
-private:
-    /** The token that caused the error when encountered */
-    string token_str;
-    TokenType token_type;
 
-    /** Sets token string */
-    void setToken(const string& token, TokenType type = TOK_0);
-    void setToken(Token token = null_token);
 public:
     /** Unexpected Token Error constructors */
     UnexpectedTokenError(
@@ -207,17 +220,20 @@ public:
 
     /** Inherited: Returns an error message */
     virtual string getMessage() override;
+
+protected:
+    /** The token that caused the error when encountered */
+    string token_str;
+    TokenType token_type;
+
+    /** Sets token string */
+    void setToken(const string& token, TokenType type = TOK_0);
+    void setToken(Token token = null_token);
+
 };
 
 
 class UnknownTokenError : public InSourceError {
-private:
-    /**
-     * The unrecognized token string that can not be parsed to
-     * any known token
-     */
-    string token_str;
-
 public:
     UnknownTokenError(
         const InStringPosition& position,
@@ -230,12 +246,19 @@ public:
 
     /** Inherited: Returns an error message */
     virtual string getMessage() override;
+
+protected:
+    /**
+     * The unrecognized token string that can not be parsed to
+     * any known token
+     */
+    string token_str;
+
 };
 
 
 class InvalidLiteralError : public InSourceError {
-protected:
-    string literal_name;
+
 public:
     /** Invalid Literal Error constructors */
     InvalidLiteralError(
@@ -248,12 +271,15 @@ public:
     
     /** Inherited: Returns an error message */
     virtual string getMessage() override;
+
+protected:
+    string literal_name;
+
 };
 
 
 class TooLongLiteralError : public InvalidLiteralError {
-private:
-    int max_lenght;
+
 public:
     /** Too Long Literal Error constructor */
     TooLongLiteralError(
@@ -267,6 +293,10 @@ public:
 
     /** Inherited: Returns an error message */
     virtual string getMessage() override;
+
+protected:
+    int max_lenght;
+
 };
 
 };

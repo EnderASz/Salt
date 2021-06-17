@@ -23,17 +23,6 @@ namespace salt
  */
 class Params
 {
-private:
-    string executable_path;
-    string input_path;
-    string output_path = "a.scc";
-    bool builtins = true;
-
-    /**
-     * The initObject method is responsible for parse arguments and
-     * initiate member variables of Params class object.
-     */
-    void initObject(std::queue<string>args);
 
 public:
     
@@ -60,6 +49,18 @@ public:
     bool getBuiltinsSwitch();
 
     static void print_help_page();
+
+private:
+    string executable_path;
+    string input_path;
+    string output_path = "a.scc";
+    bool builtins = true;
+
+    /**
+     * The initObject method is responsible for parse arguments and
+     * initiate member variables of Params class object.
+     */
+    void initObject(std::queue<string>args);
 
 }; // salt::core::Params
 
