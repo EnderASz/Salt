@@ -16,12 +16,6 @@ using std::string;
 typedef unsigned int uint;
 typedef char byte;
 
-template<typename T, class Q = std::queue<T>>
-T pop(Q& container) {
-    T value = container.front();
-    container.pop();
-    return value;
-}
 
 string load_file(string filepath);
 

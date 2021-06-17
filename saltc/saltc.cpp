@@ -21,14 +21,15 @@ using namespace salt;
 int main(int argc, char* argv[]) {
     setup_windows_logging();
     dprint("Parsing parameters");
-    Params parameters((uint) argc, argv);
+    Params parameters({argv, argv + argc});
     dprint("Parameters parsed");
     reset_print_padding();
 
+    string main_path = parameters.getInputPaths().at(0);
     iprint(
         "Initializing main source file from: %s",
-        parameters.getInputPath().c_str());
-    SourceFile main_source(parameters.getInputPath());
+        main_path.c_str());
+    SourceFile main_source(main_path);
     if(parameters.getBuiltinsSwitch())
         main_source.includeBuiltins();
     Tokenizer main_tokenizer(main_source);

@@ -18,17 +18,64 @@ namespace salt
 {
 
 /**
+ * Params class constructor
+ * 
+ * @args - Queue (std::queue) of string arguments
+ */ 
+Params::Params(std::queue<string> args): arg_list(args) {initObject();}
+
+Params::Params(const std::vector<string>& args)
+    : arg_list(std::deque<string>(args.begin(), args.end())) 
+    {
+        initObject();
+    }
+
+bool Params::arg_comp(
+    const string str,
+    const string long_arg,
+    const char short_arg[3]) {
+        return !(str.compare(short_arg) && str.compare(long_arg));
+    }
+
+/* Gets executable path argument value */
+const string& Params::getExecutablePath() {return this->executable_path;}
+
+/* Gets input path argument value */
+const std::vector<string>& Params::getInputPaths() {return this->input_paths;}
+
+/* Gets output path argument value */
+const string& Params::getOutputPath() {return this->output_path;}
+
+/* Gets builtins include switch value */
+bool Params::getBuiltinsSwitch() {return this->builtins;}
+
+void Params::print_help_page() {
+    printf(
+        "Usage: saltc [OPTIONS]... FILES...\n\n"
+        "\tFILES...             "
+            "paths of files to be compiled\n"
+        "\n"
+        "\t-h, --help           "
+            "show this page\n"
+        "\t-o, --output <path>  "
+            "path of the compilation output file\n"
+        "\t--no-builtins        "
+            "don't link builtin functionality when compiling\n"
+        "\n");
+}
+
+/**
  * The initObject method is responsible for parse arguments and
  * initiate member variables of Params class object.
  */
-void Params::initObject(std::queue<string> args) {
+void Params::initObject() {
     dprint("Setting up compiler executable path");
-    executable_path = pop<string>(args);
+    executable_path = popArg();
     dprint(
         "Compiler executable path setted up at: %s",
         executable_path.c_str());
-    while(!args.empty()) {
-        string arg = pop<string>(args);
+    string arg;
+    while(!(arg = popArg()).empty()) {
         dprint("Parsing parameter: %s", arg.c_str());
         if (Params::arg_comp(arg, "--help", "-h")) {
             dprint("Displaying help page");
@@ -43,10 +90,9 @@ void Params::initObject(std::queue<string> args) {
         }
         else if (Params::arg_comp(arg, "--output", "-o")) {
             dprint("Setting up output file path");
-            if(args.empty()) {
+            if((output_path = popArg()).empty()) {
                 eprint(MissingOptionArgumentError, arg);
             }
-            output_path = pop<string>(args);
             dprint(
                 "Output file path setted up at: %s",
                 output_path.c_str());
@@ -54,93 +100,24 @@ void Params::initObject(std::queue<string> args) {
         else if (arg[0] == '-') {
             eprint(UnrecognizedOptionError, arg);
         } else { // Nameless arguments
-            if (input_path.empty()) {
-                dprint("Setting up input file path");
-                input_path = arg;
-                dprint(
-                    "Input file path set up at: %s",
-                    input_path.c_str());
-            }
-            else {
-                wprint(
-                    "Argument '%s' cannot be parsed now. "
-                    "This will be implemented in a future",
-                    arg.c_str());
-            }
+            dprint("Adding input file path...");
+            input_paths.push_back(arg);
+            dprint(
+                "Added input file path: %s",
+                arg.c_str());
         }
     }
 
-    if (input_path.empty()) {
+    if (input_paths.empty()) {
         eprint(UnspecifiedMainError);
     }
 }
 
-/**
- * Params class constructor
- * 
- * @argc - amount of arguments
- * @argv - array of strings (char*) arguments
- */ 
-Params::Params(uint argc, char* argv[]) {
-    std::queue<string> args;
-    for (uint i = 0; i < argc; i++) {
-        args.push(argv[i]);
-    }
-    this->initObject(args);
-}
-
-/**
- * Params class constructor
- * 
- * @argc - amount of arguments
- * @argv - array of strings arguments
- */ 
-Params::Params(uint argc, string argv[]) {
-    std::queue<string> args;
-    for (uint i = 0; i < argc; i++) {
-        args.push(argv[i]);
-    }
-    this->initObject(args);
-}
-
-/**
- * Params class constructor
- * 
- * @args - Queue (std::queue) of string arguments
- */ 
-Params::Params(std::queue<string> args) {this->initObject(args);}
-
-bool Params::arg_comp(
-    const string str,
-    const string long_arg,
-    const char short_arg[3]) {
-        return !(str.compare(short_arg) && str.compare(long_arg));
-    }
-
-/* Gets executable path argument value */
-string Params::getExecutablePath() {return this->executable_path;}
-
-/* Gets input path argument value */
-string Params::getInputPath() {return this->input_path;}
-
-/* Gets output path argument value */
-string Params::getOutputPath() {return this->output_path;}
-
-/* Gets builtins include switch value */
-bool Params::getBuiltinsSwitch() {return this->builtins;}
-
-void Params::print_help_page() {
-    printf(
-        "Usage: saltc [OPTIONS]... FILE\n\n"
-        "\tFILE                 "
-            "name of the file to be compiled\n"
-        "\t-h, --help           "
-            "show this page\n"
-        "\t-o, --output <path>  "
-            "path of the compilation output file\n"
-        "\t--no-builtins        "
-            "don't link builtin functionality when compiling\n"
-        "\n");
+string Params::popArg() {
+    string arg = !arg_list.empty() ? arg_list.front() : "";
+    if(!arg.empty())
+       arg_list.pop();
+    return arg;
 }
 
 };

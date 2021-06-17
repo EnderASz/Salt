@@ -27,8 +27,7 @@ class Params
 public:
     
     Params(std::queue<string> args);
-    Params(uint argc, char* argv[]);
-    Params(uint argc, string args[]);
+    Params(const std::vector<string>& args);
 
     /* Compares given string with given short and long argument names. */
     static bool arg_comp(
@@ -37,13 +36,13 @@ public:
         const char short_arg[3]);
 
     /* Gets executable path argument value */
-    string getExecutablePath();
+    const string& getExecutablePath();
 
-    /* Gets input path argument value */
-    string getInputPath();
+    /* Gets input paths argument value */
+    const std::vector<string>& getInputPaths();
 
     /* Gets output path argument value */
-    string getOutputPath();
+    const string& getOutputPath();
 
     /* Gets import init switch value */
     bool getBuiltinsSwitch();
@@ -52,15 +51,27 @@ public:
 
 private:
     string executable_path;
-    string input_path;
+    std::vector<string> input_paths;
     string output_path = "a.scc";
     bool builtins = true;
+
+    /**
+     * Argument list passed via constructor and used by initObject method to
+     * interpret command line 
+     */
+    std::queue<string> arg_list;
 
     /**
      * The initObject method is responsible for parse arguments and
      * initiate member variables of Params class object.
      */
-    void initObject(std::queue<string>args);
+    void initObject();
+
+    /**
+     * Removes first argument from 'arg_list' and returns it or returns empty
+     * string if 'arg_list' is empty.
+     */
+    string popArg();
 
 }; // salt::core::Params
 
