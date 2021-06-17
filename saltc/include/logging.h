@@ -130,8 +130,8 @@
     }
     #define eprint(ERR_CLASS, ...)                                            \
     {                                                                         \
-        std::unique_ptr<salt::BaseError> error(                               \
-            new salt::ERR_CLASS(__VA_ARGS__));                                \
+        std::unique_ptr<salt::BaseError> error =                              \
+            std::make_unique<salt::ERR_CLASS>(__VA_ARGS__);                   \
         print_log_location(__FILENAME__, __FUNCTION__);                       \
         print_log_prefix(ERROR);                                              \
         printf(error->getMessage().c_str());                                  \
