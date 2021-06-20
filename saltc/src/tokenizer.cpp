@@ -16,11 +16,11 @@
 #include <map>
 #include <array>
 #include <functional>
+#include <memory>
 
 using std::string;
 using std::find;
 using std::distance;
-using std::min;
 
 namespace salt
 {
@@ -58,7 +58,7 @@ const std::vector<Token>& Tokenizer::render() {
             eprint(
                 UnknownTokenError,
                 curr_token.position,
-                *source,
+                source,
                 curr_token.str);
         tokens.push_back(parsed_token);
         dprint(
@@ -70,7 +70,7 @@ const std::vector<Token>& Tokenizer::render() {
     return tokens;
 }
 
-std::vector<Token> Tokenizer::getTokens() {
+const std::vector<Token>& Tokenizer::getTokens() {
     return tokens;
 }
 
@@ -85,11 +85,11 @@ bool Tokenizer::skipComment() {
         skipped = true;
         if(isLastChar()) jumpToEnd();
         if(*(current+1) == '[') {
-            string::iterator close = findFirst("]#");
+            string::const_iterator close = findFirst("]#");
             if(!isInRange(close)) eprint(
                 UnclosedCommentError,
                 InStringPosition(source->code, current),
-                *source);
+                source);
             current = close+2;
         }
         else current = findFirst("\n")+1;
@@ -133,17 +133,23 @@ void Tokenizer::resetCurrentToken() {
     curr_token.str = "";
 }
 
-string::iterator Tokenizer::sourceBegin() const {return source->code.begin();}
+string::const_iterator Tokenizer::sourceBegin() const {
+    return source->code.begin();
+}
 
-string::iterator Tokenizer::sourceEnd() const {return source->code.end();}
+string::const_iterator Tokenizer::sourceEnd() const {
+    return source->code.end();
+}
 
-string::iterator Tokenizer::sourceLast() const {return source->code.end()-1;}
+string::const_iterator Tokenizer::sourceLast() const {
+    return source->code.end()-1;
+}
 
 size_t Tokenizer::leftToEnd() const {
     return distance(current, sourceEnd())-1;
 }
 
-string::iterator Tokenizer::findFirst(const string& value) const {
+string::const_iterator Tokenizer::findFirst(const string& value) const {
     size_t current_idx = getIdx();
     size_t found = source->code.find(value, current_idx);
     if(found == string::npos) return sourceEnd();
@@ -151,18 +157,18 @@ string::iterator Tokenizer::findFirst(const string& value) const {
 }
 
 bool Tokenizer::isCommentChar() const {return isCommentChar(current);}
-bool Tokenizer::isCommentChar(const string::iterator& iterator) const {
+bool Tokenizer::isCommentChar(const string::const_iterator& iterator) const {
     return isCommentChar(*iterator);
 }
 bool Tokenizer::isCommentChar(const char& chr) const {return chr == '#';}
 
 bool Tokenizer::isLastChar() const {return isLastChar(current);}
-bool Tokenizer::isLastChar(const string::iterator& iterator) const {
+bool Tokenizer::isLastChar(const string::const_iterator& iterator) const {
     return distance(iterator, sourceEnd()-1) == 0;
 }
 
 bool Tokenizer::isInRange() const {return isInRange(current);}
-bool Tokenizer::isInRange(const string::iterator& iterator) const {
+bool Tokenizer::isInRange(const string::const_iterator& iterator) const {
     return distance(iterator, sourceEnd()-1) >= 0;
 }
 
@@ -177,7 +183,7 @@ bool Tokenizer::nextIsXDigit() const {
 }
 
 Token Tokenizer::getStringLiteral() {
-    if(!isInRange()) eprint(OutOfSourceRangeError, *source);
+    if(!isInRange()) eprint(OutOfSourceRangeError, source);
     resetCurrentToken();
     if(isChar('r')) {
         if(isLastChar()) return null_token;
@@ -198,16 +204,16 @@ Token Tokenizer::getStringLiteral() {
             pushCurrentCharacter();
         pushCurrentCharacter();
     }
-    if(!closed) eprint(UnclosedStringError, curr_token.position, *source);
+    if(!closed) eprint(UnclosedStringError, curr_token.position, source);
     return token_create(TOKL_STRING, curr_token.position, curr_token.str);
 }
 
 Token Tokenizer::getNumLiteral() {
-    if(!isInRange()) eprint(OutOfSourceRangeError, *source);
+    if(!isInRange()) eprint(OutOfSourceRangeError, source);
     if(!isdigit(*current)) return null_token;
     resetCurrentToken();
 
-    size_t non_decimal_digits = 0;
+    std::shared_ptr<size_t> non_decimal_digits = 0;
     current_num_literal = DEC;
     if(isChar('0')) {
         pushCurrentCharacter();
@@ -218,7 +224,7 @@ Token Tokenizer::getNumLiteral() {
                 eprint(
                     InvalidLiteralError,
                     curr_token.position,
-                    *source,
+                    source,
                     "hexadecimal number");
             pushCurrentCharacter();
             current_num_literal = HEX;
@@ -231,7 +237,7 @@ Token Tokenizer::getNumLiteral() {
             current_num_literal = OCT;
         }
         pushCurrentCharacter();
-        non_decimal_digits++;
+        (*non_decimal_digits)++;
     }
 
     Token getted_token = null_token;
@@ -249,10 +255,10 @@ Token Tokenizer::getNumLiteral() {
                 getted_token = pushFloatDecDigit();
                 break;
             case OCT:
-                getted_token = pushOctDigit(&non_decimal_digits, 8);
+                getted_token = pushOctDigit(non_decimal_digits, 8);
                 break;
             case HEX:
-                getted_token = pushHexDigit(&non_decimal_digits, 8);
+                getted_token = pushHexDigit(non_decimal_digits, 8);
                 break;
             default: break;
         }
@@ -277,7 +283,7 @@ Token Tokenizer::pushDecDigit() {
             eprint(
                 InvalidLiteralError,
                 curr_token.position,
-                *source,
+                source,
                 "decimal number");
         return token_create(
                 TOKL_INT,
@@ -296,7 +302,7 @@ Token Tokenizer::pushFloatDecDigit() {
             eprint(
                 InvalidLiteralError,
                 curr_token.position,
-                *source,
+                source,
                 "decimal float number");
         return token_create(
             TOKL_FLOAT,
@@ -311,60 +317,82 @@ Token Tokenizer::pushFloatDecDigit() {
  * digits_counter default: nullptr
  * max_digits default: 1
  */
-Token Tokenizer::pushOctDigit(size_t* digits_counter, const size_t& max_digits) {
-    if(!isInRange() || current_num_literal != OCT)
-        throw "#TODO: Method pushOctDigit can not be called now.";
-    if(!isodigit(*current)) {
-        if(curr_token.str.empty())
+Token Tokenizer::pushOctDigit(
+        const std::shared_ptr<size_t>& digits_counter,
+        const size_t& max_digits)
+    {
+        if(!isInRange() || current_num_literal != OCT)
             eprint(
-                InvalidLiteralError,
+                CustomError,
+                "Something went wrong!"
+                    "Method pushOctDigit cannot be called now.")
+        if(!isodigit(*current)) {
+            if(curr_token.str.empty())
+                eprint(
+                    InvalidLiteralError,
+                    curr_token.position,
+                    source,
+                    "octal number");
+            return token_create(
+                TOKL_INT,
                 curr_token.position,
-                *source,
-                "octal number");
-        return token_create(
-            TOKL_INT,
-            curr_token.position,
-            curr_token.str);
+                curr_token.str);
+        }
+        if(digits_counter){
+            if(*digits_counter >= max_digits)
+                eprint(
+                    TooLongLiteralError,
+                    curr_token.position,
+                    source,
+                    "octal number",
+                    max_digits);
+            (*digits_counter)++;
+        }
+        pushCurrentCharacter();
+        return null_token;
     }
-    if(digits_counter){
-        if(*digits_counter >= max_digits)
-            throw "#TODO: Too long octal literal";
-        (*digits_counter)++;
-    }
-    pushCurrentCharacter();
-    return null_token;
-}
 
 /**
  * digits_counter default: nullptr
  * max_digits default: 1
  */
-Token Tokenizer::pushHexDigit(size_t* digits_counter, const size_t& max_digits) {
-    if(!isInRange() || current_num_literal != HEX)
-        throw "#TODO: Method pushHexDigit can not be called now.";
-    if(!isxdigit(*current)) {
-        if(curr_token.str.empty())
+Token Tokenizer::pushHexDigit(
+        const std::shared_ptr<size_t>& digits_counter,
+        const size_t& max_digits)
+    {
+        if(!isInRange() || current_num_literal != HEX)
             eprint(
-                InvalidLiteralError,
+                CustomError,
+                "Something went wrong!"
+                    "Method pushHexDigit cannot be called now.")
+        if(!isxdigit(*current)) {
+            if(curr_token.str.empty())
+                eprint(
+                    InvalidLiteralError,
+                    curr_token.position,
+                    source,
+                    "hexadecimal number");
+            return token_create(
+                TOKL_INT,
                 curr_token.position,
-                *source,
-                "hexadecimal number");
-        return token_create(
-            TOKL_INT,
-            curr_token.position,
-            curr_token.str);
+                curr_token.str);
+        }
+        if(digits_counter){
+            if(*digits_counter >= max_digits)
+                eprint(
+                    TooLongLiteralError,
+                    curr_token.position,
+                    source,
+                    "hexadecimal number",
+                    max_digits);
+            (*digits_counter)++;
+        }
+        pushCurrentCharacter();
+        return null_token;
     }
-    if(digits_counter){
-        if(*digits_counter >= max_digits)
-            throw "#TODO: Too long hexadecimal literal";
-        (*digits_counter)++;
-    }
-    pushCurrentCharacter();
-    return null_token;
-}
 
 Token Tokenizer::getWordToken() {
-    if(!isInRange()) eprint(OutOfSourceRangeError, *source);
+    if(!isInRange()) eprint(OutOfSourceRangeError, source);
     if(!(isalpha(*current) || isChar('_'))) return null_token;
     resetCurrentToken();
     pushCurrentCharacter();
@@ -379,7 +407,7 @@ Token Tokenizer::getWordToken() {
 }
 
 Token Tokenizer::getSymbolToken() {
-    if(!isInRange()) eprint(OutOfSourceRangeError, *source);
+    if(!isInRange()) eprint(OutOfSourceRangeError, source);
     if(!ispunct(*current)) return null_token;
     resetCurrentToken();
     
@@ -390,7 +418,10 @@ Token Tokenizer::getSymbolToken() {
     auto found = search_for.find(*current);
     if(found!=search_for.end()) {
         pushCurrentCharacter();
-        return token_create(found->second, curr_token.position, curr_token.str);
+        return token_create(
+            found->second,
+            curr_token.position,
+            curr_token.str);
     }
 
     switch(*current) {
@@ -520,7 +551,7 @@ Token Tokenizer::getSymbolToken() {
 }
 
 size_t Tokenizer::getIdx() const {return getIdx(current);}
-size_t Tokenizer::getIdx(const string::iterator& iterator) const {
+size_t Tokenizer::getIdx(const string::const_iterator& iterator) const {
     return distance(sourceBegin(), iterator);
 } // salt::Tokenizer
 

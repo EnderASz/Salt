@@ -11,6 +11,7 @@
 #include <string>
 #include <vector>
 #include <functional>
+#include <memory>
 
 using std::string;
 
@@ -39,15 +40,15 @@ public:
      */
     const std::vector<Token>& render();
 
-    std::vector<Token> getTokens();
+    const std::vector<Token>& getTokens();
 
 private:
     /* Source file from the constructor. */
-    SourceFile* source;
+    std::shared_ptr<SourceFile> source;
 
     std::vector<Token> tokens;
     
-    string::iterator current;
+    string::const_iterator current;
     struct {
         InStringPosition position;
         string str;
@@ -80,11 +81,11 @@ private:
 
     void resetCurrentToken();
 
-    string::iterator sourceBegin() const;
+    string::const_iterator sourceBegin() const;
 
-    string::iterator sourceEnd() const;
+    string::const_iterator sourceEnd() const;
 
-    string::iterator sourceLast() const;
+    string::const_iterator sourceLast() const;
 
     /**
      * Return amount of characters left in source without current and
@@ -92,19 +93,19 @@ private:
      */
     size_t leftToEnd() const;
 
-    string::iterator findFirst(const string& value) const;
+    string::const_iterator findFirst(const string& value) const;
 
     bool isTokenBreakChar(char chr) const;
 
     bool isCommentChar() const;
-    bool isCommentChar(const string::iterator& iterator) const;
+    bool isCommentChar(const string::const_iterator& iterator) const;
     bool isCommentChar(const char& chr) const;
 
     bool isLastChar() const;
-    bool isLastChar(const string::iterator& iterator) const;
+    bool isLastChar(const string::const_iterator& iterator) const;
 
     bool isInRange() const;
-    bool isInRange(const string::iterator& iterator) const;
+    bool isInRange(const string::const_iterator& iterator) const;
 
     /**
      * Returns true if character on current iterator is
@@ -153,11 +154,11 @@ private:
     Token pushDecDigit();
     Token pushFloatDecDigit();
     Token pushOctDigit(
-                       size_t* digits_counter = nullptr,
-                       const size_t& max_digits = 1);
+        const std::shared_ptr<size_t>& digits_counter = nullptr,
+        const size_t& max_digits = 1);
     Token pushHexDigit(
-                       size_t* digits_counter = nullptr,
-                       const size_t& max_digits = 1);
+        const std::shared_ptr<size_t>& digits_counter = nullptr,
+        const size_t& max_digits = 1);
 
     /** 
      * Returns a token based on static lowercase alpha word or
@@ -171,7 +172,7 @@ private:
     /* Returns index of current iterator in source code */
     size_t getIdx() const;
     /* Returns index of iterator in source code */
-    size_t getIdx(const string::iterator& iterator) const;
+    size_t getIdx(const string::const_iterator& iterator) const;
 
     std::array<std::function<Token(void)>, 4> token_getters = {
         std::bind(&Tokenizer::getStringLiteral, this),

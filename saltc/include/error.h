@@ -12,6 +12,7 @@
 #include "source_file.h"
 #include "token.h"
 #include <string>
+#include <memory>
 
 using std::string;
 
@@ -123,17 +124,17 @@ class SourceError : public BaseError {
 
 public:
     /** Source Error constructor */
-    SourceError(const SourceFile& source_file);
+    SourceError(const std::shared_ptr<SourceFile>& source_file);
 
     /** Inherited: Returns an error message */
     virtual string getMessage() override;
 
     /** Returns pointer to source file where the error occurred */
-    SourceFile* getSource();
+    const std::shared_ptr<SourceFile>& getSource();
 
 protected:
     /** Source file where the error occurred */
-    SourceFile* source_file;
+    const std::shared_ptr<SourceFile>& source_file;
 
 };
 
@@ -143,7 +144,7 @@ class InSourceError : public SourceError {
 public:
     InSourceError(
         const InStringPosition& position,
-        const SourceFile& source_file
+        const std::shared_ptr<SourceFile>& source_file
     );
 
     /** Inherited: Returns an error message */
@@ -164,7 +165,7 @@ protected:
 class OutOfSourceRangeError : public SourceError {
 public:
     /** Out of Source Range Token Get Error constructor */
-    OutOfSourceRangeError(const SourceFile& source_file);
+    OutOfSourceRangeError(const std::shared_ptr<SourceFile>& source_file);
 
     /** Inherited: Returns an error message */
     virtual string getMessage() override;
@@ -176,7 +177,7 @@ public:
     /** Unclosed Comment Error constructor */
     UnclosedCommentError(
         const InStringPosition& position,
-        const SourceFile& source_file
+        const std::shared_ptr<SourceFile>& source_file
     );
 
     /** Inherited: Returns an error message */
@@ -189,7 +190,7 @@ public:
     /** Unclosed String Literal Error constructor */
     UnclosedStringError(
         const InStringPosition& position,
-        const SourceFile& source_file
+        const std::shared_ptr<SourceFile>& source_file
     );
 
     /** Inherited: Returns an error message */
@@ -203,12 +204,12 @@ public:
     /** Unexpected Token Error constructors */
     UnexpectedTokenError(
         const InStringPosition& position,
-        const SourceFile& source_file,
+        const std::shared_ptr<SourceFile>& source_file,
         const string& str,
         const TokenType type
     );
     UnexpectedTokenError(
-        const SourceFile& source_file,
+        const std::shared_ptr<SourceFile>& source_file,
         const Token& token
     );
 
@@ -237,7 +238,7 @@ class UnknownTokenError : public InSourceError {
 public:
     UnknownTokenError(
         const InStringPosition& position,
-        const SourceFile& source_file,
+        const std::shared_ptr<SourceFile>& source_file,
         const string& str
     );
 
@@ -263,7 +264,7 @@ public:
     /** Invalid Literal Error constructors */
     InvalidLiteralError(
         const InStringPosition& position,
-        const SourceFile& source_file,
+        const std::shared_ptr<SourceFile>& source_file,
         const string& literal_type_name);
 
     /** Returns literal name */
@@ -284,7 +285,7 @@ public:
     /** Too Long Literal Error constructor */
     TooLongLiteralError(
         const InStringPosition& position,
-        const SourceFile& source_file,
+        const std::shared_ptr<SourceFile>& source_file,
         const string& literal_type_name,
         const int max_lenght);
 

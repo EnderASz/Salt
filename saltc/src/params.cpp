@@ -49,21 +49,6 @@ const string& Params::getOutputPath() {return this->output_path;}
 /* Gets builtins include switch value */
 bool Params::getBuiltinsSwitch() {return this->builtins;}
 
-void Params::print_help_page() {
-    printf(
-        "Usage: saltc [OPTIONS]... FILES...\n\n"
-        "\tFILES...             "
-            "paths of files to be compiled\n"
-        "\n"
-        "\t-h, --help           "
-            "show this page\n"
-        "\t-o, --output <path>  "
-            "path of the compilation output file\n"
-        "\t--no-builtins        "
-            "don't link builtin functionality when compiling\n"
-        "\n");
-}
-
 /**
  * The initObject method is responsible for parse arguments and
  * initiate member variables of Params class object.
@@ -77,47 +62,66 @@ void Params::initObject() {
     string arg;
     while(!(arg = popArg()).empty()) {
         dprint("Parsing parameter: %s", arg.c_str());
-        if (Params::arg_comp(arg, "--help", "-h")) {
-            dprint("Displaying help page");
-            print_help_page();
-            dprint("Help page displayed");
-            exit(0);
+        if (Params::arg_comp(arg, "--help", "-h")) helpAction();
+        if (Params::arg_comp(arg, "--no-builtins", "")) {
+            noBuiltinsAction();
+            continue;
         }
-        else if (Params::arg_comp(arg, "--no-builtins", "")) {
-            dprint("Switching include builtins off");
-            builtins = false;
-            dprint("Include builtins switched off");
+        if (Params::arg_comp(arg, "--output", "-o")) {
+            setOutputAction();
+            continue;
         }
-        else if (Params::arg_comp(arg, "--output", "-o")) {
-            dprint("Setting up output file path");
-            if((output_path = popArg()).empty()) {
-                eprint(MissingOptionArgumentError, arg);
-            }
-            dprint(
-                "Output file path setted up at: %s",
-                output_path.c_str());
+        if (arg[0] != '-') {
+            addInputAction(arg);
+            continue;
         }
-        else if (arg[0] == '-') {
-            eprint(UnrecognizedOptionError, arg);
-        } else { // Nameless arguments
-            dprint("Adding input file path...");
-            input_paths.push_back(arg);
-            dprint(
-                "Added input file path: %s",
-                arg.c_str());
-        }
+        eprint(UnrecognizedOptionError, arg);
     }
-
-    if (input_paths.empty()) {
+    if (input_paths.empty())
         eprint(UnspecifiedMainError);
-    }
 }
 
 string Params::popArg() {
     string arg = !arg_list.empty() ? arg_list.front() : "";
-    if(!arg.empty())
-       arg_list.pop();
+    if(!arg.empty()) arg_list.pop();
     return arg;
+}
+
+void Params::helpAction() {
+    dprint("Displaying help page");
+    printf(
+        "Usage: saltc [OPTIONS]... FILES...\n\n"
+        "\tFILES...             "
+            "paths of files to be compiled\n"
+        "\n"
+        "\t-h, --help           "
+            "show this page\n"
+        "\t-o, --output <path>  "
+            "path of the compilation output file\n"
+        "\t--no-builtins        "
+            "don't link builtin functionality when compiling\n"
+        "\n");
+    dprint("Help page displayed");
+    exit(0);
+}
+
+void Params::noBuiltinsAction() {
+    dprint("Switching include builtins off");
+    builtins = false;
+    dprint("Include builtins switched off");
+}
+
+void Params::setOutputAction() {
+    dprint("Setting up output file path");
+    if((output_path = popArg()).empty())
+        eprint(MissingOptionArgumentError, "--output / -o");
+    dprint("Output file path setted up at: %s", output_path.c_str());
+}
+
+void Params::addInputAction(string filepath) {
+    dprint("Adding input file path...");
+    input_paths.push_back(filepath);
+    dprint("Added input file path: %s", filepath.c_str());
 }
 
 };

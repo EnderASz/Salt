@@ -27,19 +27,23 @@ string load_file(string filepath) {
     return buffer.str();
 }
 
-InStringPosition::InStringPosition(string& str, string::iterator iterator)
-    :line_idx(std::count(str.begin(), iterator, '\n')),
-    idx(std::distance(str.begin(), iterator)),
-    inline_idx(idx - str.find_last_of("\n", idx) - 1) {}
 InStringPosition::InStringPosition(
-    size_t line_idx,
-    size_t inline_idx,
-    size_t idx)
-        :line_idx(line_idx),
-        idx(idx),
-        inline_idx(inline_idx) {}
+        const string& str,
+        const string::const_iterator& iterator)
+    : line_idx(std::count(std::string_view(str).begin(), &(*iterator), '\n')),
+      idx(std::distance(str.begin(), iterator)),
+      inline_idx(idx - str.find_last_of("\n", idx) - 1)
+    {}
+InStringPosition::InStringPosition(
+        const size_t& line_idx,
+        const size_t& inline_idx,
+        const size_t& idx)
+    : line_idx(line_idx),
+      idx(idx),
+      inline_idx(inline_idx)
+    {}
 
-uint parse_oct(string str) {
+uint parse_oct(const string& str) {
     std::vector<uint> oct;
     size_t max_literal_lenght = str.size() < 8 ? str.size() : 8;
     for(size_t i = 0; i < max_literal_lenght; i++) {
@@ -52,7 +56,7 @@ uint parse_oct(string str) {
     return result;
 }
 
-uint parse_hex(string str) {
+uint parse_hex(const string& str) {
     std::vector<uint> hex;
     size_t max_literal_lenght = str.size() < 8 ? str.size() : 8;
     for(size_t i = 0; i < max_literal_lenght; i++) {
@@ -66,32 +70,32 @@ uint parse_hex(string str) {
     return result;
 }
 
-bool isodigit(char chr) {return chr >= '0' && chr < '8';}
+bool isodigit(const char& chr) {return chr >= '0' && chr < '8';}
 
-bool isalpha(const string str) {
+bool isalpha(const string& str) {
     for(size_t i = 0; i < str.size(); i++) if(!isalpha(str[i])) return false;
     return true;
 }
 
-bool islower(string str) {
+bool islower(const string& str) {
     for(size_t i = 0; i < str.size(); i++) if(islower(str[i])) return false;
     return true;
 }
 
-bool isnum(const string str) {
+bool isnum(const string& str) {
     for(size_t i = 0; i < str.size(); i++) if(!(isdigit(str[i]))) return false;
     return true;
 }
-bool isfnum(const string str) {
+bool isfnum(const string& str) {
     for(size_t i = 0; i < str.size(); i++)
         if(!(isdigit(str[i]) || (str[i] == '.' && i && i != str.size()-1)))
             return false;
     return true;
 }
-bool isalnum(const string str) {
+bool isalnum(const string& str) {
     for(size_t i = 0; i < str.size(); i++) if(!isalnum(str[i])) return false;
     return true;
 }
-bool isstropen(char chr) {
+bool isstropen(const char& chr) {
     return chr == '\'' || chr == '"';
 }

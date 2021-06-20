@@ -19,20 +19,18 @@ typedef char byte;
 
 string load_file(string filepath);
 
-template<typename T, size_t N, class A = std::array<T, N>>
-A ptr_to_array(T* data) {
-    A array;
-    std::copy(data, data+N, array.begin());
-    return array;
-}
-
 /*Stucture storage informations about position e.g in file. */
 struct InStringPosition {
     size_t line_idx;
     size_t idx;
     size_t inline_idx;
-    InStringPosition(string& str, string::iterator iterator);
-    InStringPosition(size_t line_idx, size_t inline_idx, size_t idx);
+    InStringPosition(
+        const string& str,
+        const string::const_iterator& iterator);
+    InStringPosition(
+        const size_t& line_idx,
+        const size_t& inline_idx,
+        const size_t& idx);
 };
 
 /**
@@ -51,7 +49,7 @@ struct InStringPosition {
  * 158 -> 13
  * 15u -> 13
  */
-uint parse_oct(string str);
+uint parse_oct(const string& str);
 
 /**
  * Parse hexadecimal number string into int.
@@ -70,22 +68,22 @@ uint parse_oct(string str);
  * 13P -> 19
  * 15u -> 21
  */
-uint parse_hex(string str);
+uint parse_hex(const string& str);
 
 /* Return true if chr parameter is octal digit character. */
-bool isodigit(char chr);
+bool isodigit(const char& chr);
 
-bool isalpha(string str);
+bool isalpha(const string& str);
 
-bool islower(string str);
+bool islower(const string& str);
 
-bool isnum(string str);
+bool isnum(const string& str);
 
-bool isfnum(string str);
+bool isfnum(const string& str);
 
-bool isalnum(string str);
+bool isalnum(const string& str);
 
-bool isstropen(char chr);
+bool isstropen(const char& chr);
 
 
 #endif // UTILS_H_

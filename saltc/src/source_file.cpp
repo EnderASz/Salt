@@ -13,23 +13,24 @@
 #include <array>
 
 using std::string;
-using std::memcpy;
 using std::filesystem::path;
 
 namespace salt
 {
 
-    SourceFile::SourceFile(string filepath)
-        :filename(path(filepath).filename().string()), filepath(filepath) {
-            dprint("Initializing '%s' source file object", filepath.c_str());
-            this->code = load_file(filepath);
-            dprint("Source code loaded");
+SourceFile::SourceFile(const string& filepath)
+    : filename(path(filepath).filename().string()),
+      filepath(filepath)
+    {
+        dprint("Initializing '%s' source file object", filepath.c_str());
+        this->code = load_file(filepath);
+        dprint("Source code loaded");
     }
 
-    string SourceFile::getFilename() const {return filename;}
-    
-    string SourceFile::getFilePath() const {return filepath;}
-    
-    void SourceFile::includeBuiltins() {meta.include_builtins = true;}
+const string& SourceFile::getFilename() const {return filename;}
+
+const string& SourceFile::getFilePath() const {return filepath;}
+
+void SourceFile::includeBuiltins() {meta.include_builtins = true;}
 
 } // salt

@@ -16,15 +16,15 @@ class SourceFile
 {
 
 public:
-    SourceFile(string filepath);
+    SourceFile(const string& filepath);
 
     string code;
 
     /* Gets source file name */
-    string getFilename() const;
+    const string& getFilename() const;
 
     /* Gets source file path */
-    string getFilePath() const;
+    const string& getFilePath() const;
 
     /* Toogle global import 'init' standard library on */
     void includeBuiltins();

@@ -47,8 +47,6 @@ public:
     /* Gets import init switch value */
     bool getBuiltinsSwitch();
 
-    static void print_help_page();
-
 private:
     string executable_path;
     std::vector<string> input_paths;
@@ -72,6 +70,14 @@ private:
      * string if 'arg_list' is empty.
      */
     string popArg();
+
+    void helpAction();
+
+    void noBuiltinsAction();
+
+    void setOutputAction();
+
+    void addInputAction(string filepath);
 
 }; // salt::core::Params
 
